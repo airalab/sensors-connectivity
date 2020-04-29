@@ -10,9 +10,9 @@ class SDS011(object):
     using UART.
     """
 
-    HEAD = b'\xaa'
-    TAIL = b'\xab'
-    CMD_ID = b'\xb4'
+    HEAD = b"\xaa"
+    TAIL = b"\xab"
+    CMD_ID = b"\xb4"
 
     # The sent command is a read or a write
     READ = b"\x00"
@@ -31,7 +31,7 @@ class SDS011(object):
     WORK = b"\x01"
 
     # The work period command ID
-    WORK_PERIOD_CMD = b'\x08'
+    WORK_PERIOD_CMD = b"\x08"
 
     def __init__(self, serial_port, baudrate=9600, timeout=2,
                  use_query_mode=True):
@@ -91,7 +91,7 @@ class SDS011(object):
         raw = self._get_reply()
         if raw is None:
             return None  # TODO:
-        data = struct.unpack('<HH', raw[2:6])
+        data = struct.unpack("<HH", raw[2:6])
         pm25 = data[0] / 10.0
         pm10 = data[1] / 10.0
         return (pm25, pm10)
@@ -146,7 +146,7 @@ class SDS011(object):
             8 - Checksum - sum of bytes 2-7
             9 - Tail
         """
-        raw = struct.unpack('<HHxxBBB', data[2:])
+        raw = struct.unpack("<HHxxBBB", data[2:])
         checksum = sum(v for v in data[2:8]) % 256
         if checksum != data[8]:
             return None

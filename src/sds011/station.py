@@ -42,13 +42,13 @@ class StationData:
 
 def _get_mac() -> str:
     for interface in netifaces.interfaces():
-        if interface != 'lo':
+        if interface != "lo":
             if 17 in netifaces.ifaddresses(interface):
                 _i = netifaces.ifaddresses(interface)
-                _i = _i[17][0]['addr']
+                _i = _i[17][0]["addr"]
                 break
 
-    mac = _i.replace(':', '')
+    mac = _i.replace(":", "")
     return mac
 
 

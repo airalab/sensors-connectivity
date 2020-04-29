@@ -17,8 +17,9 @@ from sds011 import Station, LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
 class WorkerNode:
 
     def __init__(self):
-        rospy.init_node('worker', log_level=rospy.DEBUG)
-        rospy.loginfo('Launching worker node...')
+        # rospy.init_node("worker", log_level=rospy.DEBUG)
+        rospy.init_node("worker")
+        rospy.loginfo("Launching worker node...")
 
         config = self._read_configuration()
         rospy.logdebug(config)
@@ -40,7 +41,7 @@ class WorkerNode:
                                                   geo)
         self.datalog_feeder = DatalogFeeder(config["datalog"], geo)
 
-        rospy.loginfo('Worker node is launched')
+        rospy.loginfo("Worker node is launched")
 
     def _read_configuration(self) -> dict:
         config_path = rospy.get_param("~config")
@@ -56,7 +57,7 @@ class WorkerNode:
 
     def spin(self):
         def send_result():
-            rospy.loginfo('Starting process...')
+            rospy.loginfo("Starting process...")
 
             station_data = self.station.get_data()
             rospy.loginfo(f"Station Data: {station_data}")
@@ -71,5 +72,5 @@ class WorkerNode:
         rospy.spin()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     WorkerNode().spin()

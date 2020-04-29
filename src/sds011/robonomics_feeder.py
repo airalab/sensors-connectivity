@@ -74,7 +74,7 @@ class RobonomicsFeeder:
 
     def _get_deadline(self) -> UInt256:
         lifetime = 100      # blocks
-        deadline = rospy.ServiceProxy('/eth/current_block', BlockNumber)().number + lifetime
+        deadline = rospy.ServiceProxy("/eth/current_block", BlockNumber)().number + lifetime
         return UInt256(str(deadline))
 
 
