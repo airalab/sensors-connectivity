@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# ROS
+import rospy
+
+# Standart, System and Third party
+from threading import Timer
+import sentry_sdk
+import yaml
+
+# AIRA
+from robonomics_msgs.msg import Demand, Result
+
+from sds011 import Station, LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
+
+
+class WorkerNode:
+
+    def __init__(self):
+        rospy.init_node('worker', log_level=rospy.DEBUG)
+        rospy.loginfo('Launching worker node...')
+
+        config = self._read_configuration()
+        rospy.logdebug(config)
+
+        sentry_sdk.init(config["dev"]["sentry"])
+
+        port = config["general"]["port"]
+        self.interval = config["general"]["read-interval"]
+        geo = config["general"]["geo"]
+
+        result_publish = rospy.Publisher("/liability/infochan/eth/signing/result", Result, queue_size=128)
+        demand_publish = rospy.Publisher("/liability/infochan/eth/signing/demand", Demand, queue_size=128)
+
+        self.station = Station(port, self.interval)
+        self.luftdaten_feeder = LuftdatenFeeder(config["luftdaten"])
+        self.robonomics_feeder = RobonomicsFeeder(result_publish,
+                                                  demand_publish,
+                                                  config["robonomics"],
+                                                  geo)
+        self.datalog_feeder = DatalogFeeder(config["datalog"], geo)
+
+        rospy.loginfo('Worker node is launched')
+
+    def _read_configuration(self) -> dict:
+        config_path = rospy.get_param("~config")
+        rospy.logdebug(config_path)
+
+        try:
+            with open(config_path) as f:
+                return yaml.load(f.read(), Loader=yaml.FullLoader)
+        except:
+            while True:
+                rospy.logerr("Configuration file is broken or not readable!")
+                rospy.sleep(5)
+
+    def spin(self):
+        def send_result():
+            rospy.loginfo('Starting process...')
+
+            station_data = self.station.get_data()
+            rospy.loginfo(f"Station Data: {station_data}")
+
+            self.luftdaten_feeder.feed(station_data)
+            self.robonomics_feeder.feed(station_data)
+            self.datalog_feeder.feed(station_data)
+
+            Timer(self.interval, send_result).start()
+
+        send_result()
+        rospy.spin()
+
+
+if __name__ == '__main__':
+    WorkerNode().spin()
