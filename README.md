@@ -9,7 +9,7 @@ Aira source package to input data from sensors. ROS-enabled telemetry agent
 Assuming you work under [AIRA](https://wiki.robonomics.network/docs/aira-installation-on-vb/) do the following:
 
 ```
-su liability && cd
+su - liability
 git clone https://github.com/airalab/sensors-connectivity
 cd sensors-connectivity
 nix build -f release.nix
@@ -101,3 +101,16 @@ systemd.services.connectivity = {
 Technically it's not necessary to specify the `default.yaml` configuration file, but if you did changes please put the absolute path to `config` parameter.
 
 After that run `nixos-rebuild switch`. The service should be up and running
+
+## Check Your Connectivity Service 
+
+Usually log files are stored in `/var/lib/liability/.ros/log/latest//connectivity-worker-1.log`
+To view logs do:
+```
+tail -f /var/lib/liability/.ros/log/latest//connectivity-worker-1.log
+```
+
+Also you can use `journalctl` but remember output is buffered so it could take some time before output appears
+```
+journalctl -u connectivity -f
+```
