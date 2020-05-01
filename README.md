@@ -1,8 +1,11 @@
 # Add telemetry agent functions to your Aira instance  
 Aira source package to input data from sensors. ROS-enabled telemetry agent
 
-# Модуль для вашего экземлпяра Aira. Добавьте функции агента телеметрии.
-Набор программного кода для Aira, позволяющий считывать данные от сенсоров и публиковать в ROS топики. Таким образом Аира может использовать собираемые данные для формирования спроса, предложения и результата по выполненному обязательству. Также в экспериментальном режиме добавлена функция отправки хэша собранных данных в Substrate Blockchain с использованием функции datalog.  
+# Module For Your Aira Instance. Add Telemetry Agent
+
+The Aira package allows you to read data from a SDS011 sensor and publish to different output channels.
+That said Aira is able to form Demand and Result messages and a few other channels.
+Also it includes Datalog feature which is still experimental. It could be used to publish data to Substrate based blockchain by Robonomics.
 
 ## Get a Package And Build
 
