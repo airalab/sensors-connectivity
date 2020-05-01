@@ -86,7 +86,7 @@ systemd.services.connectivity = {
         Restart = "on-failure";
         StartLimitInterval = 0;
         RestartSec = 60;
-        User = "root";
+        User = "liability";
     };
 };
 ```
