@@ -114,3 +114,18 @@ Also you can use `journalctl` but remember output is buffered so it could take s
 ```
 journalctl -u connectivity -f
 ```
+
+Example of output:
+```bash
+root@hq-nuc-sds011> tail -f /var/lib/liability/.ros/log/latest/connectivity-worker-1.log                                                  ~
+[rosout][INFO] 2020-05-01 19:13:43,337: Sending data...
+[rosout][INFO] 2020-05-01 19:13:43,693: Response 201
+[rosout][INFO] 2020-05-01 19:13:43,699: RobonomicsFeeder:
+[rosout][INFO] 2020-05-01 19:13:45,517: Result published: QmceqYdyJCWhJDBgjcidyWeaZkg9e6VDExavNEY4WRtXvb
+[rosout][INFO] 2020-05-01 19:18:45,520: Starting process...
+[rosout][INFO] 2020-05-01 19:18:45,628: Station Data: {MAC: 94c6911b42d6, Uptime: 0:25:11.705348, M: {PM2.5: 1.4, PM10: 8.6}}
+[rosout][INFO] 2020-05-01 19:18:45,633: Sending data...
+[rosout][INFO] 2020-05-01 19:18:45,986: Response 201
+[rosout][INFO] 2020-05-01 19:18:45,990: RobonomicsFeeder:
+[rosout][INFO] 2020-05-01 19:18:47,870: Result published: QmXMuyyRd1YrUgw25nfX1ygk8tT8KU72BadMEgG6SbiqG5
+```
