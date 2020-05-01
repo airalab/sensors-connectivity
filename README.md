@@ -59,6 +59,13 @@ Play around with the configuration!
 
 ## Launch
 
+> **Add use liability to open port `/dev/ttyUSB0` for service**
+>
+> Most probably a user liability is not in the dialout group
+>
+> Either do `sudo adduser liability dialout` or add the line to `/etc/nixos/configuration.nix` on NixOS:
+> `users.users.liability.extraGroups = [ "dialout" ];`
+
 When you feel ready to start the program do:
 
 ```
@@ -80,7 +87,7 @@ systemd.services.connectivity = {
     environment.ROS_MASTER_URI =  "http://localhost:11311";
     script = ''
         source /var/lib/liability/sensors-connectivity/result/setup.bash \
-        && roslaunch sensors_connectivity agent.launch config:=PATH
+        && roslaunch sensors_connectivity agent.launch config:=/var/lib/liability/sensors-connectivity/config/default.yaml
     '';
     serviceConfig = {
         Restart = "on-failure";
@@ -91,15 +98,6 @@ systemd.services.connectivity = {
 };
 ```
 
-The meaning of `PATH` remains the same. After that run `nixos-rebuild switch`. The service should be up and running
+Technically it's not necessary to specify the `default.yaml` configuration file, but if you did changes please put the absolute path to `config` parameter.
 
-## Troubleshooting
-
-### Could not open port /dev/ttyUSB0
-
-Most probably a user is not in the `dialout` group
-
-Either do `sudo adduser $USER dialout` or add the line to `/etc/nixos/configuration.nix` on NixOS:
-```buildoutcfg
-users.users.liability.extraGroups = [ "dialout" ];
-``` 
+After that run `nixos-rebuild switch`. The service should be up and running
