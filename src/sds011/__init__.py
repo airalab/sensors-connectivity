@@ -2,5 +2,5 @@
 
 from .robonomics_feeder import RobonomicsFeeder, get_multihash
 from .luftdaten_feeder import LuftdatenFeeder
-from .station import Station
+from .station import Station, TCPStation
 from .datalog_feeder import DatalogFeeder

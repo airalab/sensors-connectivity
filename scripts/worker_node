@@ -11,7 +11,7 @@ import yaml
 # AIRA
 from robonomics_msgs.msg import Demand, Result
 
-from sds011 import Station, LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
+from sds011 import Station, TCPStation, LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
 
 
 class WorkerNode:
@@ -33,7 +33,17 @@ class WorkerNode:
         result_publish = rospy.Publisher("/liability/infochan/eth/signing/result", Result, queue_size=128)
         demand_publish = rospy.Publisher("/liability/infochan/eth/signing/demand", Demand, queue_size=128)
 
-        self.station = Station(port, self.interval)
+        try:
+            self.station = Station(port, self.interval)
+        except Exception as e:
+            rospy.logerr(r)
+            self.station = None
+
+        if config["general"]["address"] != "":
+            self.tcpstation = TCPStation(config["general"]["address"])
+        else:
+            self.tcpstation = None
+
         self.luftdaten_feeder = LuftdatenFeeder(config["luftdaten"])
         self.robonomics_feeder = RobonomicsFeeder(result_publish,
                                                   demand_publish,
