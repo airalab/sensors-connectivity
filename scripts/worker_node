@@ -33,16 +33,17 @@ class WorkerNode:
         result_publish = rospy.Publisher("/liability/infochan/eth/signing/result", Result, queue_size=128)
         demand_publish = rospy.Publisher("/liability/infochan/eth/signing/demand", Demand, queue_size=128)
 
-        try:
-            self.station = Station(port, self.interval)
-        except Exception as e:
-            rospy.logerr(r)
-            self.station = None
+        self.station = None
+        if port != "":
+            try:
+                self.station = Station(port, self.interval)
+            except Exception as e:
+                rospy.logerr(e)
+                self.station = None
 
+        self.tcpstation = None
         if config["general"]["address"] != "":
             self.tcpstation = TCPStation(config["general"]["address"])
-        else:
-            self.tcpstation = None
 
         self.luftdaten_feeder = LuftdatenFeeder(config["luftdaten"])
         self.robonomics_feeder = RobonomicsFeeder(result_publish,
@@ -69,12 +70,21 @@ class WorkerNode:
         def send_result():
             rospy.loginfo("Starting process...")
 
-            station_data = self.station.get_data()
-            rospy.loginfo(f"Station Data: {station_data}")
+            if self.station is not None:
+                station_data = self.station.get_data()
+                rospy.loginfo(f"Station Data: {station_data}")
 
-            self.luftdaten_feeder.feed(station_data)
-            self.robonomics_feeder.feed(station_data)
-            self.datalog_feeder.feed(station_data)
+                self.luftdaten_feeder.feed(station_data)
+                self.robonomics_feeder.feed(station_data)
+                self.datalog_feeder.feed(station_data)
+
+            if self.tcpstation is not None:
+                station_data = self.tcpstation.get_data()
+                rospy.loginfo(f"TCPStation Data: {station_data}")
+
+                self.luftdaten_feeder.feed(station_data)
+                self.robonomics_feeder.feed(station_data)
+                self.datalog_feeder.feed(station_data)
 
             Timer(self.interval, send_result).start()
 

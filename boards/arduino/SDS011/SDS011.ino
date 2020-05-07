@@ -12,8 +12,8 @@
 #define WORK_PERIOD_CMD 0x08
 #define QUERY_CMD 0x04
 
-const int timeout = 5 * 60 * 1000;  // miliseconds
-const byte work_period = 5;   // minutes
+const int timeout = 1 * 15 * 1000;  // miliseconds
+const byte work_period = 1;   // minutes
 
 SoftwareSerial mySensor(rxPin, txPin);  // RX, TX of the sensor
 
@@ -27,8 +27,8 @@ void print_cmd(byte *cmd) {
 }
 
 void execute(byte *buf) {
-  //Serial.println("Execute");
-  //print_cmd(buf);
+  Serial.println("Execute");
+  print_cmd(buf);
   mySensor.write(buf, 19);
 }
 
@@ -70,6 +70,7 @@ int get_reply(float *p25, float *p10) {
       error = 0;
     }
   }
+  Serial.println(error);
   return error;
 }
 

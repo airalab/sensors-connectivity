@@ -1,5 +1,6 @@
 import subprocess
 import time
+import rospy
 
 from sds011.station import StationData
 from .robonomics_feeder import get_multihash
