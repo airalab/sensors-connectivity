@@ -8,10 +8,8 @@ from threading import Timer
 import sentry_sdk
 import yaml
 
-# AIRA
-from robonomics_msgs.msg import Demand, Result
-
-from sds011 import Station, TCPStation, LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
+from stations import COMStation, TCPStation
+from feeders import LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
 
 
 class WorkerNode:
@@ -21,36 +19,15 @@ class WorkerNode:
         rospy.init_node("worker")
         rospy.loginfo("Launching worker node...")
 
-        config = self._read_configuration()
-        rospy.logdebug(config)
+        self.config = self._read_configuration()
+        rospy.logdebug(self.config)
 
-        sentry_sdk.init(config["dev"]["sentry"])
+        self.interval = self.config["general"]["publish_interval"]
 
-        port = config["general"]["port"]
-        self.interval = config["general"]["read-interval"]
-        geo = config["general"]["geo"]
+        sentry_sdk.init(self.config["dev"]["sentry"])
 
-        result_publish = rospy.Publisher("/liability/infochan/eth/signing/result", Result, queue_size=128)
-        demand_publish = rospy.Publisher("/liability/infochan/eth/signing/demand", Demand, queue_size=128)
-
-        self.station = None
-        if port != "":
-            try:
-                self.station = Station(port, self.interval)
-            except Exception as e:
-                rospy.logerr(e)
-                self.station = None
-
-        self.tcpstation = None
-        if config["general"]["address"] != "":
-            self.tcpstation = TCPStation(config["general"]["address"])
-
-        self.luftdaten_feeder = LuftdatenFeeder(config["luftdaten"])
-        self.robonomics_feeder = RobonomicsFeeder(result_publish,
-                                                  demand_publish,
-                                                  config["robonomics"],
-                                                  geo)
-        self.datalog_feeder = DatalogFeeder(config["datalog"], geo)
+        self.stations = self._populate_stations()
+        self.feeders = self._populate_feeders()
 
         rospy.loginfo("Worker node is launched")
 
@@ -61,30 +38,43 @@ class WorkerNode:
         try:
             with open(config_path) as f:
                 return yaml.load(f.read(), Loader=yaml.FullLoader)
-        except:
+        except Exception as e:
             while True:
                 rospy.logerr("Configuration file is broken or not readable!")
+                rospy.logerr(e)
                 rospy.sleep(5)
+
+    def _populate_stations(self) -> []:
+        s = []
+        try:
+            s.append(COMStation(self.config))
+        except Exception as e:
+            rospy.logerr(e)
+
+        try:
+            s.append(TCPStation(self.config))
+        except Exception as e:
+            rospy.logerr(e)
+
+        return s
+
+    def _populate_feeders(self) -> []:
+        f = [LuftdatenFeeder(self.config),
+             RobonomicsFeeder(self.config),
+             DatalogFeeder(self.config)]
+
+        return f
 
     def spin(self):
         def send_result():
             rospy.loginfo("Starting process...")
 
-            if self.station is not None:
-                station_data = self.station.get_data()
+            for s in self.stations:
+                station_data = s.get_data()
                 rospy.loginfo(f"Station Data: {station_data}")
 
-                self.luftdaten_feeder.feed(station_data)
-                self.robonomics_feeder.feed(station_data)
-                self.datalog_feeder.feed(station_data)
-
-            if self.tcpstation is not None:
-                station_data = self.tcpstation.get_data()
-                rospy.loginfo(f"TCPStation Data: {station_data}")
-
-                self.luftdaten_feeder.feed(station_data)
-                self.robonomics_feeder.feed(station_data)
-                self.datalog_feeder.feed(station_data)
+                for f in self.feeders:
+                    f.feed(station_data)
 
             Timer(self.interval, send_result).start()
 

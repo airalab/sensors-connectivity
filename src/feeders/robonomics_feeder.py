@@ -1,5 +1,7 @@
-import json
+from feeders import IFeeder
+from stations import StationData
 
+import json
 import rospy
 from std_msgs.msg import String
 
@@ -8,8 +10,6 @@ from ethereum_common.msg import Address, UInt256
 from ethereum_common.srv import BlockNumber
 from ipfs_common.msg import Multihash
 from ipfs_common.ipfs_rosbag import IpfsRosBag
-
-from sds011.station import StationData
 
 
 def get_multihash(data: StationData, geo: str = "") -> Multihash:
@@ -27,24 +27,20 @@ def get_multihash(data: StationData, geo: str = "") -> Multihash:
     return bag.multihash
 
 
-class RobonomicsFeeder:
-    def __init__(self,
-                 result_publisher: rospy.Publisher,
-                 demand_publisher: rospy.Publisher,
-                 config: dict,
-                 geo: str = ""):
-        self.config = config
+class RobonomicsFeeder(IFeeder):
+    def __init__(self, config: dict):
+        super().__init__(config)
 
-        self.result_publisher = result_publisher
-        self.demand_publisher = demand_publisher
-        self.geo = geo
+        self.result_publisher = rospy.Publisher("/liability/infochan/eth/signing/result", Result, queue_size=128)
+        self.demand_publisher = rospy.Publisher("/liability/infochan/eth/signing/demand", Demand, queue_size=128)
+        self.geo = config["general"]["geo"]
 
     def feed(self, data: StationData):
-        if self.config["enable"]:
+        if self.config["robonomics"]["enable"]:
             rospy.loginfo("RobonomicsFeeder:")
             if self.config["result"]:
                 self._result(data)
-            if self.config["demand"]:
+            if self.config["robonomics"]["demand"]:
                 self._demand(data)
 
     def _result(self, data: StationData):
@@ -59,13 +55,13 @@ class RobonomicsFeeder:
     def _demand(self, data: StationData):
         demand = Demand()
 
-        demand.model = Multihash(self.config["model"])
+        demand.model = Multihash(self.config["robonomics"]["model"])
         demand.objective = get_multihash(data, self.geo)
-        demand.token = Address(self.config["token"])
+        demand.token = Address(self.config["robonomics"]["token"])
         demand.cost = UInt256("0")
-        demand.lighthouse = Address(self.config["lighthouse"])
-        demand.validator = Address(self.config["validator"])
-        demand.validatorFee = UInt256(str(self.config["validatorFee"]))
+        demand.lighthouse = Address(self.config["robonomics"]["lighthouse"])
+        demand.validator = Address(self.config["robonomics"]["validator"])
+        demand.validatorFee = UInt256(str(self.config["robonomics"]["validatorFee"]))
         demand.deadline = self._get_deadline()
 
         self.demand_publisher.publish(demand)

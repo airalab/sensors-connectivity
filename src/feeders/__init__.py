@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .robonomics_feeder import RobonomicsFeeder, get_multihash
+from .ifeeder import IFeeder
+from .robonomics_feeder import RobonomicsFeeder
 from .luftdaten_feeder import LuftdatenFeeder
-from .station import Station, TCPStation
 from .datalog_feeder import DatalogFeeder

@@ -1,19 +1,33 @@
 import requests
 import rospy
-from sds011.station import StationData
+from feeders import IFeeder
+from stations import StationData, Measurement
 
 
-class LuftdatenFeeder:
+class LuftdatenFeeder(IFeeder):
     def __init__(self, config):
+        super().__init__(config)
         self.apiServerUrl = "https://api.luftdaten.info/v1/push-sensor-data/"
-        self.enable = config["enable"]
+        self.enable = config["luftdaten"]["enable"]
 
     def feed(self, data: StationData):
         if self.enable:
             sensor_id = f"raspi-{data.mac}"
-            sensor_data = data.to_json()
+            sensor_data = self._payload(data.measurement)
 
             self._post_data(sensor_id, 1, sensor_data)
+
+    def _payload(self, meas: Measurement) -> dict:
+        ret = {
+            "software_version": self.version,
+            "sensordatavalues": [
+                {"value_type": "P1", "value": meas.pm10},
+                {"value_type": "P2", "value": meas.pm25}
+            ]
+        }
+
+        rospy.logdebug(ret)
+        return ret
 
     def _post_data(self, sensor_id: str, pin: int, data: dict):
         headers = {
