@@ -1,4 +1,7 @@
 """This module provides an abstraction for the SDS011 air partuclate densiry sensor.
+
+The code is borrowed from here https://github.com/ikalchev/py-sds011
+Thanks @ikalchev for work
 """
 import struct
 import serial

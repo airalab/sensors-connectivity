@@ -2,7 +2,10 @@ import json
 import select
 import threading
 import socket
-from queue import LifoQueue
+import time
+
+import rospy
+from collections import deque
 from stations import IStation, StationData, Measurement
 from .comstation import BROADCASTER_VERSION
 
@@ -12,7 +15,7 @@ class ReadingThread(threading.Thread):
     INPUTS = list()
     OUTPUTS = list()
 
-    def __init__(self, address: str, q: LifoQueue):
+    def __init__(self, address: str, q: deque):
         super().__init__()
 
         self.buffer = bytearray()
@@ -54,7 +57,8 @@ class ReadingThread(threading.Thread):
                         if b'\n' in self.buffer:
                             index = self.buffer.find(b'\n')
                             line = self.buffer[:index]
-                            self.q.put(line.decode("utf-8", "backslashreplace"))
+                            timestamp = int(time.time())
+                            self.q.append((line.decode("utf-8", "backslashreplace"), timestamp))
                             self.buffer = self.buffer[index + 1:]
 
                     if resource not in self.OUTPUTS:
@@ -81,17 +85,28 @@ class ReadingThread(threading.Thread):
             while self.INPUTS:
                 readables, writables, exceptional = select.select(self.INPUTS, self.OUTPUTS, self.INPUTS)
                 self.handle_readables(readables, server_socket)
+                time.sleep(2)   # had to limit cpu usage
         except KeyboardInterrupt:
             self.clear_resource(server_socket)
             rospy.loginfo("Server stopped!")
 
 
 class TCPStation(IStation):
+    """
+    Reads data from a TCP port
+
+    Expected format of messages is as follows:
+    b'message\n'b'message\n'... etc
+    
+    1. Every message must ends with a newline character
+    2. Every message must be valid json string
+    """
+
     def __init__(self, config: dict):
         super().__init__(config)
         self.version = f"airalab-rpi-broadcaster-{BROADCASTER_VERSION}"
 
-        self.q = LifoQueue()
+        self.q = deque(maxlen=1)  # LifoQueue(maxsize=1)
         self.server = ReadingThread(self.config["tcpstation"]["address"], self.q)
         self.server.start()
 
@@ -99,11 +114,12 @@ class TCPStation(IStation):
         return f"{{Version: {self.version}, Start: {self.start_time}, MAC: {self.mac_address}}}"
 
     def get_data(self) -> StationData:
-        if self.q.empty():
-            meas = Measurement()
+        if self.q:  # self.q.empty():
+            v = self.q[-1]
+            values = json.loads(v[0])
+            meas = Measurement(values["pm25"], values["pm10"], v[1])
         else:
-            values = json.loads(self.q.get(timeout=3))
-            meas = Measurement(values["pm25"], values["pm10"])
+            meas = Measurement()
 
         return StationData(
             self.version,

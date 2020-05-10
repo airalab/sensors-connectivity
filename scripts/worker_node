@@ -13,6 +13,7 @@ from feeders import LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
 
 
 class WorkerNode:
+    """The main class that initialize stations and feeders and launches the loop."""
 
     def __init__(self):
         # rospy.init_node("worker", log_level=rospy.DEBUG)
@@ -32,6 +33,10 @@ class WorkerNode:
         rospy.loginfo("Worker node is launched")
 
     def _read_configuration(self) -> dict:
+        """Internal method
+
+        Loads configuration.
+        """
         config_path = rospy.get_param("~config")
         rospy.logdebug(config_path)
 
@@ -48,6 +53,11 @@ class WorkerNode:
                 rospy.sleep(5)
 
     def _populate_stations(self) -> []:
+        """Initialize stations
+
+        If you make a new one, add initialization here.
+        Don't forget to append an instance to `s`
+        """
         s = []
         try:
             s.append(COMStation(self.config))
@@ -62,6 +72,10 @@ class WorkerNode:
         return s
 
     def _populate_feeders(self) -> []:
+        """Initialize feeders
+
+        If you make a new one, add initialization here.
+        """
         f = [LuftdatenFeeder(self.config),
              RobonomicsFeeder(self.config),
              DatalogFeeder(self.config)]
@@ -70,6 +84,7 @@ class WorkerNode:
 
     def spin(self):
         def send_result():
+            """Main loop"""
             rospy.loginfo("Starting process...")
 
             for s in self.stations:

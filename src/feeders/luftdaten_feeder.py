@@ -5,6 +5,12 @@ from stations import StationData, Measurement
 
 
 class LuftdatenFeeder(IFeeder):
+    """
+    Publishes a measurement to luftdaten.info site
+
+    It's required to register your sensor on http://meine.luftdaten.info/sensors
+    """
+
     def __init__(self, config):
         super().__init__(config)
         self.apiServerUrl = "https://api.luftdaten.info/v1/push-sensor-data/"
