@@ -37,7 +37,10 @@ class WorkerNode:
 
         try:
             with open(config_path) as f:
-                return yaml.load(f.read(), Loader=yaml.FullLoader)
+                content = f.read()
+                config = yaml.load(content, Loader=yaml.FullLoader)
+                rospy.loginfo(f"Configuration dict: {content}")
+                return config
         except Exception as e:
             while True:
                 rospy.logerr("Configuration file is broken or not readable!")
@@ -49,12 +52,12 @@ class WorkerNode:
         try:
             s.append(COMStation(self.config))
         except Exception as e:
-            rospy.logerr(e)
+            rospy.logerr(f"Error COMStation: {e}")
 
         try:
             s.append(TCPStation(self.config))
         except Exception as e:
-            rospy.logerr(e)
+            rospy.logerr(f"Error TCPStation: {e}")
 
         return s
 

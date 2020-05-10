@@ -1,4 +1,5 @@
 from stations import *
+import time
 from drivers import SDS011
 
 BROADCASTER_VERSION = "v0.1.0"
@@ -6,12 +7,13 @@ BROADCASTER_VERSION = "v0.1.0"
 
 class COMStation(IStation):
     def __init__(self, config: dict):
-        # sds_sensor_port: str = "/dev/ttyUSB0", work_time: int = 300):
         super().__init__(config)
         self.version = f"airalab-rpi-broadcaster-{BROADCASTER_VERSION}"
 
         self.sensor = SDS011(self.config["comstation"]["port"])
-        self.sensor.set_work_period(work_time=int(self.config["comstation"]["work_period"]))
+
+        work_period = int(self.config["general"]["publish_interval"] / 60)
+        self.sensor.set_work_period(work_time=work_period)
 
     def __str__(self):
         return f"{{Version: {self.version}, Start: {self.start_time}, MAC: {self.mac_address}}}"

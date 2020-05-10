@@ -13,13 +13,13 @@ class LuftdatenFeeder(IFeeder):
     def feed(self, data: StationData):
         if self.enable:
             sensor_id = f"raspi-{data.mac}"
-            sensor_data = self._payload(data.measurement)
+            sensor_data = self._payload(data.version, data.measurement)
 
             self._post_data(sensor_id, 1, sensor_data)
 
-    def _payload(self, meas: Measurement) -> dict:
+    def _payload(self, version: str, meas: Measurement) -> dict:
         ret = {
-            "software_version": self.version,
+            "software_version": version,
             "sensordatavalues": [
                 {"value_type": "P1", "value": meas.pm10},
                 {"value_type": "P2", "value": meas.pm25}

@@ -16,8 +16,8 @@ def get_multihash(data: StationData, geo: str = "") -> Multihash:
     rospy.logdebug(data)
     rospy.logdebug(geo)
     d = {
-        "PM2.5": data.meas.pm25,
-        "PM10": data.meas.pm10
+        "PM2.5": data.measurement.pm25,
+        "PM10": data.measurement.pm10
     }
     topics = {
         "/data": [String(json.dumps(d))],
@@ -38,7 +38,7 @@ class RobonomicsFeeder(IFeeder):
     def feed(self, data: StationData):
         if self.config["robonomics"]["enable"]:
             rospy.loginfo("RobonomicsFeeder:")
-            if self.config["result"]:
+            if self.config["robonomics"]["result"]:
                 self._result(data)
             if self.config["robonomics"]["demand"]:
                 self._demand(data)

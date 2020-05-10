@@ -1,10 +1,10 @@
 import time
-import dataclasses as dataclass
+from dataclasses import dataclass
 import netifaces
 from datetime import timedelta
 
 
-# @dataclass
+@dataclass
 class Measurement:
     pm25: float = 0
     pm10: float = 0
@@ -13,7 +13,7 @@ class Measurement:
         return f"{{PM2.5: {self.pm25}, PM10: {self.pm10}}}"
 
 
-# @dataclass
+@dataclass
 class StationData:
     version: str
     mac: str
@@ -22,7 +22,7 @@ class StationData:
 
     def __str__(self):
         uptime = str(timedelta(seconds=self.uptime))
-        return f"{{MAC: {self.mac}, Uptime: {uptime}, M: {self.meas}}}"
+        return f"{{MAC: {self.mac}, Uptime: {uptime}, M: {self.measurement}}}"
 
 
 def _get_mac() -> str:
