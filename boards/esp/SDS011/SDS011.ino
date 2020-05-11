@@ -12,20 +12,17 @@ const char* password = STAPSK;
 const char* host = "HOST";
 const uint16_t port = 31313;
 
-#define rxPin 2
-#define txPin 3
+#define rxPin 2     // TX of the sensor is connected to RX of the board
+#define txPin 3     // and vice versa sensor's rx is connected to boards's tx
 
 #define HEAD 0xAA
 #define TAIL 0xAB
 #define CMD_ID 0xB4
-#define REPORT_MODE_CMD 0x02
 #define WRITE 0x01
-#define PASSIVE 0x01
+#define REPORT_MODE_CMD 0x02
 #define WORK_PERIOD_CMD 0x08
-#define QUERY_CMD 0x04
 
-const int timeout = 5 * 60 * 1000;  // miliseconds
-const byte work_period = 5;   // minutes
+const byte work_period = 5;   // 0 <= work_period <= 30 minutes
 
 HardwareSerial mySensor(1);
 
@@ -45,7 +42,6 @@ void execute(byte *buf) {
 }
 
 int get_reply(float *p25, float *p10) {
-  //Serial.println("get reply");
   byte buffer;
   int value;
   int len = 0;
@@ -55,11 +51,8 @@ int get_reply(float *p25, float *p10) {
   int checksum_ok = 0;
   int error = 1;
   while (mySensor.available() > 0) {
-  // while(len < 10) {
-    //Serial.println("Start while");
     buffer = mySensor.read();
     value = int(buffer);
-    //Serial.println(value);
     switch (len) {
       case (0): if (value != 170) { len = -1; }; break;
       case (1): if (value != 192) { len = -1; }; break;
@@ -91,35 +84,22 @@ byte checksum(byte *cmd) {
     c += (int) cmd[i];
   }
 
-  //Serial.println(c % 256);
   return (byte)(c % 256);
 }
 
-void set_report_mode() {
-  //Serial.println("set report mode");
-  /* byte cmd[] = {
-    HEAD, CMD_ID, REPORT_MODE_CMD, WRITE,
-    PASSIVE, 0x0, 0x0, 0x0,
-    0x0, 0x0, 0x0, 0x0,
-    0x0, 0x0, 0x0, 0xFF, 0xFF, 0x0, TAIL
-  }; */
+void set_active_mode() {
   byte cmd[] = {
-    HEAD, CMD_ID, REPORT_MODE_CMD, 0x0,
+    HEAD, CMD_ID, REPORT_MODE_CMD, WRITE,
     0x0, 0x0, 0x0, 0x0,
     0x0, 0x0, 0x0, 0x0,
     0x0, 0x0, 0x0, 0xFF, 0xFF, 0x0, TAIL
   };
 
   cmd[17] = checksum(cmd);
-
   execute(cmd);
-  float *pm25, *pm10;
-  get_reply(pm25, pm10);
 }
 
 void set_work_period() {
-  //Serial.println("Set work period");
-
   byte cmd[] = {
     HEAD, CMD_ID, WORK_PERIOD_CMD, WRITE,
     work_period, 0, 0, 0,
@@ -128,10 +108,7 @@ void set_work_period() {
   };
 
   cmd[17] = checksum(cmd);
-
   execute(cmd);
-  float *pm25, *pm10;
-  get_reply(pm25, pm10);
 }
 
 void setup() {
@@ -157,22 +134,11 @@ void setup() {
   pinMode(txPin, OUTPUT);
   mySensor.begin(9600, SERIAL_8N1, rxPin, txPin);
 
-  set_report_mode();
+  set_active_mode();
   set_work_period();
 }
 
 void loop() {
-
-  byte cmd[] = {
-    HEAD, CMD_ID, QUERY_CMD, 0,
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    0, 0, 0, 0xFF, 0xFF, 0x0, TAIL
-  };
-
-  cmd[17] = checksum(cmd);
-
-  execute(cmd);
   float pm25, pm10;
   int error = get_reply(&pm25, &pm10);
 
@@ -198,5 +164,5 @@ void loop() {
     client.stop();
   }
 
-  delay(timeout);
+  delay(500);
 }

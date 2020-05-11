@@ -97,7 +97,7 @@ class TCPStation(IStation):
 
     Expected format of messages is as follows:
     b'message\n'b'message\n'... etc
-    
+
     1. Every message must ends with a newline character
     2. Every message must be valid json string
     """
