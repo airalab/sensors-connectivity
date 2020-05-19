@@ -3,24 +3,29 @@ import select
 import threading
 import socket
 import time
+import nacl.signing
 
 import rospy
 from collections import deque
 from stations import IStation, StationData, Measurement
 from .comstation import BROADCASTER_VERSION
+from drivers.payload_pb2 import Header, Body
 
 
 class ReadingThread(threading.Thread):
     MAX_CONNECTIONS = 10
     INPUTS = list()
     OUTPUTS = list()
+    session = dict()
 
-    def __init__(self, address: str, q: deque):
+    def __init__(self, config: dict, q: deque):
         super().__init__()
 
         self.buffer = bytearray()
         self.q = q
-        self.server_address = self._extract_ip_and_port(address)
+        self.server_address = self._extract_ip_and_port(config["address"])
+        self.acl = config["acl"]
+        rospy.loginfo(self.acl)
 
     def _extract_ip_and_port(self, address: str) -> tuple:
         # assume the address looks like IP:PORT where IP is xx.xx.xx.xx
@@ -35,42 +40,108 @@ class ReadingThread(threading.Thread):
 
         return server
 
+    def check_acl(self, data: Header) -> (bytes, int):
+        public = data.public_key
+        codec = data.model
+
+        pk = public.hex()
+
+        print(f"Public: {pk}, codec: {codec}")
+        if pk in self.acl:
+            return public, codec
+
+        return "", 0
+
+    def parse_data(self, data: bytes, signature: bytes, pk: bytes) -> str:
+        print("Parsing data...")
+        print(f"Data: {data}")
+        print(f"Signature: {signature}")
+        print(f"Public key: {pk}")
+
+
+        public_key = nacl.signing.VerifyKey(pk)
+
+        try:
+            public_key.verify(data, signature)
+            return "Cool"
+        except:
+            return "Broken"
+
+    def frame_length(self, peer: tuple) -> int:
+        if self.session[peer][1] == 2:
+            return 32
+
+        return 0
+
     def handle_readables(self, readables, server):
         for resource in readables:
             if resource is server:
                 connection, client_address = resource.accept()
                 connection.setblocking(0)
                 self.INPUTS.append(connection)
-                rospy.loginfo("new connection from {address}".format(address=client_address))
+                print("new connection from {address}".format(address=client_address))
             else:
                 data = ""
-                try:
-                    data = resource.recv(1024)
-                except ConnectionResetError:
-                    pass
 
-                if data:
-                    rospy.loginfo("getting data: {data}".format(data=str(data)))
-                    self.buffer.extend(data)
+                print("Peer name: " + str(resource.getpeername()))
 
-                    while len(self.buffer) > 1:
-                        if b'\n' in self.buffer:
-                            index = self.buffer.find(b'\n')
-                            line = self.buffer[:index]
-                            timestamp = int(time.time())
-                            self.q.append((line.decode("utf-8", "backslashreplace"), timestamp))
-                            self.buffer = self.buffer[index + 1:]
+                peer = resource.getpeername()
+                if peer not in self.session:
+                    print("Unknown peer yet")
+                    data = resource.recv(36)
 
-                    if resource not in self.OUTPUTS:
-                        self.OUTPUTS.append(resource)
+                    header = Header()
+                    header.ParseFromString(data)
+
+                    known, codec = self.check_acl(header)
+
+                    if known:
+                        self.session[peer] = (known, codec)
+                        print("Welcome to the party: " + str(self.session))
                 else:
-                    self.clear_resource(resource)
+                    print("I know you buddy!")
+                    msg_len = self.frame_length(peer)
+                    data = resource.recv(msg_len)
+
+                    if data:
+
+                        print("getting data: {data}".format(data=str(data)))
+                        body = Body()
+                        body.ParseFromString(data)
+
+                        public_id = self.session[peer][0]
+                        signature = resource.recv(64)
+
+                        response = self.parse_data(data, signature, public_id)
+                        print(f"Response: {response}")
+
+                        if response == "Cool":
+                            m = Measurement(
+                                public_id.hex(),
+                                self.session[peer][1],
+                                body.pm25,
+                                body.pm10,
+                                body.geo,
+                                int(time.time())
+                            )
+                            rospy.loginfo(m)
+                            self.q.append(m)
+                        else:
+                            print("Something bad happend")
+
+                        if resource not in self.OUTPUTS:
+                            self.OUTPUTS.append(resource)
+                    else:
+                        self.clear_resource(resource)
 
     def clear_resource(self, resource):
         if resource in self.OUTPUTS:
             self.OUTPUTS.remove(resource)
         if resource in self.INPUTS:
             self.INPUTS.remove(resource)
+        if resource.getpeername() in self.session:
+            del self.session[resource.getpeername()]
+
         resource.close()
 
         rospy.loginfo('closing connection ' + str(resource))
@@ -95,11 +166,6 @@ class TCPStation(IStation):
     """
     Reads data from a TCP port
 
-    Expected format of messages is as follows:
-    b'message\n'b'message\n'... etc
-
-    1. Every message must ends with a newline character
-    2. Every message must be valid json string
     """
 
     def __init__(self, config: dict):
@@ -107,19 +173,11 @@ class TCPStation(IStation):
         self.version = f"airalab-rpi-broadcaster-{BROADCASTER_VERSION}"
 
         self.q = deque(maxlen=1)  # LifoQueue(maxsize=1)
-        self.server = ReadingThread(self.config["tcpstation"]["address"], self.q)
+        self.server = ReadingThread(self.config["tcpstation"], self.q)
         self.server.start()
 
-    def __str__(self):
-        return f"{{Version: {self.version}, Start: {self.start_time}, MAC: {self.mac_address}}}"
-
     def get_data(self) -> StationData:
-        if self.q:  # self.q.empty():
-            v = self.q[-1]
-            values = json.loads(v[0])
-            meas = Measurement(values["pm25"], values["pm10"], v[1])
-        else:
-            meas = Measurement()
+        meas = self.q[-1] if self.q else Measurement()
 
         return StationData(
             self.version,
@@ -127,3 +185,4 @@ class TCPStation(IStation):
             time.time() - self.start_time,
             meas
         )
+

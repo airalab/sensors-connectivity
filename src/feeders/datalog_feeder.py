@@ -45,7 +45,7 @@ class DatalogFeeder(IFeeder):
         self.last_time = time.time()
         self.buffer = set()
         self.interval = self.config["datalog"]["dump_interval"]
-        self.geo = self.config["general"]["geo"]
+        self.geo = "" # self.config["general"]["geo"]
 
     def feed(self, data: StationData):
         if self.config["datalog"]["enable"]:
@@ -61,6 +61,7 @@ class DatalogFeeder(IFeeder):
                 rospy.loginfo("Still collecting measurements...")
 
     def _to_datalog(self, ipfs_hash: str):
+        rospy.loginfo(ipfs_hash)
         prog_path = [self.config["datalog"]["path"], "io", "write", "datalog",
                      "-s", self.config["datalog"]["suri"], "--remote", self.config["datalog"]["remote"]]
         output = subprocess.run(prog_path, stdout=subprocess.PIPE, input=ipfs_hash.encode(),

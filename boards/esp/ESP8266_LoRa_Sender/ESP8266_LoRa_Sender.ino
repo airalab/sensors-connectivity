@@ -1,33 +1,24 @@
-// #include <HardwareSerial.h>
 #include <SoftwareSerial.h>
-#include <ESP8266WiFi.h>
 
-#ifndef STASSID
-#define STASSID "your-ssid"
-#define STAPSK  "your-password"
-#endif
+#define sensorRxPin D2     // TX of the sensor is connected to RX of Arduino
+#define sensorTxPin D3     // and vice versa sensor's rx is connected to arduino's tx
 
-const char* ssid     = STASSID;
-const char* password = STAPSK;
-
-const char* host = "HOST";
-const uint16_t port = 31313;
-
-#define rxPin D2     // TX of the sensor is connected to RX of the board
-#define txPin D3     // and vice versa sensor's rx is connected to boards's tx
+#define loraRxPin D5
+#define loraTxPin D6
 
 #define HEAD 0xAA
 #define TAIL 0xAB
 #define CMD_ID 0xB4
-#define WRITE 0x01
 #define REPORT_MODE_CMD 0x02
+#define WRITE 0x01
 #define WORK_PERIOD_CMD 0x08
 
-const byte work_period = 5;   // 0 <= work_period <= 30 minutes
+const byte work_period = 5;         // minutes
 
-// HardwareSerial mySensor(0);
-SoftwareSerial mySensor(rxPin, txPin);
+SoftwareSerial mySensor(sensorRxPin, sensorTxPin);  // RX, TX of the sensor
+SoftwareSerial lora(loraRxPin, loraTxPin);
 
+// For debug perpose
 void print_cmd(byte *cmd) {
   Serial.print("[ ");
   for(int i = 0; i < 19; i++) {
@@ -37,12 +28,14 @@ void print_cmd(byte *cmd) {
   Serial.println("]");
 }
 
+// Basically sends a command to the sensor
 void execute(byte *buf) {
   //Serial.println("Execute");
   //print_cmd(buf);
   mySensor.write(buf, 19);
 }
 
+// Reads data from the sensor and extracts values
 int get_reply(float *p25, float *p10) {
   byte buffer;
   int value;
@@ -67,19 +60,22 @@ int get_reply(float *p25, float *p10) {
       case (8): if (value == (checksum_is & 255)) { checksum_ok = 1; } else { len = -1; }; break;
       case (9): if (value != 171) { len = -1; }; break;
     }
-    //Serial.println(len);
     len++;
     if (len == 10 && checksum_ok == 1) {
-      //Serial.println("Returning values");
       *p10 = (float)pm10_serial/10.0;
       *p25 = (float)pm25_serial/10.0;
       len = 0; checksum_ok = 0; pm10_serial = 0.0; pm25_serial = 0.0; checksum_is = 0;
       error = 0;
     }
   }
+
   return error;
 }
 
+// Calculates checksum for a command
+// In this particular code there are only 2 hardcoded commands:
+// set active mode and set working period
+// So we could get rid of this function
 byte checksum(byte *cmd) {
   int c = 0;
   for(int i = 2; i < 17; i++) {
@@ -98,6 +94,7 @@ void set_active_mode() {
   };
 
   cmd[17] = checksum(cmd);
+
   execute(cmd);
 }
 
@@ -110,6 +107,7 @@ void set_work_period() {
   };
 
   cmd[17] = checksum(cmd);
+
   execute(cmd);
 }
 
@@ -119,22 +117,11 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  pinMode(rxPin, INPUT);
-  pinMode(txPin, OUTPUT);
-  // mySensor.begin(9600, SERIAL_8N1);
+  pinMode(sensorRxPin, INPUT);
+  pinMode(sensorTxPin, OUTPUT);
+  pinMode(loraRxPin, INPUT);
+  pinMode(loraTxPin, OUTPUT);
+  lora.begin(9600);
   mySensor.begin(9600);
 
   set_active_mode();
@@ -151,20 +138,9 @@ void loop() {
     buff += ",\"pm10\":";
     buff += String(pm10);
     buff += "}";
+
     Serial.println(buff);
-
-    WiFiClient client;
-    if (!client.connect(host, port)) {
-      Serial.println("connection failed");
-      delay(5000);
-      return;
-    }
-
-    if (client.connected()) {
-      client.println(buff);
-    }
-
-    client.stop();
+    lora.println(buff);
   }
 
   delay(500);

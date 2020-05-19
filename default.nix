@@ -18,6 +18,9 @@ mkRosPackage rec {
     requests
     sentry-sdk
     netifaces
+    protobuf
+    pynacl
+    ipfshttpclient
   ];
 
   meta = with stdenv.lib; {

@@ -3,6 +3,7 @@ from stations import StationData, Measurement
 
 import json
 import rospy
+import ipfshttpclient
 from std_msgs.msg import String
 
 from robonomics_msgs.msg import Demand, Result
@@ -49,6 +50,22 @@ def _get_multihash(data: StationData, geo: str = "") -> Multihash:
     bag = IpfsRosBag(messages=topics)
     return bag.multihash
 
+def _to_pubsub_message(data: StationData) -> str:
+    meas = data.measurement
+
+    message = {}
+    message[meas.public] = {
+        "model": meas.model,
+        "timestamp": meas.timestamp,
+        "measurement": {
+            "pm25": meas.pm25,
+            "pm10": meas.pm10,
+            "geo": meas.geo
+        }
+    }
+
+    return json.dumps(message)
+
 
 class RobonomicsFeeder(IFeeder):
     """
@@ -62,51 +79,17 @@ class RobonomicsFeeder(IFeeder):
     def __init__(self, config: dict):
         super().__init__(config)
 
-        self.result_publisher = rospy.Publisher("/liability/infochan/eth/signing/result", Result, queue_size=128)
-        self.demand_publisher = rospy.Publisher("/liability/infochan/eth/signing/demand", Demand, queue_size=128)
-        self.geo = config["general"]["geo"]
+        # self.result_publisher = rospy.Publisher("/liability/infochan/eth/signing/result", Result, queue_size=128)
+        # self.demand_publisher = rospy.Publisher("/liability/infochan/eth/signing/demand", Demand, queue_size=128)
+        # self.geo = "" # config["general"]["geo"]
         self.published_data = LRU()
+        self.ipfs_client = ipfshttpclient.connect()
+        self.topic = config["robonomics"]["ipfs_topic"]
 
     def feed(self, data: StationData):
         if self.config["robonomics"]["enable"]:
             rospy.loginfo("RobonomicsFeeder:")
-            if self.config["robonomics"]["result"]:
-                self._result(data)
-            if self.config["robonomics"]["demand"]:
-                self._demand(data)
 
-    def _result(self, data: StationData):
-        res = Result()
-        res.liability = Address("0x0000000000000000000000000000000000000000")
+            pubsub_payload = _to_pubsub_message(data)
+            self.ipfs_client.pubsub.publish(self.topic, pubsub_payload)
 
-        if data.measurement in self.published_data:
-            res.result = self.published_data[data.measurement]
-        else:
-            res.result = _get_multihash(data, self.geo)
-            self.published_data[data.measurement] = res.result
-
-        res.success = True
-
-        self.result_publisher.publish(res)
-        rospy.loginfo(f"Result published: {res.result.multihash}")
-
-    def _demand(self, data: StationData):
-        demand = Demand()
-
-        demand.model = Multihash(self.config["robonomics"]["model"])
-        demand.objective = _get_multihash(data, self.geo)
-        demand.token = Address(self.config["robonomics"]["token"])
-        demand.cost = UInt256("0")
-        demand.lighthouse = Address(self.config["robonomics"]["lighthouse"])
-        demand.validator = Address(self.config["robonomics"]["validator"])
-        demand.validatorFee = UInt256(str(self.config["robonomics"]["validatorFee"]))
-        demand.deadline = self._get_deadline()
-
-        self.demand_publisher.publish(demand)
-        rospy.loginfo(f"Demand published: {demand.objective.multihash}")
-        rospy.logdebug(demand)
-
-    def _get_deadline(self) -> UInt256:
-        lifetime = 100  # blocks
-        deadline = rospy.ServiceProxy("/eth/current_block", BlockNumber)().number + lifetime
-        return UInt256(str(deadline))

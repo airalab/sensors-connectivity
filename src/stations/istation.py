@@ -11,12 +11,15 @@ class Measurement:
     Represents a single measurement
     """
 
+    public: str = ""
+    model: int = 0
     pm25: float = 0
     pm10: float = 0
+    geo: str = ""
     timestamp: int = 0
 
     def __str__(self):
-        return f"{{PM2.5: {self.pm25}, PM10: {self.pm10}, timestamp: {self.timestamp}}}"
+        return f"{{Public: {self.public}, PM2.5: {self.pm25}, PM10: {self.pm10}, geo: {self.geo}, timestamp: {self.timestamp}}}"
 
 
 @dataclass

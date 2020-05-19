@@ -1,4 +1,5 @@
 import threading
+import rospy
 
 from stations import *
 import time
@@ -34,12 +35,10 @@ class COMStation(IStation):
         self.q = deque(maxlen=1)
         threading.Thread(target=_read_data_thread, args=(self.sensor, self.q, work_period)).start()
 
-    def __str__(self):
-        return f"{{Version: {self.version}, Start: {self.start_time}, MAC: {self.mac_address}}}"
-
     def get_data(self) -> StationData:
         if self.q:
             values = self.q[-1]
+            # rospy.loginfo(values)
             pm = values[0]
             meas = Measurement(pm[0], pm[1], values[1])
         else:
