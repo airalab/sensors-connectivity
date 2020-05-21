@@ -7,6 +7,8 @@ import struct
 import serial
 
 
+SDS011_MODEL = 2    # unique model for the driver
+
 # TODO: Commands against the sensor should read the reply and return success status.
 class SDS011(object):
     """Provides method to read from a SDS011 air particlate density sensor

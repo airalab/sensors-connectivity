@@ -18,7 +18,7 @@ mkRosPackage rec {
     requests
     sentry-sdk
     netifaces
-    protobuf
+    # protobuf
     pynacl
     ipfshttpclient
   ];

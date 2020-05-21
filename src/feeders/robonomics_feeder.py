@@ -60,7 +60,7 @@ def _to_pubsub_message(data: StationData) -> str:
         "measurement": {
             "pm25": meas.pm25,
             "pm10": meas.pm10,
-            "geo": meas.geo
+            "geo": "{},{}".format(meas.geo_lat, meas.geo_lon)
         }
     }
 
@@ -88,8 +88,8 @@ class RobonomicsFeeder(IFeeder):
 
     def feed(self, data: StationData):
         if self.config["robonomics"]["enable"]:
-            rospy.loginfo("RobonomicsFeeder:")
-
-            pubsub_payload = _to_pubsub_message(data)
-            self.ipfs_client.pubsub.publish(self.topic, pubsub_payload)
+            if data.measurement.public:
+                pubsub_payload = _to_pubsub_message(data)
+                rospy.loginfo(f"RobonomicsFeeder: {pubsub_payload}")
+                self.ipfs_client.pubsub.publish(self.topic, pubsub_payload)
 

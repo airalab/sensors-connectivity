@@ -2,6 +2,7 @@ import json
 import select
 import threading
 import socket
+import struct
 import time
 import nacl.signing
 
@@ -9,69 +10,83 @@ import rospy
 from collections import deque
 from stations import IStation, StationData, Measurement
 from .comstation import BROADCASTER_VERSION
-from drivers.payload_pb2 import Header, Body
+from drivers.sds011 import SDS011_MODEL
+#from drivers.payload_pb2 import Header, Body
+
+
+def _extract_ip_and_port(address: str) -> tuple:
+    # assume the address looks like IP:PORT where IP is xx.xx.xx.xx
+    splitted = address.split(":")
+    return splitted[0], int(splitted[1])
+
+def _get_non_blocking_server_socket(addr: tuple, max_connections: int) -> socket.socket:
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setblocking(False)
+    server.bind(addr)
+    server.listen(max_connections)
+
+    return server
+
+def parse_header(data: bytes) -> tuple:
+    public_key = data[:32].hex()
+    model = struct.unpack("<h", data[32:34])
+    return public_key, model[0]
+
+def parse_sds011(data: bytes, pk: str, model: int, timestamp: int) -> Measurement:
+    unpacked = struct.unpack("<ffff", data)
+
+    return Measurement(pk,
+                       model,
+                       round(unpacked[0], 2),
+                       round(unpacked[1], 2),
+                       round(unpacked[2], 6),
+                       round(unpacked[3], 6),
+                       timestamp)
+
+def _get_codec(model: int) -> int:
+    models = {
+        SDS011_MODEL: (16 + 64, parse_sds011)
+    }
+
+    return models[model]
 
 
 class ReadingThread(threading.Thread):
     MAX_CONNECTIONS = 10
     INPUTS = list()
     OUTPUTS = list()
-    session = dict()
+    SESSIONS = dict()
 
     def __init__(self, config: dict, q: deque):
         super().__init__()
 
-        self.buffer = bytearray()
         self.q = q
-        self.server_address = self._extract_ip_and_port(config["address"])
+        self.server_address = _extract_ip_and_port(config["address"])
         self.acl = config["acl"]
         rospy.loginfo(self.acl)
 
-    def _extract_ip_and_port(self, address: str) -> tuple:
-        # assume the address looks like IP:PORT where IP is xx.xx.xx.xx
-        splitted = address.split(":")
-        return splitted[0], int(splitted[1])
+    def parse_frame(self, peer) -> tuple:
+        print(self.SESSIONS[peer])
+        data_length, parser = _get_codec(self.SESSIONS[peer]["model"])
 
-    def _get_non_blocking_server_socket(self):
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.setblocking(False)
-        server.bind(self.server_address)
-        server.listen(self.MAX_CONNECTIONS)
+        if data_length > len(self.SESSIONS[peer]["buffer"]):
+            return False, Measurement()
 
-        return server
+        signed = bytes(self.SESSIONS[peer]["buffer"][:data_length])
+        self.SESSIONS[peer]["buffer"] = self.SESSIONS[peer]["buffer"][data_length:]
+        pk = self.SESSIONS[peer]["public"]
 
-    def check_acl(self, data: Header) -> (bytes, int):
-        public = data.public_key
-        codec = data.model
-
-        pk = public.hex()
-
-        print(f"Public: {pk}, codec: {codec}")
-        if pk in self.acl:
-            return public, codec
-
-        return "", 0
-
-    def parse_data(self, data: bytes, signature: bytes, pk: bytes) -> str:
-        print("Parsing data...")
-        print(f"Data: {data}")
-        print(f"Signature: {signature}")
-        print(f"Public key: {pk}")
-
-
-        public_key = nacl.signing.VerifyKey(pk)
+        public_key = nacl.signing.VerifyKey(pk, encoder=nacl.encoding.HexEncoder)
 
         try:
-            public_key.verify(data, signature)
-            return "Cool"
-        except:
-            return "Broken"
-
-    def frame_length(self, peer: tuple) -> int:
-        if self.session[peer][1] == 2:
-            return 32
-
-        return 0
+            print("Verifying...")
+            public_key.verify(signed[:-64], signed[-64:])
+            m = parser(signed[:-64], pk, self.SESSIONS[peer]["model"], int(time.time()))
+            print("Congrats!")
+            print(m)
+            return (True, m)
+        except nacl.exceptions.BadSignatureError:
+            return (False, Measurement())
 
     def handle_readables(self, readables, server):
         for resource in readables:
@@ -86,48 +101,33 @@ class ReadingThread(threading.Thread):
                 print("Peer name: " + str(resource.getpeername()))
 
                 peer = resource.getpeername()
-                if peer not in self.session:
+                if peer not in self.SESSIONS:
                     print("Unknown peer yet")
-                    data = resource.recv(36)
+                    data = resource.recv(34)
 
-                    header = Header()
-                    header.ParseFromString(data)
+                    public_key, model = parse_header(data)
 
-                    known, codec = self.check_acl(header)
-
-                    if known:
-                        self.session[peer] = (known, codec)
-                        print("Welcome to the party: " + str(self.session))
+                    if public_key in self.acl:
+                        self.SESSIONS[peer] = {
+                            "public": public_key,
+                            "model": model,
+                            "buffer": bytearray()
+                        }
+                        print(f"Welcome to the party: ({public_key},{model})")
                 else:
                     print("I know you buddy!")
-                    msg_len = self.frame_length(peer)
-                    data = resource.recv(msg_len)
+                    data = resource.recv(128)
+                    self.SESSIONS[peer]["buffer"].extend(data)
 
                     if data:
-
                         print("getting data: {data}".format(data=str(data)))
-                        body = Body()
-                        body.ParseFromString(data)
 
-                        public_id = self.session[peer][0]
-                        signature = resource.recv(64)
+                        status, measurement = self.parse_frame(peer)
+                        print(f"{status}: {measurement}")
 
-                        response = self.parse_data(data, signature, public_id)
-                        print(f"Response: {response}")
-
-                        if response == "Cool":
-                            m = Measurement(
-                                public_id.hex(),
-                                self.session[peer][1],
-                                body.pm25,
-                                body.pm10,
-                                body.geo,
-                                int(time.time())
-                            )
-                            rospy.loginfo(m)
-                            self.q.append(m)
-                        else:
-                            print("Something bad happend")
+                        if status:
+                            rospy.loginfo(measurement)
+                            self.q.append(measurement)
 
                         if resource not in self.OUTPUTS:
                             self.OUTPUTS.append(resource)
@@ -144,10 +144,10 @@ class ReadingThread(threading.Thread):
 
         resource.close()
 
-        rospy.loginfo('closing connection ' + str(resource))
+        rospy.loginfo("closing connection " + str(resource))
 
     def run(self):
-        server_socket = self._get_non_blocking_server_socket()
+        server_socket = _get_non_blocking_server_socket(self.server_address, self.MAX_CONNECTIONS)
         self.INPUTS.append(server_socket)
 
         rospy.loginfo("Server is running...")
@@ -172,7 +172,7 @@ class TCPStation(IStation):
         super().__init__(config)
         self.version = f"airalab-rpi-broadcaster-{BROADCASTER_VERSION}"
 
-        self.q = deque(maxlen=1)  # LifoQueue(maxsize=1)
+        self.q = deque(maxlen=1)
         self.server = ReadingThread(self.config["tcpstation"], self.q)
         self.server.start()
 
