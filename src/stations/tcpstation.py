@@ -66,8 +66,10 @@ class ReadingThread(threading.Thread):
         rospy.loginfo(self.acl)
 
     def parse_frame(self, peer) -> tuple:
-        print(self.SESSIONS[peer])
-        data_length, parser = _get_codec(self.SESSIONS[peer]["model"])
+        try:
+            data_length, parser = _get_codec(self.SESSIONS[peer]["model"])
+        except:
+            return False, Measurement()
 
         if data_length > len(self.SESSIONS[peer]["buffer"]):
             return False, Measurement()
@@ -79,11 +81,8 @@ class ReadingThread(threading.Thread):
         public_key = nacl.signing.VerifyKey(pk, encoder=nacl.encoding.HexEncoder)
 
         try:
-            print("Verifying...")
             public_key.verify(signed[:-64], signed[-64:])
             m = parser(signed[:-64], pk, self.SESSIONS[peer]["model"], int(time.time()))
-            print("Congrats!")
-            print(m)
             return (True, m)
         except nacl.exceptions.BadSignatureError:
             return (False, Measurement())
@@ -114,16 +113,15 @@ class ReadingThread(threading.Thread):
                             "buffer": bytearray()
                         }
                         print(f"Welcome to the party: ({public_key},{model})")
+                    else:
+                        self.clear_resource(resource)
                 else:
                     print("I know you buddy!")
                     data = resource.recv(128)
                     self.SESSIONS[peer]["buffer"].extend(data)
 
                     if data:
-                        print("getting data: {data}".format(data=str(data)))
-
                         status, measurement = self.parse_frame(peer)
-                        print(f"{status}: {measurement}")
 
                         if status:
                             rospy.loginfo(measurement)
@@ -139,8 +137,8 @@ class ReadingThread(threading.Thread):
             self.OUTPUTS.remove(resource)
         if resource in self.INPUTS:
             self.INPUTS.remove(resource)
-        if resource.getpeername() in self.session:
-            del self.session[resource.getpeername()]
+        if resource.getpeername() in self.SESSIONS:
+            del self.SESSIONS[resource.getpeername()]
 
         resource.close()
 

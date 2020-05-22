@@ -6,20 +6,18 @@ comstation:
   port: "/dev/ttyUSB0"  # COM port of the device
   work_period: 300      # time between two measurements in seconds
   geo: ""               # Geo coordinates as latitude,longitude
+  public_key: ""        # If not provided, COMStation creates itself
 tcpstation:
   address: ""           # IP and PORT to listen to, for example 0.0.0.0:31313
   acl:                  # list of known addresses. If not specified accepts from everyone
+  # -
+  # -
 luftdaten:
   enable: true          # whether or not publish to https://luftdaten.info/
 robonomics:
   enable: true          # enable use of Robonomics Network
-  result: true          # publish Result message
-  demand: false         # publish Demand message
-  model: ""             # Agent's model (IPFS hash)
-  token: ""             # Ethereum address of ERC20 token
-  lighthouse: ""        # Name of lighthouse, e.g. airalab.lighthouse.5.robonomics.eth
-  validator: "0x0000000000000000000000000000000000000000"
-  validatorFee: 0
+  ipfs_provider: ""     # ipfs endpoint
+  ipfs_topic: "airalab.lighthouse.5.robonomics.eth"
 datalog:
   enable: false         # enable use of Datalog Robonomics subcommand
   path: ""              # path to Robonomics execution file

@@ -2,8 +2,9 @@ import threading
 import rospy
 
 from stations import *
+import nacl.signing
 import time
-from drivers import SDS011
+from drivers.sds011 import SDS011, SDS011_MODEL
 from collections import deque
 
 BROADCASTER_VERSION = "v0.1.0"
@@ -27,10 +28,22 @@ class COMStation(IStation):
         super().__init__(config)
         self.version = f"airalab-rpi-broadcaster-{BROADCASTER_VERSION}"
 
-        self.sensor = SDS011(self.config["comstation"]["port"])
+        self.sensor = SDS011(config["comstation"]["port"])
 
-        work_period = int(self.config["comstation"]["work_period"])
+        work_period = int(config["comstation"]["work_period"])
         self.sensor.set_work_period(work_time=int(work_period / 60))
+
+        self.geo = config["comstation"]["geo"].split(",")
+
+        if "public_key" in config["comstation"] and config["comstation"]["public_key"]:
+            self.public = config["comstation"]["public_key"]
+        else:
+            signing_key = nacl.signing.SigningKey.generate()
+            verify_key = signing_key.verify_key
+
+            self.public = bytes(verify_key).hex()
+
+        rospy.loginfo(f"COMStation public key: {self.public}")
 
         self.q = deque(maxlen=1)
         threading.Thread(target=_read_data_thread, args=(self.sensor, self.q, work_period)).start()
@@ -38,9 +51,15 @@ class COMStation(IStation):
     def get_data(self) -> StationData:
         if self.q:
             values = self.q[-1]
-            # rospy.loginfo(values)
             pm = values[0]
-            meas = Measurement(pm[0], pm[1], values[1])
+
+            meas = Measurement(self.public,
+                               SDS011_MODEL,
+                               pm[0],
+                               pm[1],
+                               float(self.geo[0]),
+                               float(self.geo[1]),
+                               values[1])
         else:
             meas = Measurement()
 
@@ -50,3 +69,4 @@ class COMStation(IStation):
             time.time() - self.start_time,
             meas
         )
+

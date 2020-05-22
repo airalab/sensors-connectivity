@@ -2,33 +2,50 @@ import json
 import subprocess
 import time
 import rospy
+from tempfile import NamedTemporaryFile
+import ipfshttpclient
 
-from std_msgs.msg import String
 from feeders import IFeeder
-from stations import StationData
-from ipfs_common.ipfs_rosbag import IpfsRosBag
+from stations import StationData, Measurement
 
 
-def _get_multihash(buffer: set, geo: str = "") -> str:
-    data_topic_payload = []
-
-    for m in buffer:
-        d = {
-            "PM2.5": m.pm25,
-            "PM10": m.pm10,
-            "timestamp": m.timestamp
-        }
-
-        data_topic_payload.append(String(json.dumps(d)))
-
-    topics = {
-        "/data": data_topic_payload,
-        "/geo": [String(geo)]
+def _create_row(m: Measurement) -> dict:
+    return {
+        "pm25": m.pm25,
+        "pm10": m.pm10,
+        "geo": "{},{}".format(m.geo_lat, m.geo_lon),
+        "teimstamp": m.timestamp
     }
 
-    rospy.loginfo(topics)
-    bag = IpfsRosBag(messages=topics)
-    return bag.multihash.multihash
+def _sort_payload(data: dict) -> dict:
+    ordered = {}
+    for k,v in data.items():
+        meas = sorted(v["measurements"], key=lambda x: x["teimstamp"])
+        ordered[k] = {"model":v["model"], "measurements":meas}
+
+def _get_multihash(buffer: set) -> str:
+    payload = {}
+
+    for m in buffer:
+        if m.public in payload:
+            payload[m.public]["measurements"].append(_create_row(m))
+        else:
+            payload[m.public] = {
+                "model": m.model,
+                "measurements": [
+                    _create_row(m)
+                ]
+            }
+
+    payload = _sort_payload(payload)
+
+    temp = NamedTemporaryFile(mode="w", delete=False)
+    temp.write(json.dumps(payload))
+    temp.close()
+
+    with ipfshttpclient.connect() as client:
+        response = client.add(temp.name)
+        return response["Hash"]
 
 
 class DatalogFeeder(IFeeder):
@@ -45,15 +62,15 @@ class DatalogFeeder(IFeeder):
         self.last_time = time.time()
         self.buffer = set()
         self.interval = self.config["datalog"]["dump_interval"]
-        self.geo = "" # self.config["general"]["geo"]
 
     def feed(self, data: StationData):
         if self.config["datalog"]["enable"]:
             rospy.loginfo("DatalogFeeder:")
-            self.buffer.add(data.measurement)
+            if data.measurement.public:
+                self.buffer.add(data.measurement)
 
             if (time.time() - self.last_time) >= self.interval:
-                ipfs_hash = _get_multihash(self.buffer, self.geo)
+                ipfs_hash = _get_multihash(self.buffer)
                 self._to_datalog(ipfs_hash)
                 self.buffer = set()
                 self.last_time = time.time()
