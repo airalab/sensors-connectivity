@@ -9,8 +9,8 @@
 #define STAPSK  ""
 #endif
 
-#define rxPin 2     // D2 on ESP TX of the sensor is connected to RX of the board
-#define txPin 3     // D3 on ESP and vice versa sensor's rx is connected to boards's tx
+#define rxPin 12     // D2 on ESP TX of the sensor is connected to RX of the board
+#define txPin 14     // D3 on ESP and vice versa sensor's rx is connected to boards's tx
 
 const char* ssid     = STASSID;
 const char* password = STAPSK;
@@ -18,8 +18,8 @@ const char* password = STAPSK;
 const char* host = "HOST";
 const uint16_t port = 31313;
 
-const float GEO_LAT = 0.0;
-const float GEO_LON = 0.0;
+const float GEO_LAT = 60.01;
+const float GEO_LON = 30.28;
 
 const short model = 2;
 const byte work_period = 5;     // minutes
@@ -62,10 +62,13 @@ void setup() {
     return;
   }
 
+
   if (client.connected()) {
     client.write(verifying_key, sizeof(verifying_key));
     client.write((byte*)&model, sizeof(model));
   }
+
+  Serial.write(verifying_key, 32);
 }
 
 void loop() {

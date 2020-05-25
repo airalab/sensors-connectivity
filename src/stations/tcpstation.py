@@ -1,4 +1,3 @@
-import json
 import select
 import threading
 import socket
@@ -11,7 +10,6 @@ from collections import deque
 from stations import IStation, StationData, Measurement
 from .comstation import BROADCASTER_VERSION
 from drivers.sds011 import SDS011_MODEL
-#from drivers.payload_pb2 import Header, Body
 
 
 def _extract_ip_and_port(address: str) -> tuple:
@@ -93,15 +91,15 @@ class ReadingThread(threading.Thread):
                 connection, client_address = resource.accept()
                 connection.setblocking(0)
                 self.INPUTS.append(connection)
-                print("new connection from {address}".format(address=client_address))
+                rospy.loginfo("new connection from {address}".format(address=client_address))
             else:
                 data = ""
 
-                print("Peer name: " + str(resource.getpeername()))
+                rospy.loginfo("Peer name: " + str(resource.getpeername()))
 
                 peer = resource.getpeername()
                 if peer not in self.SESSIONS:
-                    print("Unknown peer yet")
+                    rospy.loginfo("Unknown peer yet")
                     data = resource.recv(34)
 
                     public_key, model = parse_header(data)
@@ -112,11 +110,11 @@ class ReadingThread(threading.Thread):
                             "model": model,
                             "buffer": bytearray()
                         }
-                        print(f"Welcome to the party: ({public_key},{model})")
+                        rospy.loginfo(f"Welcome to the party: ({public_key},{model})")
                     else:
                         self.clear_resource(resource)
                 else:
-                    print("I know you buddy!")
+                    rospy.loginfo("I know you buddy!")
                     data = resource.recv(128)
                     self.SESSIONS[peer]["buffer"].extend(data)
 
