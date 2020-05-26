@@ -18,6 +18,13 @@ cd sensors-connectivity
 nix build -f release.nix
 ```
 
+> **Allow liability user to open port `/dev/ttyUSB0`**
+>
+> Most probably a user liability is not in the dialout group
+>
+> Either do `sudo adduser liability dialout` or add the line to `/etc/nixos/configuration.nix` on NixOS:
+> `users.users.liability.extraGroups = [ "dialout" ];`
+
 ## Configuration
 
 Basically you can think of the package as a black box with one input (sensor data) and many outputs.
@@ -63,29 +70,216 @@ The last one is experimental!
 
 Play around with the configuration!
 
-## ESP Firmware
+## Scenario #1: Connect SDS011 to serial port
 
-There is a firmware for ESP8266-like boards in [boards/esp/ESP_TCP](boards/esp/ESP_TCP/ESP_TCP.ino)
+The easiest and the most straight forward way to connect your sensor to the network is using serial port
 
-Check out the following [README.md](boards/README.md) to connect your board
+Connect you SDS011 sensor to a USB port, let's assume it got `/dev/ttyUSB0` address. Copy configuration file:
 
-## Launch
+```
+cp config/default.yaml config/my.yaml
+```
 
-> **Allow liability user to open port `/dev/ttyUSB0`**
->
-> Most probably a user liability is not in the dialout group
->
-> Either do `sudo adduser liability dialout` or add the line to `/etc/nixos/configuration.nix` on NixOS:
-> `users.users.liability.extraGroups = [ "dialout" ];`
+and make it look like:
 
-When you feel ready to start the program do:
+```yaml
+general:
+  publish_interval: 15 # time between two published messages
+comstation:
+  port: "/dev/ttyUSB0"  # COM port of the device
+  work_period: 300      # time between two measurements in seconds
+  geo: "59.944954,30.294534"  # Geo coordinates as latitude,longitude
+  public_key: ""        # If not provided, COMStation creates itself
+tcpstation:
+  address: ""           # IP and PORT to listen to, for example 0.0.0.0:31313
+  acl:                  # list of known addresses. If not specified accepts from everyone
+  # -
+  # -
+luftdaten:
+  enable: true          # whether or not publish to https://luftdaten.info/
+robonomics:
+  enable: true          # enable use of Robonomics Network
+  ipfs_provider: ""     # ipfs endpoint
+  ipfs_topic: "airalab.lighthouse.5.robonomics.eth"
+datalog:
+  enable: false         # enable use of Datalog Robonomics subcommand
+  path: ""              # path to Robonomics execution file
+  suri: ""              # private key of publisher account
+  remote: "wss://substrate.ipci.io"
+  dump_interval: 3600   # time between two transactions in seconds
+dev:
+  sentry: ""
+```
+
+Launch the agent:
 
 ```
 source result/setup.bash
-roslaunch sensors_connectivity agent.launch config:=PATH
+roslaunch sensors_connectivity agent.launch config:=/var/lib/liability/sensors-connectivity/config/my.yaml
 ```
 
-where `PATH` is the absolute path to your configuration yaml file
+## Scenario #2: Connect SDS011 via TCP
+
+### ESP Board Preparation
+
+First you need to generate a signing/verifying keys pair. To do so:
+
+```
+source result/setup.bash
+./utils/generate_secrets.py -o ./boards/esp/ESP_TCP/
+```
+
+Now you have a `./boards/esp/ESP_TCP/secrest.h` file. The script also outputs verifying key, let's say it is `49de10e0762517d209b7e61d8fe47e3fc06d08609707aeb290b425847cd2ce56`
+
+Now open `./boards/esp/ESP_TCP/ESP_TCP.ino` file in Arduino IDE. Install dependencies:
+
+* [ESP Boards](https://arduino-esp8266.readthedocs.io/en/latest/installing.html)
+* [SdsDustSensor library](https://github.com/lewapek/sds-dust-sensors-arduino-library). Could be installed by searching SdsDustSensor in `Sketch -> Include library -> Manage libraries` (Hotkey: `Ctrl + Shift + I`)
+* Extract [Crypto](https://github.com/rweather/arduinolibs/tree/master/libraries/Crypto) folder to `~/Arduino/libraries`
+
+You need to set `STASSID`, `STAPSK`, `HOST`, `GEO_LAT`, `GEO_LON`. Optional: `rxPin`, `txPin`, `work_period`, `port`
+
+```
+#ifndef STASSID
+#define STASSID ""
+#define STAPSK  ""
+#endif
+
+#define rxPin 2     // D2 on ESP TX of the sensor is connected to RX of the board
+#define txPin 3     // D3 on ESP and vice versa sensor's rx is connected to boards's tx
+
+const char* host = "HOST";
+const uint16_t port = 31313;
+
+const float GEO_LAT = 0.0;
+const float GEO_LON = 0.0;
+
+const byte work_period = 5;     // minutes
+```
+
+Upload the firmware
+
+### Connectivity Configuration
+
+```
+cp config/default.yaml config/my.yaml
+```
+
+```yaml
+general:
+  publish_interval: 15 # time between two published messages
+comstation:
+  port: ""              # COM port of the device
+  work_period: 300      # time between two measurements in seconds
+  geo: ""               # Geo coordinates as latitude,longitude
+  public_key: ""        # If not provided, COMStation creates itself
+tcpstation:
+  address: "0.0.0.0:31313"  # IP and PORT to listen to, for example 0.0.0.0:31313
+  acl:                  # list of known addresses. If not specified accepts from everyone
+    - 49de10e0762517d209b7e61d8fe47e3fc06d08609707aeb290b425847cd2ce56 # PUT YOUR VERIFYING KEY HERE
+luftdaten:
+  enable: true          # whether or not publish to https://luftdaten.info/
+robonomics:
+  enable: true          # enable use of Robonomics Network
+  ipfs_provider: ""     # ipfs endpoint
+  ipfs_topic: "airalab.lighthouse.5.robonomics.eth"
+datalog:
+  enable: false         # enable use of Datalog Robonomics subcommand
+  path: ""              # path to Robonomics execution file
+  suri: ""              # private key of publisher account
+  remote: "wss://substrate.ipci.io"
+  dump_interval: 3600   # time between two transactions in seconds
+dev:
+  sentry: ""
+```
+
+Launch connectivity:
+
+```
+roslaunch sensors_connectivity agent.launch config:=/var/lib/liability/sensors-connectivity/config/my.yaml
+```
+
+When initialization passed power your board or reset it. It's needed because the very first data from the board is header.
+If connectivity doesn't receive the header it drops the connection.
+
+If you need to connect more sensors to a single instance of connectivity repeat [ESP Board Preparation](#esp-board-preparation) for every sensor.
+Then add all the keys to the configuration file, restart connectivity and power up/reset every board.
+
+## Scenario #3: Connect Multiple Sensors and Publish to Datalog
+
+In order to upload a firmware to ESP board read [ESP Board Preparation](#esp-board-preparation) section.
+
+Connect SDS011 to a serial port.
+
+### Install Robonomics
+
+From `root` user do:
+
+```
+cp /var/lib/liability/sensors-connectivity/robonomics/robonomics-bin.nix /etc/nixos/
+```
+
+Then edit `/etc/nixos/configuration.nix` and add:
+
+```
+  nixpkgs = {
+    config = {
+      packageOverrides = {
+        substrate-node-robonomics-bin =  pkgs.callPackage ./robonomics-bin.nix {};
+      };
+    };
+  };
+
+  environment.systemPackages = with pkgs; [
+   substrate-node-robonomics-bin
+  ];
+```
+
+Run rebuild and find out where `robonomics` is:
+```
+nixos-rebuild switch
+whereis robonomics
+```
+
+Let's assume you got the following path: `/nix/store/2gz2ik17w5xad8w819bsb05a23pbjbya-system-path/bin/robonomics`
+
+### Configuration
+
+```yaml
+general:
+  publish_interval: 15 # time between two published messages
+comstation:
+  port: "/dev/ttyUSB0"  # COM port of the device
+  work_period: 300      # time between two measurements in seconds
+  geo: "59.944954,30.294534"  # Geo coordinates as latitude,longitude
+  public_key: ""        # If not provided, COMStation creates itself
+tcpstation:
+  address: "0.0.0.0:31313"  # IP and PORT to listen to, for example 0.0.0.0:31313
+  acl:                  # list of known addresses. If not specified accepts from everyone
+    - 49de10e0762517d209b7e61d8fe47e3fc06d08609707aeb290b425847cd2ce56 # PUT YOUR VERIFYING KEY HERE
+luftdaten:
+  enable: true          # whether or not publish to https://luftdaten.info/
+robonomics:
+  enable: true          # enable use of Robonomics Network
+  ipfs_provider: ""     # ipfs endpoint
+  ipfs_topic: "airalab.lighthouse.5.robonomics.eth"
+datalog:
+  enable: false         # enable use of Datalog Robonomics subcommand
+  path: "/nix/store/2gz2ik17w5xad8w819bsb05a23pbjbya-system-path/bin/robonomics"              # path to Robonomics execution file
+  suri: "0x....."       # private key of publisher account
+  remote: "wss://substrate.ipci.io"
+  dump_interval: 3600   # time between two transactions in seconds
+dev:
+  sentry: ""
+```
+
+Start connectivity first and then all your boards:
+```
+su - liability
+cd sensors-connectivity
+source result/setup.bash
+roslaunch sensors_connectivity agent.launch config:=/var/lib/liability/sensors-connectivity/config/my.yaml
+```
 
 ## Make a Service
 
@@ -99,7 +293,7 @@ systemd.services.connectivity = {
     environment.ROS_MASTER_URI =  "http://localhost:11311";
     script = ''
         source /var/lib/liability/sensors-connectivity/result/setup.bash \
-        && roslaunch sensors_connectivity agent.launch config:=/var/lib/liability/sensors-connectivity/config/default.yaml
+        && roslaunch sensors_connectivity agent.launch config:=/var/lib/liability/sensors-connectivity/config/my.yaml
     '';
     serviceConfig = {
         Restart = "on-failure";
@@ -116,10 +310,10 @@ After that run `nixos-rebuild switch`. The service should be up and running
 
 ## Check Your Connectivity Service 
 
-Usually log files are stored in `/var/lib/liability/.ros/log/latest//connectivity-worker-1.log`
+Usually log files are stored in `/var/lib/liability/.ros/log/latest/connectivity-worker-1.log`
 To view logs do:
 ```
-tail -f /var/lib/liability/.ros/log/latest//connectivity-worker-1.log
+tail -f /var/lib/liability/.ros/log/latest/connectivity-worker-1.log
 ```
 
 Also you can use `journalctl` but remember output is buffered so it could take some time before output appears
@@ -129,15 +323,15 @@ journalctl -u connectivity -f
 
 Example of output:
 ```bash
-root@hq-nuc-sds011> tail -f /var/lib/liability/.ros/log/latest/connectivity-worker-1.log                                                  ~
-[rosout][INFO] 2020-05-01 19:13:43,337: Sending data...
-[rosout][INFO] 2020-05-01 19:13:43,693: Response 201
-[rosout][INFO] 2020-05-01 19:13:43,699: RobonomicsFeeder:
-[rosout][INFO] 2020-05-01 19:13:45,517: Result published: QmceqYdyJCWhJDBgjcidyWeaZkg9e6VDExavNEY4WRtXvb
-[rosout][INFO] 2020-05-01 19:18:45,520: Starting process...
-[rosout][INFO] 2020-05-01 19:18:45,628: Station Data: {MAC: 94c6911b42d6, Uptime: 0:25:11.705348, M: {PM2.5: 1.4, PM10: 8.6}}
-[rosout][INFO] 2020-05-01 19:18:45,633: Sending data...
-[rosout][INFO] 2020-05-01 19:18:45,986: Response 201
-[rosout][INFO] 2020-05-01 19:18:45,990: RobonomicsFeeder:
-[rosout][INFO] 2020-05-01 19:18:47,870: Result published: QmXMuyyRd1YrUgw25nfX1ygk8tT8KU72BadMEgG6SbiqG5
+root@hq-nuc-sds011> journalctl -u connectivity -f
+May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498964.382380]: b'2020-05-26 17:16:04 Creating Extrinsic with genesis hash 0x7372b32137952f3047d30bfe1ffd240bc5e70f7a61d9a0cbf16e910dbb673f84 and account nonce 211\n2020-05-26 17:16:04 Data record submited in extrinsic with hash 0x5a4e\xe2\x80\xa6e733\n'
+May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.394788]: Starting process...
+May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.405389]: Station Data: {MAC: 00e04c366753, Uptime: 0:15:49.242490, M: {Public: 442cd3a20cf630ea499f4442e4fc49b24d6f57dc1febb867fd89defd469481cf, PM2.5: 1.4, PM10: 7.9, geo: (53.512909,49.285239), timestamp: 1590498945}}
+May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.414272]: Sending data...
+May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.781666]: Response 201
+May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.791170]: RobonomicsFeeder: {"442cd3a20cf630ea499f4442e4fc49b24d6f57dc1febb867fd89defd469481cf": {"model": 2, "timestamp": 1590498945, "measurement": {"pm25": 1.4, "pm10": 7.9, "geo": "53.512909,49.285239"}}}
+May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.841458]: DatalogFeeder:
+May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.852811]: Still collecting measurements...
+May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590499024.863852]: Starting process...
+May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590499024.876311]: Station Data: {MAC: 00e04c366753, Uptime: 0:16:19.713384, M: {Public: 442cd3a20cf630ea499f4442e4fc49b24d6f57dc1febb867fd89defd469481cf, PM2.5: 1.4, PM10: 7.9, geo: (53.512909,49.285239), timestamp: 1590498945}}
 ```

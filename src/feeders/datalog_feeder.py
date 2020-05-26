@@ -23,6 +23,8 @@ def _sort_payload(data: dict) -> dict:
         meas = sorted(v["measurements"], key=lambda x: x["teimstamp"])
         ordered[k] = {"model":v["model"], "measurements":meas}
 
+    return ordered
+
 def _get_multihash(buffer: set) -> str:
     payload = {}
 
