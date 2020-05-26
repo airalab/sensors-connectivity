@@ -14,13 +14,13 @@ def _create_row(m: Measurement) -> dict:
         "pm25": m.pm25,
         "pm10": m.pm10,
         "geo": "{},{}".format(m.geo_lat, m.geo_lon),
-        "teimstamp": m.timestamp
+        "timestamp": m.timestamp
     }
 
 def _sort_payload(data: dict) -> dict:
     ordered = {}
     for k,v in data.items():
-        meas = sorted(v["measurements"], key=lambda x: x["teimstamp"])
+        meas = sorted(v["measurements"], key=lambda x: x["timestamp"])
         ordered[k] = {"model":v["model"], "measurements":meas}
 
     return ordered
