@@ -216,22 +216,15 @@ Connect SDS011 to a serial port.
 From `root` user do:
 
 ```
-cp /var/lib/liability/sensors-connectivity/robonomics/robonomics-bin.nix /etc/nixos/
+echo "https://github.com/airalab/airapkgs/archive/nixos-unstable.tar.gz nixos" > /root/.nix-channels
+nix-channels --update
 ```
 
 Then edit `/etc/nixos/configuration.nix` and add:
 
 ```
-  nixpkgs = {
-    config = {
-      packageOverrides = {
-        substrate-node-robonomics-bin =  pkgs.callPackage ./robonomics-bin.nix {};
-      };
-    };
-  };
-
   environment.systemPackages = with pkgs; [
-   substrate-node-robonomics-bin
+        substrate-node-robonomics-bin
   ];
 ```
 
