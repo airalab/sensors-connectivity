@@ -37,10 +37,11 @@ class RobonomicsFeeder(IFeeder):
         self.ipfs_client = ipfshttpclient.connect()
         self.topic = config["robonomics"]["ipfs_topic"]
 
-    def feed(self, data: StationData):
+    def feed(self, data: [StationData]):
         if self.config["robonomics"]["enable"]:
-            if data.measurement.public:
-                pubsub_payload = _to_pubsub_message(data)
-                rospy.loginfo(f"RobonomicsFeeder: {pubsub_payload}")
-                self.ipfs_client.pubsub.publish(self.topic, pubsub_payload)
+            for d in data:
+                if d.measurement.public:
+                    pubsub_payload = _to_pubsub_message(d)
+                    rospy.loginfo(f"RobonomicsFeeder: {pubsub_payload}")
+                    self.ipfs_client.pubsub.publish(self.topic, pubsub_payload)
 

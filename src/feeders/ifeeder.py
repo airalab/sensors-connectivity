@@ -24,7 +24,7 @@ class IFeeder:
         """
         self.config = config
 
-    def feed(self, data: StationData):
+    def feed(self, data: [StationData]):
         """
         It's responsible for publishing data to an implemented channel
 

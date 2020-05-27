@@ -123,7 +123,8 @@ class ReadingThread(threading.Thread):
 
                         if status:
                             rospy.loginfo(measurement)
-                            self.q.append(measurement)
+                            self.q[0][measurement.public] = measurement
+                            # self.q.append(measurement)
 
                         if resource not in self.OUTPUTS:
                             self.OUTPUTS.append(resource)
@@ -169,16 +170,20 @@ class TCPStation(IStation):
         self.version = f"airalab-rpi-broadcaster-{BROADCASTER_VERSION}"
 
         self.q = deque(maxlen=1)
+        self.q.append({})   # Need to find a better way of interthread data exchange
         self.server = ReadingThread(self.config["tcpstation"], self.q)
         self.server.start()
 
     def get_data(self) -> StationData:
-        meas = self.q[-1] if self.q else Measurement()
+        result = []
+        for k, v in self.q[0].items():
+            result.append(StationData(
+                self.version,
+                self.mac_address,
+                time.time() - self.start_time,
+                self.q[0][k]
+            ))
 
-        return StationData(
-            self.version,
-            self.mac_address,
-            time.time() - self.start_time,
-            meas
-        )
+        self.q[0] = {}
+        return result
 

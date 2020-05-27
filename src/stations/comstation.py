@@ -48,7 +48,7 @@ class COMStation(IStation):
         self.q = deque(maxlen=1)
         threading.Thread(target=_read_data_thread, args=(self.sensor, self.q, work_period)).start()
 
-    def get_data(self) -> StationData:
+    def get_data(self) -> [StationData]:
         if self.q:
             values = self.q[-1]
             pm = values[0]
@@ -63,10 +63,10 @@ class COMStation(IStation):
         else:
             meas = Measurement()
 
-        return StationData(
+        return [StationData(
             self.version,
             self.mac_address,
             time.time() - self.start_time,
             meas
-        )
+        )]
 

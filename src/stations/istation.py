@@ -81,7 +81,7 @@ class IStation:
     def __str__(self):
         return f"{{Version: {self.version}, Start: {self.start_time}, MAC: {self.mac_address}}}"
 
-    def get_data(self) -> StationData:
+    def get_data(self) -> [StationData]:
         """
         Must return a new record of data or last measured data
 
@@ -91,12 +91,12 @@ class IStation:
         :return: StationData object
         """
 
-        return StationData(
+        return [StationData(
             self.version,
             self.mac_address,
             time.time() - self.start_time,
             Measurement()
-        )
+        )]
 
 
 __all__ = ["IStation", "Measurement", "StationData"]

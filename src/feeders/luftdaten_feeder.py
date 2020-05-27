@@ -16,12 +16,12 @@ class LuftdatenFeeder(IFeeder):
         self.apiServerUrl = "https://api.luftdaten.info/v1/push-sensor-data/"
         self.enable = config["luftdaten"]["enable"]
 
-    def feed(self, data: StationData):
+    def feed(self, data: [StationData]):
         if self.enable:
-            sensor_id = f"raspi-{data.mac}"
-            sensor_data = self._payload(data.version, data.measurement)
-
-            self._post_data(sensor_id, 1, sensor_data)
+            for d in data:
+                sensor_id = f"raspi-{d.mac}"
+                sensor_data = self._payload(d.version, d.measurement)
+                self._post_data(sensor_id, 1, sensor_data)
 
     def _payload(self, version: str, meas: Measurement) -> dict:
         ret = {

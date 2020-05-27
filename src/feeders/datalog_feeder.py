@@ -65,11 +65,12 @@ class DatalogFeeder(IFeeder):
         self.buffer = set()
         self.interval = self.config["datalog"]["dump_interval"]
 
-    def feed(self, data: StationData):
+    def feed(self, data: [StationData]):
         if self.config["datalog"]["enable"]:
             rospy.loginfo("DatalogFeeder:")
-            if data.measurement.public:
-                self.buffer.add(data.measurement)
+            for d in data:
+                if d.measurement.public:
+                    self.buffer.add(d.measurement)
 
             if (time.time() - self.last_time) >= self.interval:
                 ipfs_hash = _get_multihash(self.buffer)
