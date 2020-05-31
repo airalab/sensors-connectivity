@@ -81,7 +81,7 @@ Explanation of options:
 * `tcpstation/acl` - a list of known public keys in hex format
 * `luftdaten/enable` - true/false. Whether or not publish data to [Luftdaten](https://devices.sensor.community/). Don't forget to register sensor's mac address on the site
 * `robonomics/enable` - true/false. Whether or not publish data to IPFS topic according to Robonomics communication protocol
-* `robonomics/ipfs_proveder` - an endpoint for IPFS daemon. By default it's `127.0.0.1:5001` that means local daemon
+* `robonomics/ipfs_proveder` - an endpoint for IPFS daemon. By default it's `/ip4/127.0.0.1/tcp/5001/http` that means local daemon
 * `robonomics/ipfs_topic` - IPFS topic's name. If you want to use [DApp](sensors.robonomics.network) provided by Robonomics team leave it untouched
 * `datalog/enable` - true/false. Enable/Disable saving log to [Robonomics on Substrate chain](https://ui.ipci.io/)
 * `datalog/path` - full path to `robonomics` executable file. You can find the latest release on [this](https://github.com/airalab/robonomics/releases) page
