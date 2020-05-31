@@ -45,7 +45,8 @@ def _get_multihash(buffer: set) -> str:
     temp.write(json.dumps(payload))
     temp.close()
 
-    with ipfshttpclient.connect() as client:
+    endpoint = config["robonomics"]["ipfs_provider"] if config["robonomics"]["ipfs_provider"] else "/ip4/127.0.0.1/tcp/5001/http"
+    with ipfshttpclient.connect(endpoint) as client:
         response = client.add(temp.name)
         return response["Hash"]
 

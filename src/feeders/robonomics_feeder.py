@@ -34,7 +34,8 @@ class RobonomicsFeeder(IFeeder):
     def __init__(self, config: dict):
         super().__init__(config)
 
-        self.ipfs_client = ipfshttpclient.connect()
+        endpoint = config["robonomics"]["ipfs_provider"] if config["robonomics"]["ipfs_provider"] else "/ip4/127.0.0.1/tcp/5001/http"
+        self.ipfs_client = ipfshttpclient.connect(endpoint)
         self.topic = config["robonomics"]["ipfs_topic"]
 
     def feed(self, data: [StationData]):
