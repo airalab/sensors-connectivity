@@ -70,6 +70,26 @@ The last one is experimental!
 
 Play around with the configuration!
 
+Explanation of options:
+
+* `general/publish_interval` - integer number from 1 and above. Tells how often send measurements. Keep in mind that if measurements from sensors come less often than this number connectivity sends last data
+* `comstation/port` - valid path to com port, for example `/dev/ttyUSB0`. It is where a sensor is connected to
+* `comstation/work_period` - integer from 0 to 1800. For SDS011 sensor 0 means continuous work. Recommended period is 300 seconds
+* `comstation/geo` - `lat,lon` a string with two floats separated by a comma. It represents latitude and longitude of a sensor
+* `comstation/public_key` - Ed25519 verifying key in hex format. If not provided connectivity generates a new one
+* `tcpstation/address` - what address and port listen to. If you are willing to make it open for external connections put `0.0.0.0` as an address. `31313` is a port chosen by developers. You can pick any port you want but don't forget to change the port in an ESP firmware.
+* `tcpstation/acl` - a list of known public keys in hex format
+* `luftdaten/enable` - true/false. Whether or not publish data to [Luftdaten](https://devices.sensor.community/). Don't forget to register sensor's mac address on the site
+* `robonomics/enable` - true/false. Whether or not publish data to IPFS topic according to Robonomics communication protocol
+* `robonomics/ipfs_proveder` - an endpoint for IPFS daemon. By default it's `127.0.0.1:5001` that means local daemon
+* `robonomics/ipfs_topic` - IPFS topic's name. If you want to use [DApp](sensors.robonomics.network) provided by Robonomics team leave it untouched
+* `datalog/enable` - true/false. Enable/Disable saving log to [Robonomics on Substrate chain](https://ui.ipci.io/)
+* `datalog/path` - full path to `robonomics` executable file. You can find the latest release on [this](https://github.com/airalab/robonomics/releases) page
+* `datalog/suri` - a private key from substrate chain account
+* `datalog/remote` - an endpoint to substrate instance
+* `datalog/dump_interval` - specify a period of time for collecting log in seconds
+* `dev/sentry` - for development purpose. If you have a [Sentry.io](https://sentry.io/) account you can put sentry's credentials in here
+
 ## Scenario #1: Connect SDS011 to serial port
 
 The easiest and the most straight forward way to connect your sensor to the network is using serial port
