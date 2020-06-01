@@ -4,6 +4,8 @@ from dataclasses import dataclass
 import netifaces
 from datetime import timedelta
 
+STATION_VERSION = "v0.1.0"
+
 
 @dataclass(frozen=True)
 class Measurement:
@@ -35,6 +37,10 @@ class StationData:
     measurement: Measurement
 
     def __str__(self):
+        uptime = str(timedelta(seconds=self.uptime))
+        return f"{{MAC: {self.mac}, Uptime: {uptime}, M: {self.measurement}}}"
+
+    def __repr__(self):
         uptime = str(timedelta(seconds=self.uptime))
         return f"{{MAC: {self.mac}, Uptime: {uptime}, M: {self.measurement}}}"
 
@@ -74,7 +80,7 @@ class IStation:
         """
 
         self.config = config
-        self.version = "0.1.0"
+        self.version = STATION_VERSION
         self.start_time = time.time()
         self.mac_address = _get_mac()
 

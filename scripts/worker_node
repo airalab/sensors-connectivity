@@ -89,7 +89,7 @@ class WorkerNode:
 
             for s in self.stations:
                 station_data = s.get_data()
-                rospy.loginfo(f"Station Data: {station_data}")
+                rospy.loginfo(f"{s.version}: {station_data}")
 
                 for f in self.feeders:
                     f.feed(station_data)

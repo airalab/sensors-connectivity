@@ -7,8 +7,6 @@ import time
 from drivers.sds011 import SDS011, SDS011_MODEL
 from collections import deque
 
-BROADCASTER_VERSION = "v0.1.0"
-
 
 def _read_data_thread(sensor: SDS011, q: deque, timeout: int):
     while True:
@@ -26,7 +24,7 @@ class COMStation(IStation):
 
     def __init__(self, config: dict):
         super().__init__(config)
-        self.version = f"airalab-rpi-broadcaster-{BROADCASTER_VERSION}"
+        self.version = f"airalab-com-{STATION_VERSION}"
 
         self.sensor = SDS011(config["comstation"]["port"])
 

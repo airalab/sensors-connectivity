@@ -42,9 +42,11 @@ class LuftdatenFeeder(IFeeder):
                 "X-Sensor": sensor_id
                 }
 
-        rospy.loginfo("Sending data...")
         try:
             r = requests.post(self.apiServerUrl, json=data, headers=headers, timeout=30)
-            rospy.loginfo(f"Response {r.status_code}")
+            if r.status_code == 201:
+                rospy.loginfo(f"LuftdatenFeeder: sent successfuly")
+            else:
+                rospy.loginfo(f"LuftdatenFeeder: unknown error")
         except Exception as e:
-            rospy.logerr(e)
+            rospy.logerr(f"LuftdatenFeeder: {e}")
