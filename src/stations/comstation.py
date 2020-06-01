@@ -33,7 +33,9 @@ class COMStation(IStation):
         work_period = int(config["comstation"]["work_period"])
         self.sensor.set_work_period(work_time=int(work_period / 60))
 
-        self.geo = config["comstation"]["geo"].split(",")
+        self.geo = [0, 0]
+        if config["comstation"]["geo"]:
+            self.geo = config["comstation"]["geo"].split(",")
 
         if "public_key" in config["comstation"] and config["comstation"]["public_key"]:
             self.public = config["comstation"]["public_key"]
@@ -49,8 +51,9 @@ class COMStation(IStation):
         threading.Thread(target=_read_data_thread, args=(self.sensor, self.q, work_period)).start()
 
     def get_data(self) -> [StationData]:
+        meas = Measurement()
         if self.q:
-            values = self.q[-1]
+            values = self.q[0]
             pm = values[0]
 
             meas = Measurement(self.public,
@@ -60,8 +63,6 @@ class COMStation(IStation):
                                float(self.geo[0]),
                                float(self.geo[1]),
                                values[1])
-        else:
-            meas = Measurement()
 
         return [StationData(
             self.version,
