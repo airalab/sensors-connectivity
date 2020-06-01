@@ -213,6 +213,12 @@ dev:
   sentry: ""
 ```
 
+> Do not forget to open the port in system firewall
+> On NixOS you can do:
+> ```
+> networking.firewall.allowedTCPPorts = [ 31313 ];
+> ```
+
 Launch connectivity:
 
 ```
