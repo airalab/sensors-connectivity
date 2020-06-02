@@ -244,7 +244,7 @@ From `root` user do:
 
 ```
 echo "https://github.com/airalab/airapkgs/archive/nixos-unstable.tar.gz nixos" > /root/.nix-channels
-nix-channels --update
+nix-channel --update
 ```
 
 Then edit `/etc/nixos/configuration.nix` and add:
@@ -343,15 +343,22 @@ journalctl -u connectivity -f
 
 Example of output:
 ```bash
-root@hq-nuc-sds011> journalctl -u connectivity -f
-May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498964.382380]: b'2020-05-26 17:16:04 Creating Extrinsic with genesis hash 0x7372b32137952f3047d30bfe1ffd240bc5e70f7a61d9a0cbf16e910dbb673f84 and account nonce 211\n2020-05-26 17:16:04 Data record submited in extrinsic with hash 0x5a4e\xe2\x80\xa6e733\n'
-May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.394788]: Starting process...
-May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.405389]: Station Data: {MAC: 00e04c366753, Uptime: 0:15:49.242490, M: {Public: 442cd3a20cf630ea499f4442e4fc49b24d6f57dc1febb867fd89defd469481cf, PM2.5: 1.4, PM10: 7.9, geo: (53.512909,49.285239), timestamp: 1590498945}}
-May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.414272]: Sending data...
-May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.781666]: Response 201
-May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.791170]: RobonomicsFeeder: {"442cd3a20cf630ea499f4442e4fc49b24d6f57dc1febb867fd89defd469481cf": {"model": 2, "timestamp": 1590498945, "measurement": {"pm25": 1.4, "pm10": 7.9, "geo": "53.512909,49.285239"}}}
-May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.841458]: DatalogFeeder:
-May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590498994.852811]: Still collecting measurements...
-May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590499024.863852]: Starting process...
-May 26 17:17:04 aira-sds011-01 i9kbdsn47dwh1wzfb7csi739hm1h3p7j-unit-script-connectivity-start[31597]: [INFO] [1590499024.876311]: Station Data: {MAC: 00e04c366753, Uptime: 0:16:19.713384, M: {Public: 442cd3a20cf630ea499f4442e4fc49b24d6f57dc1febb867fd89defd469481cf, PM2.5: 1.4, PM10: 7.9, geo: (53.512909,49.285239), timestamp: 1590498945}}
+root@hq-nuc-sds011> tail /var/lib/liability/.ros/log/latest/connectivity-worker-1.log -f 
+[rosout][INFO] 2020-06-02 13:55:48,427: Starting process...
+[rosout][INFO] 2020-06-02 13:55:48,430: airalab-com-v0.1.0: [{MAC: 94c6911b42d6, Uptime: 0:00:30.997699, M: {Public: 4aebc455889ee993a615c479eb069079f643a8210aca0c866f0a7d126b8160f2, PM2.5: 8.3, PM10: 16.7, geo: (0.0,0.0), timestamp: 1591091717}}]
+[rosout][INFO] 2020-06-02 13:55:48,520: new connection from ('192.168.20.23', 57336)
+[rosout][INFO] 2020-06-02 13:55:48,865: LuftdatenFeeder: sent successfuly
+[rosout][INFO] 2020-06-02 13:55:48,868: RobonomicsFeeder: {"4aebc455889ee993a615c479eb069079f643a8210aca0c866f0a7d126b8160f2": {"model": 2, "timestamp": 1591091717, "measurement": {"pm25": 8.3, "pm10": 16.7, "geo": "0.0,0.0"}}}
+[rosout][INFO] 2020-06-02 13:55:48,877: airalab-tcp-v0.1.0: []
+[rosout][INFO] 2020-06-02 13:55:50,524: Peer name: ('192.168.20.23', 57336)
+[rosout][INFO] 2020-06-02 13:55:50,527: Unknown peer yet
+[rosout][INFO] 2020-06-02 13:55:50,531: Welcome to the party: (5dff08595b74db99a997dab6cab851092d27373168f5b04c1035fd2c0a520ee3,2)
+[rosout][INFO] 2020-06-02 13:56:03,880: Starting process...
+[rosout][INFO] 2020-06-02 13:56:03,884: airalab-com-v0.1.0: [{MAC: 94c6911b42d6, Uptime: 0:00:46.451368, M: {Public: 4aebc455889ee993a615c479eb069079f643a8210aca0c866f0a7d126b8160f2, PM2.5: 8.3, PM10: 16.7, geo: (0.0,0.0), timestamp: 1591091717}}]
+[rosout][INFO] 2020-06-02 13:56:04,241: LuftdatenFeeder: sent successfuly
+[rosout][INFO] 2020-06-02 13:56:04,246: RobonomicsFeeder: {"4aebc455889ee993a615c479eb069079f643a8210aca0c866f0a7d126b8160f2": {"model": 2, "timestamp": 1591091717, "measurement": {"pm25": 8.3, "pm10": 16.7, "geo": "0.0,0.0"}}}
+[rosout][INFO] 2020-06-02 13:56:04,266: airalab-tcp-v0.1.0: []
+[rosout][INFO] 2020-06-02 13:56:14,330: Peer name: ('192.168.20.23', 57336)
+[rosout][INFO] 2020-06-02 13:56:14,334: I know you buddy!
+[rosout][INFO] 2020-06-02 13:56:14,340: {Public: 5dff08595b74db99a997dab6cab851092d27373168f5b04c1035fd2c0a520ee3, PM2.5: 3.8, PM10: 7.1, geo: (53.507675,49.252785), timestamp: 1591091774}
 ```

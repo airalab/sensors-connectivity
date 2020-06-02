@@ -14,18 +14,18 @@ def _create_row(m: Measurement) -> dict:
         "pm25": m.pm25,
         "pm10": m.pm10,
         "geo": "{},{}".format(m.geo_lat, m.geo_lon),
-        "teimstamp": m.timestamp
+        "timestamp": m.timestamp
     }
 
 def _sort_payload(data: dict) -> dict:
     ordered = {}
     for k,v in data.items():
-        meas = sorted(v["measurements"], key=lambda x: x["teimstamp"])
+        meas = sorted(v["measurements"], key=lambda x: x["timestamp"])
         ordered[k] = {"model":v["model"], "measurements":meas}
 
     return ordered
 
-def _get_multihash(buffer: set) -> str:
+def _get_multihash(buffer: set, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> str:
     payload = {}
 
     for m in buffer:
@@ -45,7 +45,7 @@ def _get_multihash(buffer: set) -> str:
     temp.write(json.dumps(payload))
     temp.close()
 
-    with ipfshttpclient.connect() as client:
+    with ipfshttpclient.connect(endpoint) as client:
         response = client.add(temp.name)
         return response["Hash"]
 
@@ -64,16 +64,21 @@ class DatalogFeeder(IFeeder):
         self.last_time = time.time()
         self.buffer = set()
         self.interval = self.config["datalog"]["dump_interval"]
+        self.ipfs_endpoint = config["robonomics"]["ipfs_provider"] if config["robonomics"]["ipfs_provider"] else "/ip4/127.0.0.1/tcp/5001/http"
 
-    def feed(self, data: StationData):
+    def feed(self, data: [StationData]):
         if self.config["datalog"]["enable"]:
             rospy.loginfo("DatalogFeeder:")
-            if data.measurement.public:
-                self.buffer.add(data.measurement)
+            for d in data:
+                if d.measurement.public:
+                    self.buffer.add(d.measurement)
 
             if (time.time() - self.last_time) >= self.interval:
-                ipfs_hash = _get_multihash(self.buffer)
-                self._to_datalog(ipfs_hash)
+                if self.buffer:
+                    ipfs_hash = _get_multihash(self.buffer, self.ipfs_endpoint)
+                    self._to_datalog(ipfs_hash)
+                else:
+                    rospy.loginfo("Nothing to publish")
                 self.buffer = set()
                 self.last_time = time.time()
             else:
