@@ -5,9 +5,22 @@ Thanks @ikalchev for work
 """
 import struct
 import serial
+from stations import Measurement
 
 
 SDS011_MODEL = 2    # unique model for the driver
+
+def sds011_codec(data: bytes, pk: str, model: int, timestamp: int) -> Measurement:
+    unpacked = struct.unpack("<ffff", data)
+
+    return Measurement(pk,
+                       model,
+                       round(unpacked[0], 2),
+                       round(unpacked[1], 2),
+                       round(unpacked[2], 6),
+                       round(unpacked[3], 6),
+                       timestamp)
+
 
 # TODO: Commands against the sensor should read the reply and return success status.
 class SDS011(object):

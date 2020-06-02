@@ -16,12 +16,12 @@ class LuftdatenFeeder(IFeeder):
         self.apiServerUrl = "https://api.luftdaten.info/v1/push-sensor-data/"
         self.enable = config["luftdaten"]["enable"]
 
-    def feed(self, data: StationData):
+    def feed(self, data: [StationData]):
         if self.enable:
-            sensor_id = f"raspi-{data.mac}"
-            sensor_data = self._payload(data.version, data.measurement)
-
-            self._post_data(sensor_id, 1, sensor_data)
+            for d in data:
+                sensor_id = f"raspi-{d.mac}"
+                sensor_data = self._payload(d.version, d.measurement)
+                self._post_data(sensor_id, 1, sensor_data)
 
     def _payload(self, version: str, meas: Measurement) -> dict:
         ret = {
@@ -42,9 +42,11 @@ class LuftdatenFeeder(IFeeder):
                 "X-Sensor": sensor_id
                 }
 
-        rospy.loginfo("Sending data...")
         try:
             r = requests.post(self.apiServerUrl, json=data, headers=headers, timeout=30)
-            rospy.loginfo(f"Response {r.status_code}")
+            if r.status_code == 201:
+                rospy.loginfo(f"LuftdatenFeeder: sent successfuly")
+            else:
+                rospy.loginfo(f"LuftdatenFeeder: unknown error")
         except Exception as e:
-            rospy.logerr(e)
+            rospy.logerr(f"LuftdatenFeeder: {e}")

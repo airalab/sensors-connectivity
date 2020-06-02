@@ -7,9 +7,8 @@ import nacl.signing
 
 import rospy
 from collections import deque
-from stations import IStation, StationData, Measurement
-from .comstation import BROADCASTER_VERSION
-from drivers.sds011 import SDS011_MODEL
+from stations import IStation, StationData, Measurement, STATION_VERSION
+from drivers.sds011 import SDS011_MODEL, sds011_codec
 
 
 def _extract_ip_and_port(address: str) -> tuple:
@@ -30,20 +29,10 @@ def parse_header(data: bytes) -> tuple:
     model = struct.unpack("<h", data[32:34])
     return public_key, model[0]
 
-def parse_sds011(data: bytes, pk: str, model: int, timestamp: int) -> Measurement:
-    unpacked = struct.unpack("<ffff", data)
-
-    return Measurement(pk,
-                       model,
-                       round(unpacked[0], 2),
-                       round(unpacked[1], 2),
-                       round(unpacked[2], 6),
-                       round(unpacked[3], 6),
-                       timestamp)
 
 def _get_codec(model: int) -> int:
     models = {
-        SDS011_MODEL: (16 + 64, parse_sds011)
+        SDS011_MODEL: (16 + 64, sds011_codec)
     }
 
     return models[model]
@@ -104,7 +93,7 @@ class ReadingThread(threading.Thread):
 
                     public_key, model = parse_header(data)
 
-                    if public_key in self.acl:
+                    if (not self.acl) or (public_key in self.acl):
                         self.SESSIONS[peer] = {
                             "public": public_key,
                             "model": model,
@@ -123,7 +112,8 @@ class ReadingThread(threading.Thread):
 
                         if status:
                             rospy.loginfo(measurement)
-                            self.q.append(measurement)
+                            self.q[0][measurement.public] = measurement
+                            # self.q.append(measurement)
 
                         if resource not in self.OUTPUTS:
                             self.OUTPUTS.append(resource)
@@ -166,19 +156,23 @@ class TCPStation(IStation):
 
     def __init__(self, config: dict):
         super().__init__(config)
-        self.version = f"airalab-rpi-broadcaster-{BROADCASTER_VERSION}"
+        self.version = f"airalab-tcp-{STATION_VERSION}"
 
         self.q = deque(maxlen=1)
+        self.q.append({})   # Need to find a better way of interthread data exchange
         self.server = ReadingThread(self.config["tcpstation"], self.q)
         self.server.start()
 
     def get_data(self) -> StationData:
-        meas = self.q[-1] if self.q else Measurement()
+        result = []
+        for k, v in self.q[0].items():
+            result.append(StationData(
+                self.version,
+                self.mac_address,
+                time.time() - self.start_time,
+                self.q[0][k]
+            ))
 
-        return StationData(
-            self.version,
-            self.mac_address,
-            time.time() - self.start_time,
-            meas
-        )
+        self.q[0] = {}
+        return result
 

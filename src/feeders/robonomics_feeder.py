@@ -34,13 +34,15 @@ class RobonomicsFeeder(IFeeder):
     def __init__(self, config: dict):
         super().__init__(config)
 
-        self.ipfs_client = ipfshttpclient.connect()
+        endpoint = config["robonomics"]["ipfs_provider"] if config["robonomics"]["ipfs_provider"] else "/ip4/127.0.0.1/tcp/5001/http"
+        self.ipfs_client = ipfshttpclient.connect(endpoint)
         self.topic = config["robonomics"]["ipfs_topic"]
 
-    def feed(self, data: StationData):
+    def feed(self, data: [StationData]):
         if self.config["robonomics"]["enable"]:
-            if data.measurement.public:
-                pubsub_payload = _to_pubsub_message(data)
-                rospy.loginfo(f"RobonomicsFeeder: {pubsub_payload}")
-                self.ipfs_client.pubsub.publish(self.topic, pubsub_payload)
+            for d in data:
+                if d.measurement.public:
+                    pubsub_payload = _to_pubsub_message(d)
+                    rospy.loginfo(f"RobonomicsFeeder: {pubsub_payload}")
+                    self.ipfs_client.pubsub.publish(self.topic, pubsub_payload)
 
