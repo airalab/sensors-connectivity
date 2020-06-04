@@ -44,7 +44,7 @@ class WorkerNode:
             with open(config_path) as f:
                 content = f.read()
                 config = yaml.load(content, Loader=yaml.FullLoader)
-                rospy.loginfo(f"Configuration dict: {content}")
+                rospy.logdebug(f"Configuration dict: {content}")
                 return config
         except Exception as e:
             while True:
