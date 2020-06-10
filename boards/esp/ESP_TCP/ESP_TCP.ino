@@ -62,17 +62,22 @@ void setup() {
     return;
   }
 
-
   if (client.connected()) {
     client.write(verifying_key, sizeof(verifying_key));
     client.write((byte*)&model, sizeof(model));
+    client.flush();
   }
-
-  Serial.write(verifying_key, 32);
 }
 
 void loop() {
   PmResult pm = sds.readPm();
+
+  if (!client.connected()) {
+    client.connect(host, port);
+    client.write(verifying_key, sizeof(verifying_key));
+    client.write((byte*)&model, sizeof(model));
+    client.flush();
+  }
 
   if(pm.isOk()) {
     Serial.print("Got data: ");
@@ -85,14 +90,10 @@ void loop() {
     memcpy(buffer+12, (byte*) &GEO_LON, 4);
 
     Ed25519::sign(signature, privateKey, publicKey, buffer, 16);
-    if (client.connected()) {
-      client.write(buffer, sizeof(buffer));
-      client.write(signature, sizeof(signature));
-      client.flush();
-    } else {
-      Serial.println("Not connected");
-    }
-  }
+    client.write(buffer, sizeof(buffer));
+    client.write(signature, sizeof(signature));
+    client.flush();
+   }
 
   delay(500);
 }
