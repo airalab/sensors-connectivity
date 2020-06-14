@@ -7,6 +7,7 @@ import ipfshttpclient
 
 from feeders import IFeeder
 from stations import StationData, Measurement
+from drivers.ping import PING_MODEL
 
 
 def _create_row(m: Measurement) -> dict:
@@ -70,7 +71,7 @@ class DatalogFeeder(IFeeder):
         if self.config["datalog"]["enable"]:
             rospy.loginfo("DatalogFeeder:")
             for d in data:
-                if d.measurement.public:
+                if d.measurement.public and d.measurement.model != PING_MODEL:
                     self.buffer.add(d.measurement)
 
             if (time.time() - self.last_time) >= self.interval:

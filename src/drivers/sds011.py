@@ -10,11 +10,11 @@ from stations import Measurement
 
 SDS011_MODEL = 2    # unique model for the driver
 
-def sds011_codec(data: bytes, pk: str, model: int, timestamp: int) -> Measurement:
+def sds011_codec(data: bytes, pk: str, timestamp: int) -> Measurement:
     unpacked = struct.unpack("<ffff", data)
 
     return Measurement(pk,
-                       model,
+                       SDS011_MODEL,
                        round(unpacked[0], 2),
                        round(unpacked[1], 2),
                        round(unpacked[2], 6),

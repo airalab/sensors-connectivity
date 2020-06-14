@@ -9,6 +9,7 @@ import rospy
 from collections import deque
 from stations import IStation, StationData, Measurement, STATION_VERSION
 from drivers.sds011 import SDS011_MODEL, sds011_codec
+from drivers.ping import PING_MODEL, ping_codec
 
 
 def _extract_ip_and_port(address: str) -> tuple:
@@ -32,6 +33,7 @@ def parse_header(data: bytes) -> tuple:
 
 def _get_codec(model: int) -> int:
     models = {
+        PING_MODEL: (8 + 64, ping_codec),
         SDS011_MODEL: (16 + 64, sds011_codec)
     }
 
@@ -55,7 +57,8 @@ class ReadingThread(threading.Thread):
     def parse_frame(self, peer) -> tuple:
         try:
             data_length, parser = _get_codec(self.SESSIONS[peer]["model"])
-        except:
+        except Exception as e:
+            rospy.logerr(e)
             return False, Measurement()
 
         if data_length > len(self.SESSIONS[peer]["buffer"]):
@@ -69,9 +72,10 @@ class ReadingThread(threading.Thread):
 
         try:
             public_key.verify(signed[:-64], signed[-64:])
-            m = parser(signed[:-64], pk, self.SESSIONS[peer]["model"], int(time.time()))
+            m = parser(signed[:-64], pk, int(time.time()))
             return (True, m)
-        except nacl.exceptions.BadSignatureError:
+        except nacl.exceptions.BadSignatureError as e:
+            rospy.logerr(e)
             return (False, Measurement())
 
     def handle_readables(self, readables, server):
