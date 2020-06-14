@@ -3,4 +3,5 @@ __pycache__/
 .idea/
 venv/
 config/*
+.pio/
 !config/default.yaml

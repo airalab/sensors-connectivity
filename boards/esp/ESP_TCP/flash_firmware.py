@@ -55,8 +55,11 @@ def main():
                 .replace("$$STAPSK$$", "\"{}\"".format(settings["stapsk"])) \
                 .replace("$$HOST$$", "\"{}\"".format(settings["host"])) \
                 .replace("$$PORT$$", str(settings["port"])) \
+                .replace("$$RXPIN$$", str(settings["rxpin"])) \
+                .replace("$$xXPIN$$", str(settings["txpin"])) \
                 .replace("$$GEOLAT$$", geos[0]) \
-                .replace("$$GEOLON$$", geos[1])
+                .replace("$$GEOLON$$", geos[1]) \
+                .replace("$$WORKPERIOD$$", str(settings["work_period"])) \
 
     tempenv = tempfile.TemporaryDirectory()
     logging.debug(f"Temporal directory is created: {tempenv}")
@@ -80,8 +83,8 @@ def main():
 
 
     shutil.copyfile(ino + "/platformio.ini", "platformio.ini")
-    os.system("python3 -m platformio run")
-    os.system("python3 -m platformio run -t upload")
+    os.system("pio run")
+    os.system("pio run -t upload")
 
 
 if __name__ == "__main__":
