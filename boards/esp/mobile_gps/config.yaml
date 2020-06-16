@@ -1,0 +1,9 @@
+rxpinsensor: 12
+txpinsensor: 14
+rxpingps: 10
+txpingps: 11
+stassid:
+stapsk:
+host: "34.90.113.108"
+port: 31313
+work_period: 5

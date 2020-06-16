@@ -48,18 +48,15 @@ def main():
     geos = settings["geo"].split(",")
 
     ino = os.path.abspath(args.s)
-    with open(ino + "/src/ESP_PING.ino", "r") as f:
+    with open(ino + "/src/ping.ino", "r") as f:
         firmware = f.read()
 
     firmware = firmware.replace("$$STASSID$$", "\"{}\"".format(settings["stassid"])) \
                 .replace("$$STAPSK$$", "\"{}\"".format(settings["stapsk"])) \
                 .replace("$$HOST$$", "\"{}\"".format(settings["host"])) \
                 .replace("$$PORT$$", str(settings["port"])) \
-                .replace("$$RXPIN$$", str(settings["rxpin"])) \
-                .replace("$$xXPIN$$", str(settings["txpin"])) \
                 .replace("$$GEOLAT$$", geos[0]) \
-                .replace("$$GEOLON$$", geos[1]) \
-                .replace("$$WORKPERIOD$$", str(settings["work_period"])) \
+                .replace("$$GEOLON$$", geos[1])
 
     tempenv = tempfile.TemporaryDirectory()
     logging.debug(f"Temporal directory is created: {tempenv}")
@@ -83,8 +80,8 @@ def main():
 
 
     shutil.copyfile(ino + "/platformio.ini", "platformio.ini")
-    os.system("pio run")
-    os.system("pio run -t upload")
+    os.system("python3 -m platformio run")
+    os.system("python3 -m platformio run -t upload")
 
 
 if __name__ == "__main__":
