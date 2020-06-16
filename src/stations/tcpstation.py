@@ -2,6 +2,7 @@ import select
 import threading
 import socket
 import struct
+import signal
 import time
 import nacl.signing
 
@@ -44,15 +45,27 @@ class ReadingThread(threading.Thread):
     MAX_CONNECTIONS = 10
     INPUTS = list()
     OUTPUTS = list()
+
+    """
+    SESSIONS[peer] = {
+        "public": public_key,
+        "model": model,
+        "buffer": bytearray()
+    }
+    """
     SESSIONS = dict()
 
     def __init__(self, config: dict, q: deque):
         super().__init__()
 
         self.q = q
+        self.running = True
         self.server_address = _extract_ip_and_port(config["address"])
         self.acl = config["acl"]
         rospy.loginfo(self.acl)
+
+    def cancel(self):
+        self.running = False
 
     def parse_frame(self, peer) -> tuple:
         try:
@@ -130,6 +143,7 @@ class ReadingThread(threading.Thread):
         if resource in self.INPUTS:
             self.INPUTS.remove(resource)
         if resource.getpeername() in self.SESSIONS:
+            del self.q[0][self.SESSIONS[resource.getpeername()]["public"]]
             del self.SESSIONS[resource.getpeername()]
 
         resource.close()
@@ -142,14 +156,13 @@ class ReadingThread(threading.Thread):
 
         rospy.loginfo("Server is running...")
 
-        try:
-            while self.INPUTS:
-                readables, writables, exceptional = select.select(self.INPUTS, self.OUTPUTS, self.INPUTS)
-                self.handle_readables(readables, server_socket)
-                time.sleep(2)   # had to limit cpu usage
-        except KeyboardInterrupt:
-            self.clear_resource(server_socket)
-            rospy.loginfo("Server stopped!")
+        while self.INPUTS and self.running:
+            readables, writables, exceptional = select.select(self.INPUTS, self.OUTPUTS, self.INPUTS)
+            self.handle_readables(readables, server_socket)
+            time.sleep(2)   # had to limit cpu usage
+
+        self.clear_resource(server_socket)
+        rospy.loginfo("Server stopped!")
 
 
 class TCPStation(IStation):
@@ -158,14 +171,28 @@ class TCPStation(IStation):
 
     """
 
+    TIMEOUT = 1 * 60 * 60   # Timeout to drop dead sensors in seconds
+
     def __init__(self, config: dict):
         super().__init__(config)
         self.version = f"airalab-tcp-{STATION_VERSION}"
 
+        """
+        q[0] = {
+          "public": Measurement,
+          ...
+          "public2": Measurement
+        }
+        """
         self.q = deque(maxlen=1)
         self.q.append({})   # Need to find a better way of interthread data exchange
         self.server = ReadingThread(self.config["tcpstation"], self.q)
         self.server.start()
+
+        signal.signal(signal.SIGINT, self.handle_sigint)
+
+    def handle_sigint(self, signal, frame):
+        self.server.cancel()
 
     def get_data(self) -> StationData:
         result = []
@@ -177,6 +204,14 @@ class TCPStation(IStation):
                 self.q[0][k]
             ))
 
-        #self.q[0] = {}
         return result
+
+    def _drop_dead_sensors(self):
+        stripped = {}
+        current_time = int(time.time())
+        for k, v in self.q[0].items():
+            if (current_time - self.q[0][k]) < self.TIMEOUT:
+                stripped[k] = v
+
+        self.q[0] = v
 
