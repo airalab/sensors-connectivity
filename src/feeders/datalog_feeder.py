@@ -4,6 +4,7 @@ import time
 import rospy
 from tempfile import NamedTemporaryFile
 import ipfshttpclient
+import requests
 
 from feeders import IFeeder
 from stations import StationData, Measurement
@@ -92,9 +93,10 @@ class DatalogFeeder(IFeeder):
         if username and password:
             auth_url = "https://api.temporal.cloud/v2/auth/login"
             token_resp = requests.post(auth_url, json={"username": username, "password": password})
+            token = token_resp.json()
 
             url_add = "https://api.temporal.cloud/v2/ipfs/public/file/add"
-            headers = {"Authorization": f"Bearer {token_resp['token']}"}
+            headers = {"Authorization": f"Bearer {token['token']}"}
             resp = requests.post(url_add, files={"file":open(file_path), "hold_time":(None,1)}, headers=headers)
 
             if resp.status_code == 200:

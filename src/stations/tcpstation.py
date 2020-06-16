@@ -142,9 +142,12 @@ class ReadingThread(threading.Thread):
             self.OUTPUTS.remove(resource)
         if resource in self.INPUTS:
             self.INPUTS.remove(resource)
-        if resource.getpeername() in self.SESSIONS:
-            del self.q[0][self.SESSIONS[resource.getpeername()]["public"]]
-            del self.SESSIONS[resource.getpeername()]
+        try:
+            if resource.getpeername() in self.SESSIONS:
+                del self.q[0][self.SESSIONS[resource.getpeername()]["public"]]
+                del self.SESSIONS[resource.getpeername()]
+        except:
+            rospy.loginfo("Error cleaning connections")
 
         resource.close()
 
@@ -195,6 +198,8 @@ class TCPStation(IStation):
         self.server.cancel()
 
     def get_data(self) -> StationData:
+        self._drop_dead_sensors()
+
         result = []
         for k, v in self.q[0].items():
             result.append(StationData(
@@ -210,8 +215,8 @@ class TCPStation(IStation):
         stripped = {}
         current_time = int(time.time())
         for k, v in self.q[0].items():
-            if (current_time - self.q[0][k]) < self.TIMEOUT:
+            if (current_time - self.q[0][k].timestamp) < self.TIMEOUT:
                 stripped[k] = v
 
-        self.q[0] = v
+        self.q[0] = stripped
 
