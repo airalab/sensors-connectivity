@@ -1,0 +1,4 @@
+platformio
+pynacl
+pyyaml
+requests
