@@ -82,8 +82,8 @@ def main():
 
     shutil.copyfile(ino + "/platformio.ini", "platformio.ini")
     print(os.getcwd())
-    os.system("pio run")
-    # os.system("pio run -t upload")
+    os.system("python3 -m platformio run")
+    os.system("python3 -m platformio run -t upload")
 
 
 if __name__ == "__main__":
