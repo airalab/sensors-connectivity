@@ -59,15 +59,11 @@ class WorkerNode:
         Don't forget to append an instance to `s`
         """
         s = []
-        try:
+        if self.config["comstation"]["enable"]:
             s.append(COMStation(self.config))
-        except Exception as e:
-            rospy.logerr(f"Error COMStation: {e}")
 
-        try:
+        if self.config["tcpstation"]["enable"]:
             s.append(TCPStation(self.config))
-        except Exception as e:
-            rospy.logerr(f"Error TCPStation: {e}")
 
         return s
 
