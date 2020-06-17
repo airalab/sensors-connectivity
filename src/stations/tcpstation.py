@@ -20,6 +20,7 @@ def _extract_ip_and_port(address: str) -> tuple:
 
 def _get_non_blocking_server_socket(addr: tuple, max_connections: int) -> socket.socket:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
     server.setblocking(False)
     server.bind(addr)
     server.listen(max_connections)
