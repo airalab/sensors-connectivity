@@ -9,6 +9,7 @@ from stations import Measurement
 
 
 SDS011_MODEL = 2    # unique model for the driver
+MOBILE_GPS = 3
 
 def sds011_codec(data: bytes, pk: str, timestamp: int) -> Measurement:
     unpacked = struct.unpack("<ffff", data)

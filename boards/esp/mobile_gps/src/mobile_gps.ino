@@ -22,7 +22,7 @@ const char* password = STAPSK;
 const char* host = $$HOST$$;
 const uint16_t port = $$PORT$$;
 
-const short model = 2;
+const short model = 3;
 const byte work_period = $$WORKPERIOD$$;     // minutes
 
 float geo_lat = 0;
