@@ -48,7 +48,7 @@ class TCPStation(IStation):
     clients = {}
 
     """
-    SESSIONS[peer] = {
+    sessions[peer] = {
         "public": public_key,
         "model": model,
         "buffer": bytearray(),
@@ -66,7 +66,9 @@ class TCPStation(IStation):
 
         # Starting a dedicated thread to serve TCP server
         threading.Thread(target=self._start_server_thread, args=(server_address,)).start()
+        rospy.loginfo("TCP Station is launched!")
 
+    # Placing asyncio stuff to a dedicated thread
     def _start_server_thread(self, server_address: tuple):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -75,15 +77,17 @@ class TCPStation(IStation):
         loop.run_forever()
 
     def _accept_client(self, client_reader: StreamReader, client_writer: StreamWriter):
+        # creating a new task for every connection
         task = asyncio.Task(self._handle_client(client_reader, client_writer))
         self.clients[task] = (client_reader, client_writer)
 
         def client_done(task):
+            peer = self.clients[task][1].get_extra_info('peername')
+            del self.sessions[peer]
             del self.clients[task]
             client_writer.close()
             rospy.loginfo("End Connection")
 
-        rospy.loginfo("New Connection")
         task.add_done_callback(client_done)
 
     async def _handle_client(self, client_reader: StreamReader, client_writer: StreamWriter):
@@ -105,8 +109,9 @@ class TCPStation(IStation):
         try:
             while True:
                 try:
-                    data = await asyncio.wait_for(client_reader.read(80),
-                                                timeout=300.0)
+                    # Timeout is kinda big but it covers the maximum timeout for SDS011 sensor
+                    # and gets rid of dropped connections
+                    data = await asyncio.wait_for(client_reader.read(128), timeout=2000.0)
                     self.sessions[peer]["buffer"].extend(data)
                 except:
                     rospy.logwarn("Timeout")
@@ -125,7 +130,7 @@ class TCPStation(IStation):
         except Exception as e:
             rospy.logwarn(e)
 
-    def _parse_frame(self, peer) -> tuple:
+    def _parse_frame(self, peer: tuple) -> tuple:
         try:
             data_length, parser = _get_codec(self.sessions[peer]["model"])
         except Exception as e:
@@ -142,6 +147,7 @@ class TCPStation(IStation):
         public_key = nacl.signing.VerifyKey(pk, encoder=nacl.encoding.HexEncoder)
 
         try:
+            # checking signature
             public_key.verify(signed[:-64], signed[-64:])
             m = parser(signed[:-64], pk, int(time.time()))
             return (True, m)
