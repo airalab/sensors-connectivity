@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import netifaces
 from datetime import timedelta
 
-STATION_VERSION = "v0.1.0"
+STATION_VERSION = "v0.3.0"
 
 
 @dataclass(frozen=True)
