@@ -27,10 +27,10 @@ def _sort_payload(data: dict) -> dict:
 
     return ordered
 
-def _get_multihash(buffer: set, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> (str, str):
+def _get_multihash(buf: set, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> (str, str):
     payload = {}
 
-    for m in buffer:
+    for m in buf:
         if m.public in payload:
             payload[m.public]["measurements"].append(_create_row(m))
         else:
@@ -41,9 +41,12 @@ def _get_multihash(buffer: set, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") 
                 ]
             }
 
+    rospy.logdebug(f"Payload before sorting: {payload}")
     payload = _sort_payload(payload)
+    rospy.logdebug(f"Payload sorted: {payload}")
 
     temp = NamedTemporaryFile(mode="w", delete=False)
+    rospy.logdebug(f"Created temp file: {temp.name}")
     temp.write(json.dumps(payload))
     temp.close()
 
@@ -73,10 +76,13 @@ class DatalogFeeder(IFeeder):
             rospy.loginfo("DatalogFeeder:")
             for d in data:
                 if d.measurement.public and d.measurement.model != PING_MODEL:
+                    rospy.logdebug(f"Adding data to buffer: {d.measurement}")
                     self.buffer.add(d.measurement)
 
             if (time.time() - self.last_time) >= self.interval:
                 if self.buffer:
+                    rospy.logdebug("About to publish collected data...")
+                    rospy.logdebug(f"Buffer is {self.buffer}")
                     ipfs_hash, file_path = _get_multihash(self.buffer, self.ipfs_endpoint)
                     self._pin_to_temporal(file_path)
                     self._to_datalog(ipfs_hash)
