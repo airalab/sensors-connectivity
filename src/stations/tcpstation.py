@@ -7,7 +7,7 @@ import nacl.signing
 
 import rospy
 from stations import IStation, StationData, Measurement, STATION_VERSION
-from drivers.sds011 import SDS011_MODEL, MOBILE_GPS, sds011_codec
+from drivers.sds011 import SDS011_MODEL, MOBILE_GPS, sds011_codec, sds011_gps_codec
 from drivers.ping import PING_MODEL, ping_codec
 
 
@@ -25,7 +25,7 @@ def _get_codec(model: int) -> int:
     models = {
         PING_MODEL: (8 + 64, ping_codec),
         SDS011_MODEL: (16 + 64, sds011_codec),
-        MOBILE_GPS: (16 + 64, sds011_codec)
+        MOBILE_GPS: (16 + 64, sds011_gps_codec)
     }
 
     return models[model]
