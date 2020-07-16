@@ -37,11 +37,10 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     parser = argparse.ArgumentParser(description="Prepare and flush ESP firmware")
     parser.add_argument("-s", metavar="source", type=str, default=".", help="firmware folder (default to current dir)")
-    parser.add_argument("-c", metavar="config", type=str, help="Path to configuration file")
+    parser.add_argument("-c", metavar="config", type=str, default="config.yaml", help="Path to configuration file")
 
     args = parser.parse_args()
 
-    config_file = args.c if args.c else "config.yaml"
     with open(args.c) as f:
         settings = yaml.load(f.read(), Loader=yaml.FullLoader)
 
