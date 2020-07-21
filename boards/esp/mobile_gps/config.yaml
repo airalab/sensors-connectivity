@@ -1,9 +1,9 @@
-rxpinsensor: 12
-txpinsensor: 14
-rxpingps: 10
-txpingps: 11
-stassid:
-stapsk:
-host: "34.90.113.108"
-port: 31313
-work_period: 5
+$$RXPIN$$: 12
+$$TXPIN$$: 14
+$$RXPINGPS$$: 10
+$$TXPINGPS$$: 11
+$$STASSID$$:
+$$STAPSK$$:
+$$HOST$$: "34.90.113.108"
+$$PORT$$: 31313
+$$WORKPERIOD$$: 5

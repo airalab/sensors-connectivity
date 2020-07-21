@@ -1,8 +1,9 @@
-rxpin: 12
-txpin: 14
-stassid:
-stapsk:
-host: "34.90.113.108"
-port: 31313
-geo:
-work_period: 5
+$$RXPIN$$: 12
+$$TXPIN$$: 14
+$$STASSID$$:
+$$STAPSK$$:
+$$HOST$$: "34.90.113.108"
+$$PORT$$: 31313
+$$GEOLAT$$:
+$$GEOLON$$:
+$$WORKPERIOD$$: 5
