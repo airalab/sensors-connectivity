@@ -39,8 +39,19 @@ def main():
     parser = argparse.ArgumentParser(description="Prepare and flush ESP firmware")
     parser.add_argument("-s", metavar="source", type=str, default=".", help="firmware folder (default to current dir)")
     parser.add_argument("-c", metavar="config", type=str, default="config.yaml", help="Path to configuration file")
+    parser.add_argument("-p", "--port", metavar="port", type=str, help="Port the board is connected to")
 
     args = parser.parse_args()
+
+    if args.port:
+        port = args.port
+    else:
+        if sys.platform.startswith("win32"):
+            port = "COM1"
+        else:
+            port = "/dev/ttyUSB0"
+
+    logging.debug(f"Port is {port}")
 
     with open(args.c) as f:
         settings = yaml.load(f.read(), Loader=yaml.FullLoader)
@@ -75,8 +86,8 @@ def main():
 
     shutil.copyfile(os.path.join(ino, "platformio.ini"), "platformio.ini")
 
+    os.environ["PLATFORMIO_UPLOAD_PORT"] = port
     if sys.platform.startswith("win32"):
-        os.environ["PLATFORMIO_UPLOAD_PORT"] = "COM1"
         os.system("python -m platformio run")
         os.system("python -m platformio run -t upload")
     else:

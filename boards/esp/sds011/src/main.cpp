@@ -7,9 +7,6 @@
 const float GEO_LAT = $$GEOLAT$$;
 const float GEO_LON = $$GEOLON$$;
 
-const short model = 2;
-const byte work_period = $$WORKPERIOD$$;     // minutes
-
 SdsDustSensor sds(rxPin, txPin);
 
 void print_bytes(uint8_t *buffer, int len) {
@@ -26,7 +23,7 @@ void setup() {
 
   sds.begin(9600);
   sds.setActiveReportingMode();
-  sds.setCustomWorkingPeriod(work_period);
+  sds.setContinuousWorkingPeriod();
 }
 
 void loop() {
