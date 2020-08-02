@@ -5,8 +5,8 @@
 
 
 #ifndef STASSID
-#define STASSID $$STASSID$$
-#define STAPSK  $$STAPSK$$
+#define STASSID "$$STASSID$$"
+#define STAPSK  "$$STAPSK$$"
 #endif
 
 #define rxPin $$RXPIN$$     // D2 on ESP TX of the sensor is connected to RX of the board
@@ -15,7 +15,7 @@
 const char* ssid     = STASSID;
 const char* password = STAPSK;
 
-const char* host = $$HOST$$;
+const char* host = "$$HOST$$";
 const uint16_t port = $$PORT$$;
 
 const float GEO_LAT = $$GEOLAT$$;
