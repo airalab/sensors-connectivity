@@ -6,3 +6,4 @@ config/*
 .pio/
 my.yaml
 !config/default.yaml
+.vscode/*
