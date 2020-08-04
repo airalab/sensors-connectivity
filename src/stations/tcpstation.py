@@ -82,11 +82,14 @@ class TCPStation(IStation):
         self.clients[task] = (client_reader, client_writer)
 
         def client_done(task):
-            peer = self.clients[task][1].get_extra_info('peername')
-            del self.sessions[peer]
-            del self.clients[task]
-            client_writer.close()
-            rospy.loginfo("End Connection")
+            try:
+                peer = self.clients[task][1].get_extra_info('peername')
+                del self.sessions[peer]
+                del self.clients[task]
+                client_writer.close()
+                rospy.loginfo("End Connection")
+            except Exception as e:
+                rospy.logerr(e)
 
         task.add_done_callback(client_done)
 
