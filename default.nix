@@ -1,6 +1,7 @@
 { stdenv
 , mkRosPackage
-, robonomics_comm-nightly
+#, robonomics_comm-nightly
+, ros_comm
 , python3Packages
 }:
 
@@ -12,7 +13,9 @@ mkRosPackage rec {
   src = ./.;
 
   propagatedBuildInputs = with python3Packages; [
-    robonomics_comm-nightly
+    #robonomics_comm-nightly
+    ros_comm
+    setuptools
     pyserial
     pyyaml
     requests
