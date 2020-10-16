@@ -1,4 +1,4 @@
-{ nixpkgs ? import (builtins.fetchTarball https://github.com/airalab/airapkgs/archive/nixos-unstable.tar.gz
+{ nixpkgs ? import (builtins.fetchTarball https://github.com/airalab/airapkgs/archive/nixos-unstable.tar.gz)
 , system ? builtins.currentSystem
 }:
 
