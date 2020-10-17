@@ -85,7 +85,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         meas = self.parser(self.data)
         rospy.loginfo(meas)
         with thlock:
-            sessions[self.client_address] = meas
+            if meas:
+                sessions[self.client_address] = meas
         self._set_headers()
 
 
