@@ -112,7 +112,11 @@ class DatalogFeeder(IFeeder):
         rospy.loginfo(ipfs_hash)
         prog_path = [self.config["datalog"]["path"], "io", "write", "datalog",
                      "-s", self.config["datalog"]["suri"], "--remote", self.config["datalog"]["remote"]]
-        output = subprocess.run(prog_path, stdout=subprocess.PIPE, input=ipfs_hash.encode(),
+        try:
+            output = subprocess.run(prog_path, stdout=subprocess.PIPE, input=ipfs_hash.encode(), timeout=30,
                            stderr=subprocess.PIPE)
+        except TimeoutExpired:
+            rospy.loginfo("Process timeout expired")
+
         rospy.loginfo(output.stderr)
         rospy.logdebug(output)
