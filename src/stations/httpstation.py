@@ -40,11 +40,13 @@ class RequestHandler(BaseHTTPRequestHandler):
         global thlock
         #rospy.loginfo(f"parser data: {data}")
         try:
+            if data["esp8266id"]:
+                self.client_id = data["esp8266id"]
             for d in data["sensordatavalues"]:
                 if d["value_type"] == "SDS_P1":
-                    pm10 = d["value"]
+                    pm10 = float(d["value"])
                 if d["value_type"] == "SDS_P2":
-                    pm25 = d["value"]
+                    pm25 = float(d["value"])
                 if d["value_type"] == "GPS_lat":
                     geo_lat = d["value"]
                 if d["value_type"] == "GPS_lon":
@@ -53,12 +55,12 @@ class RequestHandler(BaseHTTPRequestHandler):
             #rospy.loginfo("After 'for'")
 
             with thlock:
-                if self.client_address not in sessions:
+                if self.client_id not in sessions:
                     #rospy.loginfo(f"There is no such address: {self.client_address}")
                     public = self._generate_pubkey()
                 else:
                     #rospy.loginfo(f"Found such address: {self.client_address}")
-                    public = sessions[self.client_address].public
+                    public = sessions[self.client_id].public
 
             #rospy.loginfo(f"Pubkey: {public}")
             timestamp = int(time.time())
@@ -86,7 +88,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         rospy.loginfo(meas)
         with thlock:
             if meas:
-                sessions[self.client_address] = meas
+                if self.client_id in sessions:
+                    del sessions[self.client_id]
+                sessions[self.client_id] = meas
         self._set_headers()
 
 
