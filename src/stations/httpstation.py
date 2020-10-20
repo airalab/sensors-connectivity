@@ -58,7 +58,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             with thlock:
                 if self.client_id not in sessions:
                     #rospy.loginfo(f"There is no such address: {self.client_address}")
-                    public = self._generate_pubkey()
+                    public = _generate_pubkey()
                 else:
                     #rospy.loginfo(f"Found such address: {self.client_address}")
                     public = sessions[self.client_id].public
