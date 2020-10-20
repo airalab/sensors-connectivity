@@ -85,7 +85,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         length = int(self.headers.get("content-length"))
         self.data = json.loads(self.rfile.read(length))
         rospy.loginfo(self.data)
-        meas = self.parser(self.data)
+        meas = self._parser(self.data)
         rospy.loginfo(meas)
         with thlock:
             if meas:
