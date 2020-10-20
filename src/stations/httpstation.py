@@ -6,15 +6,21 @@ from drivers.sds011 import SDS011_MODEL
 import json
 import cgi
 import nacl.signing
+import copy
 
 from stations import IStation, StationData, Measurement, STATION_VERSION
-#from collections import deque
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-#q = deque()
 
 thlock = threading.RLock()
 sessions = dict()
+
+def _generate_pubkey() -> str:
+    signing_key = nacl.signing.SigningKey.generate()
+    verify_key = signing_key.verify_key
+    verify_key_hex = bytes(verify_key).hex()
+    return str(verify_key_hex)
+
 
 class RequestHandler(BaseHTTPRequestHandler):
 
@@ -29,19 +35,14 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self._set_headers()
 
-    def _generate_pubkey(self) -> str:
-        signing_key = nacl.signing.SigningKey.generate()
-        verify_key = signing_key.verify_key
-        verify_key_hex = bytes(verify_key).hex()
-        return str(verify_key_hex)
 
-    def parser(self, data) -> Measurement:
+    def _parser(self, data: dict) -> Measurement:
         global sessions
         global thlock
         #rospy.loginfo(f"parser data: {data}")
         try:
             if data["esp8266id"]:
-                self.client_id = data["esp8266id"]
+                self.client_id = int(data["esp8266id"])
             for d in data["sensordatavalues"]:
                 if d["value_type"] == "SDS_P1":
                     pm10 = float(d["value"])
@@ -116,7 +117,7 @@ class HTTPStation(IStation):
         self.version = f"airalab-http-{STATION_VERSION}"
         self.DEAD_SENSOR_TIME = 60*60 # 1 hour
 
-    def get_data(self):
+    def get_data(self) -> StationData:
         global sessions
         rospy.loginfo(sessions)
 
@@ -138,9 +139,12 @@ class HTTPStation(IStation):
         stripped = dict()
         current_time = int(time.time())
         with thlock:
-            for k, v in sessions.items():
+            sessions_copy = copy.deepcopy(sessions)
+            for k, v in sessions_copy.items():
                 if (current_time - v.timestamp) < self.DEAD_SENSOR_TIME:
                     stripped[k] = v
+                else:
+                    del sessions[k]
 
         return stripped
 
