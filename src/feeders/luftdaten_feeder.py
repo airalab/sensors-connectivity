@@ -27,8 +27,8 @@ class LuftdatenFeeder(IFeeder):
         ret = {
             "software_version": version,
             "sensordatavalues": [
-                {"value_type": "P1", "value": meas.pm10},
-                {"value_type": "P2", "value": meas.pm25}
+                {"value_type": "P1", "value": meas.measurement["pm10"]},
+                {"value_type": "P2", "value": meas.measurement["pm25"]}
             ]
         }
 

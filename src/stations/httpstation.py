@@ -2,18 +2,21 @@
 import threading
 import time
 import rospy
-from drivers.sds011 import SDS011_MODEL
+from drivers.sds011 import SDS011_MODEL, MOBILE_GPS
 import json
 import cgi
 import nacl.signing
 import copy
 
+
 from stations import IStation, StationData, Measurement, STATION_VERSION
+from stations.bme280 import BME_MODEL
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
 thlock = threading.RLock()
 sessions = dict()
+
 
 def _generate_pubkey() -> str:
     signing_key = nacl.signing.SigningKey.generate()
@@ -39,19 +42,34 @@ class RequestHandler(BaseHTTPRequestHandler):
     def _parser(self, data: dict) -> Measurement:
         global sessions
         global thlock
+
         #rospy.loginfo(f"parser data: {data}")
         try:
-            if data["esp8266id"]:
+            if 'esp8266id' in data.keys():
                 self.client_id = int(data["esp8266id"])
-            for d in data["sensordatavalues"]:
-                if d["value_type"] == "SDS_P1":
-                    pm10 = float(d["value"])
-                if d["value_type"] == "SDS_P2":
-                    pm25 = float(d["value"])
-                if d["value_type"] == "GPS_lat":
-                    geo_lat = d["value"]
-                if d["value_type"] == "GPS_lon":
-                    geo_lon = d["value"]
+                temperature = None
+                pressure = None
+                humidity = None
+                for d in data["sensordatavalues"]:
+                    if d["value_type"] == "SDS_P1":
+                        pm10 = float(d["value"])
+                    if d["value_type"] == "SDS_P2":
+                        pm25 = float(d["value"])
+                    if d["value_type"] == "GPS_lat":
+                        geo_lat = d["value"]
+                    if d["value_type"] == "GPS_lon":
+                        geo_lon = d["value"]
+
+                    if d["value_type"] == "BME280_temperature":
+                        temperature = float(d["value"])
+                    if d["value_type"] == "BME280_pressure":
+                        pressure = float(d["value"])
+                    if d["value_type"] == "BME280_humidity":
+                        humidity = float(d["value"])
+
+                meas = {}
+                meas.update({'pm10': pm10, 'pm25': pm25, 'temperature': temperature, 'pressure': pressure, 'humidity': humidity})
+
 
             #rospy.loginfo("After 'for'")
 
@@ -65,13 +83,17 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             #rospy.loginfo(f"Pubkey: {public}")
             timestamp = int(time.time())
+            #rospy.loginfo(f"time: {timestamp}")
+            meas.update({'timestamp': timestamp})
             measurement = Measurement(public,
-                                    SDS011_MODEL,
-                                    pm25,
-                                    pm10,
-                                    geo_lat,
-                                    geo_lon,
-                                    timestamp)
+                                        SDS011_MODEL,
+                                        geo_lat,
+                                        geo_lon,
+                                        meas
+            )
+
+
+
         except Exception as e:
             rospy.logerr(e)
             return
@@ -86,12 +108,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.data = json.loads(self.rfile.read(length))
         rospy.loginfo(self.data)
         meas = self._parser(self.data)
-        rospy.loginfo(meas)
+        rospy.loginfo(f"meas: {meas}")
         with thlock:
             if meas:
+                rospy.loginfo(type(meas))
                 if self.client_id in sessions:
                     del sessions[self.client_id]
-                sessions[self.client_id] = meas
+                sessions.update({self.client_id: meas})
+                rospy.loginfo(f"sessions in post {sessions}")
         self._set_headers()
 
 
@@ -119,7 +143,7 @@ class HTTPStation(IStation):
 
     def get_data(self) -> StationData:
         global sessions
-        rospy.loginfo(sessions)
+        rospy.loginfo(f"sessions {sessions.__str__()}")
 
         result = []
         for k, v in self._drop_dead_sensors().items():
@@ -141,7 +165,8 @@ class HTTPStation(IStation):
         with thlock:
             sessions_copy = copy.deepcopy(sessions)
             for k, v in sessions_copy.items():
-                if (current_time - v.timestamp) < self.DEAD_SENSOR_TIME:
+                #rospy.loginfo(v.measurement)
+                if (current_time - v.measurement["timestamp"]) < self.DEAD_SENSOR_TIME:
                     stripped[k] = v
                 else:
                     del sessions[k]

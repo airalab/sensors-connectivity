@@ -17,7 +17,6 @@ mkRosPackage rec {
     ros_comm
     setuptools
     pyserial
-    pyyaml
     requests
     sentry-sdk
     netifaces
@@ -25,6 +24,7 @@ mkRosPackage rec {
     requests
     pynacl
     ipfshttpclient
+    jsonpickle
   ];
 
   meta = with stdenv.lib; {

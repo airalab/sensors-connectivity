@@ -5,18 +5,24 @@ import rospy
 from tempfile import NamedTemporaryFile
 import ipfshttpclient
 import requests
+import threading
 
 from feeders import IFeeder
 from stations import StationData, Measurement
 from drivers.ping import PING_MODEL
 
-
+thlock = threading.RLock()
 def _create_row(m: Measurement) -> dict:
     return {
         "pm25": m.pm25,
         "pm10": m.pm10,
         "geo": "{},{}".format(m.geo_lat, m.geo_lon),
-        "timestamp": m.timestamp
+        "timestamp": m.timestamp,
+        "temperature": m.temperature,
+        "humidity": m.humidity,
+        "pressure": m.pressure,
+        "ph": m.ph,
+        "conductivity": m.conductivity
     }
 
 def _sort_payload(data: dict) -> dict:
@@ -36,8 +42,9 @@ def _get_multihash(buf: set, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> 
         else:
             payload[m.public] = {
                 "model": m.model,
+                "geo": "{},{}".format(m.geo_lat, m.geo_lon),
                 "measurements": [
-                    _create_row(m)
+                    m.to_json(m.measurement)
                 ]
             }
 

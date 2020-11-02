@@ -1,28 +1,56 @@
 # This is an interface for a station
 import time
-from dataclasses import dataclass
 import netifaces
 from datetime import timedelta
+import json
+from dataclasses import dataclass
+import jsonpickle
+from json import JSONEncoder
+import rospy
+import threading
+import copy
 
 STATION_VERSION = "v0.3.0"
+thlock = threading.RLock()
 
-
-@dataclass(frozen=True)
-class Measurement:
+class Measurement():
     """
     Represents a single measurement
     """
 
-    public: str     = ""
-    model: int      = 0
-    pm25: float     = 0
-    pm10: float     = 0
-    geo_lat: float  = 0
-    geo_lon: float  = 0
-    timestamp: int  = 0
+    # public: str     = ""
+    # model: int      = 0
+    # pm25: float     = 0
+    # pm10: float     = 0
+    # geo_lat: float  = 0
+    # geo_lon: float  = 0
+    # timestamp: int  = 0
+    # temperature: float = None
+    # pressure: float = None
+    # humidity: float = None
+    # ph: float = 0
+    # conductivity: float = 0
+
+    def __init__(self, public, model, geo_lat, geo_lon, measurement):
+        self.public = public
+        self.model = model
+        self.geo_lat = geo_lat
+        self.geo_lon = geo_lon
+        self.measurement = measurement
+         
+
+    def to_json(self):
+        with thlock:
+            data_copy = copy.deepcopy(self.measurement)
+            for key, value in data_copy.items():
+                rospy.loginfo(f"inside to_json {value}")
+                if value is None:
+                    del self.measurement[key]
+        return jsonpickle.encode(self.measurement)
 
     def __str__(self):
-        return f"{{Public: {self.public}, PM2.5: {self.pm25}, PM10: {self.pm10}, geo: ({self.geo_lat},{self.geo_lon}), timestamp: {self.timestamp}}}"
+
+        return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), measurements: {self.measurement}}}"
 
 
 @dataclass

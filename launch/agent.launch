@@ -1,5 +1,5 @@
 <launch>
-	<arg name="config" default="$(find sensors_connectivity)/config/default.yaml" />
+	<arg name="config" default="$(find sensors_connectivity)/config/default.json" />
 
     <node ns="connectivity" name="worker" pkg="sensors_connectivity" type="worker_node" output="screen" respawn="true">
         <!--
