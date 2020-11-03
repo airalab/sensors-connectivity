@@ -5,5 +5,5 @@ venv/
 config/*
 .pio/
 my.yaml
-!config/default.yaml
+!config/default.json
 .vscode/*
