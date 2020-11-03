@@ -25,7 +25,7 @@ install(
 
 install(
     FILES
-        config/default.yaml
+        config/default.json
     DESTINATION
         ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
 )

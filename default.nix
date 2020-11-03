@@ -17,7 +17,6 @@ mkRosPackage rec {
     ros_comm
     setuptools
     pyserial
-    pyyaml
     requests
     sentry-sdk
     netifaces
