@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 # ROS
 import rospy
+import json
 
 # Standart, System and Third party
 from threading import Timer
 import sentry_sdk
-import yaml
 
 from stations import COMStation, TCPStation, HTTPStation
 from feeders import LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
@@ -43,7 +43,7 @@ class WorkerNode:
         try:
             with open(config_path) as f:
                 content = f.read()
-                config = yaml.load(content, Loader=yaml.FullLoader)
+                config = json.loads(content)
                 rospy.logdebug(f"Configuration dict: {content}")
                 return config
         except Exception as e:

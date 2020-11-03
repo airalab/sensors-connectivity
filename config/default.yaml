@@ -3,13 +3,13 @@
 general:
   publish_interval: 30  # time between two published messages
 comstation:
-  enable: true
+  enable: false
   port: "/dev/ttyUSB0"  # COM port of the device
   work_period: 300      # time between two measurements in seconds
   geo: ""               # Geo coordinates as latitude,longitude
   public_key: ""        # If not provided, COMStation creates itself
 tcpstation:
-  enable: true
+  enable: false
   address: "0.0.0.0:31313"  # IP and PORT to listen to, 0.0.0.0:31313 means available for everyone
   acl:                  # list of known addresses. If not specified accepts from everyone
 httpstation:
