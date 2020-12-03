@@ -24,7 +24,6 @@ mkRosPackage rec {
     requests
     pynacl
     ipfshttpclient
-    jsonpickle
   ];
 
   meta = with stdenv.lib; {

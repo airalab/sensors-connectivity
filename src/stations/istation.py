@@ -14,22 +14,22 @@ STATION_VERSION = "v0.3.0"
 thlock = threading.RLock()
 
 class Measurement():
+
     """
     Represents a single measurement
     """
-
-    # public: str     = ""
-    # model: int      = 0
-    # pm25: float     = 0
-    # pm10: float     = 0
-    # geo_lat: float  = 0
-    # geo_lon: float  = 0
-    # timestamp: int  = 0
-    # temperature: float = None
-    # pressure: float = None
-    # humidity: float = None
-    # ph: float = 0
-    # conductivity: float = 0
+    """
+    public: str     = ""
+    model: int      = 0
+    pm25: float     = 0
+    pm10: float     = 0
+    geo_lat: float  = 0
+    geo_lon: float  = 0
+    timestamp: int  = 0
+    temperature: float = 0
+    pressure: float = 0
+    humidity: float = 0
+    """
 
     def __init__(self, public, model, geo_lat, geo_lon, measurement):
         self.public = public
@@ -39,14 +39,13 @@ class Measurement():
         self.measurement = measurement
          
 
-    def to_json(self):
+    def measurement_check(self) -> dict:
         with thlock:
             data_copy = copy.deepcopy(self.measurement)
             for key, value in data_copy.items():
-                rospy.loginfo(f"inside to_json {value}")
                 if value is None:
                     del self.measurement[key]
-        return jsonpickle.encode(self.measurement)
+        return self.measurement
 
     def __str__(self):
 

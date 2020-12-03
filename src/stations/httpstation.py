@@ -60,11 +60,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                     if d["value_type"] == "GPS_lon":
                         geo_lon = d["value"]
 
-                    if d["value_type"] == "BME280_temperature":
+                    if d["value_type"] == "BME280_temperature" or d["value_type"] == "HTU21D_temperature":
                         temperature = float(d["value"])
                     if d["value_type"] == "BME280_pressure":
                         pressure = float(d["value"])
-                    if d["value_type"] == "BME280_humidity":
+                    if d["value_type"] == "BME280_humidity" or d["value_type"] == "HTU21D_humidity":
                         humidity = float(d["value"])
 
                 meas = {}
@@ -92,8 +92,6 @@ class RequestHandler(BaseHTTPRequestHandler):
                                         meas
             )
 
-
-
         except Exception as e:
             rospy.logerr(e)
             return
@@ -108,14 +106,11 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.data = json.loads(self.rfile.read(length))
         rospy.loginfo(self.data)
         meas = self._parser(self.data)
-        rospy.loginfo(f"meas: {meas}")
         with thlock:
             if meas:
-                rospy.loginfo(type(meas))
                 if self.client_id in sessions:
                     del sessions[self.client_id]
                 sessions.update({self.client_id: meas})
-                rospy.loginfo(f"sessions in post {sessions}")
         self._set_headers()
 
 
@@ -143,7 +138,7 @@ class HTTPStation(IStation):
 
     def get_data(self) -> StationData:
         global sessions
-        rospy.loginfo(f"sessions {sessions.__str__()}")
+        # rospy.loginfo(f"sessions {str(sessions)}")
 
         result = []
         for k, v in self._drop_dead_sensors().items():
