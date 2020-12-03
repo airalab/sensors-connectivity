@@ -96,7 +96,7 @@ class IStation:
 
     Keep in mind `get_data()` can be called more often than actual data arrives.
     A good practice is to have a thread for data reading and a variable that keeps last record.
-    Have a look at COMStation and TCPStation implementation.
+    Have a look at COMStation and HTTPStation implementation.
     """
 
     def __init__(self, config: dict):
