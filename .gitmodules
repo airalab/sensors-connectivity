@@ -1,0 +1,6 @@
+[submodule "firmware-flasher"]
+	path = airrohr-firmware-flasher
+	url = https://github.com/LoSk-p/airrohr-firmware-flasher
+[submodule "firmware"]
+	path = sensors-software
+	url = https://github.com/LoSk-p/sensors-software

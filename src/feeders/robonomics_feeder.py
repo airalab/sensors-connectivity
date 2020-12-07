@@ -4,22 +4,19 @@ import ipfshttpclient
 from feeders import IFeeder
 from drivers.ping import PING_MODEL
 from stations import StationData
+import threading
 
 
+thlock = threading.RLock()
 def _to_pubsub_message(data: StationData) -> str:
     meas = data.measurement
 
     message = {}
     message[meas.public] = {
         "model": meas.model,
-        "timestamp": meas.timestamp,
-        "measurement": {
-            "pm25": meas.pm25,
-            "pm10": meas.pm10,
-            "geo": "{},{}".format(meas.geo_lat, meas.geo_lon)
-        }
+        "geo": "{},{}".format(meas.geo_lat, meas.geo_lon),
+        "measurement": meas.measurement_check()
     }
-
     return json.dumps(message)
 
 def _to_ping_message(data: StationData) -> str:
@@ -57,9 +54,9 @@ class RobonomicsFeeder(IFeeder):
         if self.config["robonomics"]["enable"]:
             for d in data:
                 if d.measurement.public and d.measurement.model != PING_MODEL:
-                    pubsub_payload = _to_pubsub_message(d)
+                   pubsub_payload = _to_pubsub_message(d)
                 else:
-                    pubsub_payload = _to_ping_message(d)
+                   pubsub_payload = _to_ping_message(d)
 
                 rospy.loginfo(f"RobonomicsFeeder: {pubsub_payload}")
                 self.ipfs_client.pubsub.publish(self.topic, pubsub_payload)

@@ -1,28 +1,41 @@
 # This is an interface for a station
 import time
-from dataclasses import dataclass
 import netifaces
 from datetime import timedelta
+import json
+from dataclasses import dataclass
+import rospy
+import threading
+import copy
 
 STATION_VERSION = "v0.3.0"
+thlock = threading.RLock()
 
+class Measurement():
 
-@dataclass(frozen=True)
-class Measurement:
     """
     Represents a single measurement
     """
+    
+    def __init__(self, public: str, model: int, geo_lat: float, geo_lon: float, measurement: dict):
+        self.public = public
+        self.model = model
+        self.geo_lat = geo_lat
+        self.geo_lon = geo_lon
+        self.measurement = measurement
+         
 
-    public: str     = ""
-    model: int      = 0
-    pm25: float     = 0
-    pm10: float     = 0
-    geo_lat: float  = 0
-    geo_lon: float  = 0
-    timestamp: int  = 0
+    def measurement_check(self) -> dict:
+        with thlock:
+            data_copy = copy.deepcopy(self.measurement)
+            for key, value in data_copy.items():
+                if value is None:
+                    del self.measurement[key]
+        return self.measurement
 
     def __str__(self):
-        return f"{{Public: {self.public}, PM2.5: {self.pm25}, PM10: {self.pm10}, geo: ({self.geo_lat},{self.geo_lon}), timestamp: {self.timestamp}}}"
+
+        return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), measurements: {self.measurement_check()}}}"
 
 
 @dataclass
@@ -69,7 +82,7 @@ class IStation:
 
     Keep in mind `get_data()` can be called more often than actual data arrives.
     A good practice is to have a thread for data reading and a variable that keeps last record.
-    Have a look at COMStation and TCPStation implementation.
+    Have a look at COMStation and HTTPStation implementation.
     """
 
     def __init__(self, config: dict):

@@ -9,11 +9,6 @@
       "geo":"",
       "public_key":""
    },
-   "tcpstation":{
-      "enable":false,
-      "address":"0.0.0.0:31313",
-      "acl":null
-   },
    "httpstation":{
       "enable":true,
       "port":8001
