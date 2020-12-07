@@ -13,19 +13,6 @@ from drivers.ping import PING_MODEL
 
 thlock = threading.RLock()
 
-# def _create_row(m: Measurement) -> dict:
-#     return {
-#         "pm25": m.pm25,
-#         "pm10": m.pm10,
-#         "geo": "{},{}".format(m.geo_lat, m.geo_lon),
-#         "timestamp": m.timestamp,
-#         "temperature": m.temperature,
-#         "humidity": m.humidity,
-#         "pressure": m.pressure,
-#         "ph": m.ph,
-#         "conductivity": m.conductivity
-#     }
-
 def _sort_payload(data: dict) -> dict:
     ordered = {}
     for k,v in data.items():

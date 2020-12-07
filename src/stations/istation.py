@@ -16,20 +16,7 @@ class Measurement():
     """
     Represents a single measurement
     """
-    """
-    public: str     = ""
-    model: int      = 0
-    pm25: float     = 0
-    pm10: float     = 0
-    geo_lat: float  = 0
-    geo_lon: float  = 0
-    timestamp: int  = 0
-    temperature: float = 0
-    pressure: float = 0
-    humidity: float = 0
-    measurment: dict
-    """
-
+    
     def __init__(self, public: str, model: int, geo_lat: float, geo_lon: float, measurement: dict):
         self.public = public
         self.model = model
