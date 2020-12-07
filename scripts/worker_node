@@ -8,7 +8,7 @@ import json
 from threading import Timer
 import sentry_sdk
 
-from stations import COMStation, TCPStation, HTTPStation
+from stations import COMStation, HTTPStation
 from feeders import LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
 
 
@@ -61,9 +61,6 @@ class WorkerNode:
         s = []
         if self.config["comstation"]["enable"]:
             s.append(COMStation(self.config))
-
-        if self.config["tcpstation"]["enable"]:
-            s.append(TCPStation(self.config))
 
         if self.config["httpstation"]["enable"]:
             s.append(HTTPStation(self.config))

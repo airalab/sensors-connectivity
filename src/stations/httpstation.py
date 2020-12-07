@@ -10,7 +10,6 @@ import copy
 
 
 from stations import IStation, StationData, Measurement, STATION_VERSION
-from stations.bme280 import BME_MODEL
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
@@ -138,8 +137,6 @@ class HTTPStation(IStation):
 
     def get_data(self) -> StationData:
         global sessions
-        # rospy.loginfo(f"sessions {str(sessions)}")
-
         result = []
         for k, v in self._drop_dead_sensors().items():
             result.append(StationData(
@@ -160,7 +157,6 @@ class HTTPStation(IStation):
         with thlock:
             sessions_copy = copy.deepcopy(sessions)
             for k, v in sessions_copy.items():
-                #rospy.loginfo(v.measurement)
                 if (current_time - v.measurement["timestamp"]) < self.DEAD_SENSOR_TIME:
                     stripped[k] = v
                 else:

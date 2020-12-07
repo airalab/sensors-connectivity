@@ -4,8 +4,6 @@ import netifaces
 from datetime import timedelta
 import json
 from dataclasses import dataclass
-import jsonpickle
-from json import JSONEncoder
 import rospy
 import threading
 import copy
@@ -29,9 +27,10 @@ class Measurement():
     temperature: float = 0
     pressure: float = 0
     humidity: float = 0
+    measurment: dict
     """
 
-    def __init__(self, public, model, geo_lat, geo_lon, measurement):
+    def __init__(self, public: str, model: int, geo_lat: float, geo_lon: float, measurement: dict):
         self.public = public
         self.model = model
         self.geo_lat = geo_lat
@@ -49,7 +48,7 @@ class Measurement():
 
     def __str__(self):
 
-        return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), measurements: {self.measurement}}}"
+        return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), measurements: {self.measurement_check()}}}"
 
 
 @dataclass
