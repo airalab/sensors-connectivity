@@ -50,17 +50,16 @@ class COMStation(IStation):
 
     def get_data(self) -> [StationData]:
         meas = Measurement()
+        meas_data = {}
         if self.q:
             values = self.q[0]
             pm = values[0]
-
+            meas_data.update({"pm25": pm[0], "pm10": pm[1], "timestamp": values[1]})
             meas = Measurement(self.public,
                                SDS011_MODEL,
-                               pm[0],
-                               pm[1],
                                float(self.geo[0]),
                                float(self.geo[1]),
-                               values[1])
+                               meas_data)
 
         return [StationData(
             self.version,
