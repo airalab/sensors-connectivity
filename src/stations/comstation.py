@@ -42,29 +42,26 @@ class COMStation(IStation):
             verify_key = signing_key.verify_key
 
             self.public = bytes(verify_key).hex()
-
         rospy.loginfo(f"COMStation public key: {self.public}")
-
+        
+        self.meas_data = {"pm25": 0, "pm10": 0, "timestamp": 0}
         self.q = deque(maxlen=1)
         threading.Thread(target=_read_data_thread, args=(self.sensor, self.q, work_period)).start()
 
     def get_data(self) -> [StationData]:
-        meas = Measurement()
-        meas_data = {}
+        meas = Measurement(self.public, SDS011_MODEL, 0, 0, self.meas_data)
         if self.q:
             values = self.q[0]
             pm = values[0]
-            meas_data.update({"pm25": pm[0], "pm10": pm[1], "timestamp": values[1]})
+            self.meas_data.update({"pm25": pm[0], "pm10": pm[1], "timestamp": values[1]})
             meas = Measurement(self.public,
                                SDS011_MODEL,
                                float(self.geo[0]),
                                float(self.geo[1]),
-                               meas_data)
+                               self.meas_data)
 
-        return [StationData(
-            self.version,
-            self.mac_address,
-            time.time() - self.start_time,
-            meas
-        )]
+        return [StationData(self.version,
+                            self.mac_address,
+                            time.time() - self.start_time,
+                            meas)]
 
