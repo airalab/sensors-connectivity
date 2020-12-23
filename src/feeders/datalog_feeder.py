@@ -45,7 +45,7 @@ def _get_multihash(buf: set, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> 
     temp.write(json.dumps(payload))
     temp.close()
 
-    with ipfshttpclient.connect(endpoint) as client:
+    with ipfshttpclient.connect(endpoint, session=True) as client:
         response = client.add(temp.name)
         return (response["Hash"], temp.name)
 

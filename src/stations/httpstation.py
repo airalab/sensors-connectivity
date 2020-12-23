@@ -106,9 +106,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         meas = self._parser(self.data)
         with thlock:
             if meas:
-                if self.client_id in sessions:
-                    del sessions[self.client_id]
-                sessions.update({self.client_id: meas})
+                sessions[self.client_id] = meas
         self._set_headers()
 
 
