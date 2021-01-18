@@ -17,7 +17,7 @@ def _sort_payload(data: dict) -> dict:
     ordered = {}
     for k,v in data.items():
         meas = sorted(v["measurements"], key=lambda x: x["timestamp"])
-        ordered[k] = {"model":v["model"], "measurements":meas}
+        ordered[k] = {"model":v["model"], "geo":v["geo"], "measurements":meas}
 
     return ordered
 
