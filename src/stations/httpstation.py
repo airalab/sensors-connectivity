@@ -58,12 +58,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                         geo_lat = d["value"]
                     if d["value_type"] == "GPS_lon":
                         geo_lon = d["value"]
-
-                    if d["value_type"] == "BME280_temperature" or d["value_type"] == "HTU21D_temperature":
+                    if "temperature" in d["value_type"]:
                         temperature = float(d["value"])
-                    if d["value_type"] == "BME280_pressure":
+                    if "pressure" in d["value_type"]:
                         pressure = float(d["value"])
-                    if d["value_type"] == "BME280_humidity" or d["value_type"] == "HTU21D_humidity":
+                    if "humidity" in d["value_type"]:
                         humidity = float(d["value"])
 
                 meas = {}
