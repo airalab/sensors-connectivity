@@ -62,7 +62,7 @@ while id < 102000:
       ]
     }
     try:
-      response = requests.post('http://localhost:8001/', data=json.dumps(body), headers=header)
+      response = requests.post('http://connectivity.robonomics.network :65/', data=json.dumps(body), headers=header)
       id += 1
       print(response)
       print(id)
