@@ -14,7 +14,7 @@
       "port":8001
    },
    "mqttstation": {
-      "enable": true,
+      "enable": false,
       "host": "connectivity.robonomics.network",
       "port": 1883
    },
