@@ -23,6 +23,7 @@ mkRosPackage rec {
     # protobuf
     pynacl
     ipfshttpclient
+    paho-mqtt
   ];
 
   meta = with stdenv.lib; {

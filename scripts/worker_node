@@ -8,7 +8,7 @@ import json
 from threading import Timer
 import sentry_sdk
 
-from stations import COMStation, HTTPStation
+from stations import COMStation, HTTPStation, MQTTStation
 from feeders import LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
 
 
@@ -64,6 +64,9 @@ class WorkerNode:
 
         if self.config["httpstation"]["enable"]:
             s.append(HTTPStation(self.config))
+
+        if self.config["mqttstation"]["enable"]:
+            s.append(MQTTStation(self.config))
 
         return s
 

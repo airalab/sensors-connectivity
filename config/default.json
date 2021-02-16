@@ -13,6 +13,11 @@
       "enable":true,
       "port":8001
    },
+   "mqttstation": {
+      "enable": true,
+      "host": "connectivity.robonomics.network",
+      "port": 1883
+   },
    "luftdaten":{
       "enable":true
    },
