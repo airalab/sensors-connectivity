@@ -8,7 +8,7 @@ import time
 
 def main():
     parser = argparse.ArgumentParser(description="Virtual Weather Station for Robonomics Connectivity Service")
-    parser.add_argument("--remote", help="set server's URL (default: http://127.0.0.1:65/)", default="http://127.0.0.1:65/")
+    parser.add_argument("--remote", help="set server's URL (default: http://127.0.0.1:8001/)", default="http://127.0.0.1:8001/")
     parser.add_argument("--geo", default="59.944843, 30.294372", help="GPS position in lat,lon format (default: 59.944843, 30.294372)")
     parser.add_argument("--period", default=60, help="measurement period (default: 60 seconds)", type=int)
 
