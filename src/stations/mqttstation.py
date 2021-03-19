@@ -27,14 +27,14 @@ class MQTTHandler(mqtt.Client):
 
     def on_connect(self, client, obj, flags, rc):
         rospy.loginfo(f"Connected to mqtt with result code {str(rc)}")
-        self.subscribe("sensors", 0)
+        self.subscribe("/freertos_mqtt_robonomics_example/#", 0)
 
     def _parser(self, data: dict) -> Measurement: 
         global sessions
         global thlock
         try:
-            if "esp8266id" in data.keys():
-                    self.client_id = int(data["esp8266id"])
+            if "esp32mac" in data.keys():
+                    self.client_id = data["esp32mac"]
                     temperature = None
                     pressure = None
                     humidity = None
@@ -81,7 +81,7 @@ class MQTTHandler(mqtt.Client):
     def on_message(self, client, userdata, msg: dict):
         global thlock
         global sessions
-       
+        #rospy.loginfo(f'on msg {msg.payload}')
         data = json.loads(msg.payload.decode())
         parse_data = self._parser(data)
         print(f"parse {parse_data}")
@@ -141,3 +141,4 @@ class MQTTStation(IStation):
                     del sessions[k]
 
         return stripped
+
