@@ -7,17 +7,18 @@ import time
 import rospy
 import json
 import copy
+import hashlib
 
 
 thlock = threading.RLock()
 sessions = dict()
 
 
-def _generate_pubkey() -> str:
-    signing_key = nacl.signing.SigningKey.generate()
-    verify_key = signing_key.verify_key
-    verify_key_hex = bytes(verify_key).hex()
+def _generate_pubkey(id) -> str:
+    verify_key = hashlib.sha256(id.encode('utf-8'))
+    verify_key_hex = verify_key.hexdigest()
     return str(verify_key_hex)
+
 
 class MQTTHandler(mqtt.Client):
     def __init__(self, host: str, port: int):
