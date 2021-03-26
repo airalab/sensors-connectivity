@@ -5,8 +5,9 @@ import rospy
 from drivers.sds011 import SDS011_MODEL, MOBILE_GPS
 import json
 import cgi
-import nacl.signing
+#import nacl.signing
 import copy
+import hashlib
 
 
 from stations import IStation, StationData, Measurement, STATION_VERSION
@@ -17,11 +18,11 @@ thlock = threading.RLock()
 sessions = dict()
 
 
-def _generate_pubkey() -> str:
-    signing_key = nacl.signing.SigningKey.generate()
-    verify_key = signing_key.verify_key
-    verify_key_hex = bytes(verify_key).hex()
+def _generate_pubkey(id) -> str:
+    verify_key = hashlib.sha256(id.encode('utf-8'))
+    verify_key_hex = verify_key.hexdigest()
     return str(verify_key_hex)
+
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -74,7 +75,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             with thlock:
                 if self.client_id not in sessions:
                     #rospy.loginfo(f"There is no such address: {self.client_address}")
-                    public = _generate_pubkey()
+                    public = _generate_pubkey(str(self.client_id))
                 else:
                     #rospy.loginfo(f"Found such address: {self.client_address}")
                     public = sessions[self.client_id].public
