@@ -68,9 +68,19 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                 meas = {}
                 meas.update({'pm10': pm10, 'pm25': pm25, 'temperature': temperature, 'pressure': pressure, 'humidity': humidity})
+            elif 'ID' in data.keys():
+                self.client_id = data["ID"]
+                temperature = float(data["temperature"])
+                humidity = float(data["humidity"])
+                pressure = float(data["pressure"])
+                CO = float(data["CO"])
+                NH3 = float(data["NH3"])
+                NO2 = float(data["NO2"])
+                geo_lat = float(data["GPS_lat"])
+                geo_lon = float(data["GPS_lon"])
 
-
-            #rospy.loginfo("After 'for'")
+                meas = {}
+                meas.update({"temperature": temperature, "humidity": humidity, "pressure": pressure, "CO": CO, "NH3": NH3, "NO2": NO2})
 
             with thlock:
                 if self.client_id not in sessions:
