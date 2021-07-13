@@ -24,7 +24,8 @@ mkRosPackage rec {
     pynacl
     ipfshttpclient
     paho-mqtt
-    susbstrate-interface_0_13_6
+    substrate-interface_0_13_8
+    xxhash
   ];
 
   meta = with stdenv.lib; {
