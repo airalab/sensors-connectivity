@@ -30,7 +30,7 @@
       "enable":false,
       "path":"",
       "suri":"",
-      "remote":"wss://substrate.ipci.io",
+      "remote":"wss://ipci.rpc.robonomics.network",
       "dump_interval":3600,
       "temporal_username":"",
       "temporal_password":""

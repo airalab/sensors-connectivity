@@ -4,6 +4,7 @@ import time
 import rospy
 from tempfile import NamedTemporaryFile
 import ipfshttpclient
+from substrateinterface import SubstrateInterface, Keypair
 import requests
 import threading
 
@@ -66,6 +67,25 @@ class DatalogFeeder(IFeeder):
         self.buffer = set()
         self.interval = self.config["datalog"]["dump_interval"]
         self.ipfs_endpoint = config["robonomics"]["ipfs_provider"] if config["robonomics"]["ipfs_provider"] else "/ip4/127.0.0.1/tcp/5001/http"
+        self.substrate = SubstrateInterface(
+            url="wss://ipci.rpc.robonomics.network",
+            ss58_format=32,
+            type_registry_preset="substrate-node-template",
+            type_registry={
+                "types": {
+                    "Record": "Vec<u8>",
+                    "<T as frame_system::Config>::AccountId": "AccountId",
+                    "RingBufferItem": {
+                        "type": "struct",
+                        "type_mapping": [
+                            ["timestamp", "Compact<u64>"],
+                            ["payload", "Vec<u8>"],
+                        ],
+                    },
+                }
+            },
+        )
+        self.keypair = Keypair.create_from_seed(seed_hex=self.config["datalog"]["suri"], ss58_format=32 ) 
 
     def feed(self, data: [StationData]):
         if self.config["datalog"]["enable"]:
@@ -106,13 +126,17 @@ class DatalogFeeder(IFeeder):
 
     def _to_datalog(self, ipfs_hash: str):
         rospy.loginfo(ipfs_hash)
-        prog_path = [self.config["datalog"]["path"], "io", "write", "datalog",
-                     "-s", self.config["datalog"]["suri"], "--remote", self.config["datalog"]["remote"]]
+        call = self.substrate.compose_call(
+            call_module = "Datalog",
+            call_function = "record",
+            call_params = {
+                "record": ipfs_hash
+            }
+        )
+        extrinsic = self.substrate.create_signed_extrinsic(call=call, keypair=self.keypair)
         try:
-            output = subprocess.run(prog_path, stdout=subprocess.PIPE, input=ipfs_hash.encode(), timeout=30,
-                           stderr=subprocess.PIPE)
-        except TimeoutExpired:
-            rospy.loginfo("Process timeout expired")
-
-        rospy.loginfo(output.stderr)
-        rospy.logdebug(output)
+            receipt = self.substrate.submit_extrinsic(extrinsic, wait_for_inclusion=True)
+            rospy.loginfo(f'ipfs hash sent and included in block {receipt.block_hash}')
+        except Exception as e:
+            rospy.loginfo(f'something went wrong during extrinsic submission: {e}')
+        
