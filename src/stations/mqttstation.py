@@ -59,6 +59,40 @@ class MQTTHandler(mqtt.Client):
                     meas = {}
                     meas.update({'pm10': pm10, 'pm25': pm25, 'temperature': temperature, 'pressure': pressure, 'humidity': humidity})
 
+            elif 'ID' in data.keys():
+                self.client_id = data["ID"]
+                temperature = None
+                pressure = None
+                humidity = None
+                CO = None
+                NH3 = None
+                NO2 = None
+                speed = None
+                vane = None
+
+                if "temperature" in data.keys():
+                    temperature = float(data["temperature"])
+                if "humidity" in data.keys():
+                    humidity = float(data["humidity"])
+                if "pressure" in data.keys():
+                    pressure = float(data["pressure"])
+                if "CO" in data.keys():
+                    CO = float(data["CO"])
+                if "NH3" in data.keys():
+                    NH3 = float(data["NH3"])
+                if "NO2" in data.keys():
+                    NO2 = float(data["NO2"])
+                if "speed" in data.keys():
+                    speed = float(data["speed"])
+                if "vane" in data.keys():
+                    vane = data["vane"]
+
+                geo_lat = float(data["GPS_lat"])
+                geo_lon = float(data["GPS_lon"])
+
+                meas = {}
+                meas.update({"temperature": temperature, "humidity": humidity, "pressure": pressure, "CO": CO, "NH3": NH3, "NO2": NO2, "speed": speed, "vane": vane})
+
             timestamp = int(time.time())
             meas.update({'timestamp': timestamp})
             with thlock:
@@ -77,6 +111,7 @@ class MQTTHandler(mqtt.Client):
         except Exception as e:
             rospy.logerr(e)
             return
+            
         return measurement
 
     def on_message(self, client, userdata, msg: dict):
