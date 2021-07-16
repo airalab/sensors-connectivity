@@ -24,7 +24,7 @@ mkRosPackage rec {
     pynacl
     ipfshttpclient
     paho-mqtt
-    substrate-interface_0_13_8
+    substrate-interface_0_13_6
     xxhash
   ];
 
