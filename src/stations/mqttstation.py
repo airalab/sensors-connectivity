@@ -57,6 +57,7 @@ class MQTTHandler(mqtt.Client):
                             humidity = float(d["value"])
 
                     meas = {}
+                    model = SDS011_MODEL
                     meas.update({'pm10': pm10, 'pm25': pm25, 'temperature': temperature, 'pressure': pressure, 'humidity': humidity})
 
             elif 'ID' in data.keys():
@@ -69,6 +70,9 @@ class MQTTHandler(mqtt.Client):
                 NO2 = None
                 speed = None
                 vane = None
+                PM1 = None
+                PM10 = None
+                PM25 = None
 
                 if "temperature" in data.keys():
                     temperature = float(data["temperature"])
@@ -86,12 +90,20 @@ class MQTTHandler(mqtt.Client):
                     speed = float(data["speed"])
                 if "vane" in data.keys():
                     vane = data["vane"]
+                if "PM1" in data.keys():
+                    PM1 = data["PM1"]
+                if "PM10" in data.keys():
+                    PM10 = data["PM10"]
+                if "PM25" in data.keys():
+                    PM25 = data["PM25"]
 
                 geo_lat = float(data["GPS_lat"])
                 geo_lon = float(data["GPS_lon"])
 
                 meas = {}
-                meas.update({"temperature": temperature, "humidity": humidity, "pressure": pressure, "CO": CO, "NH3": NH3, "NO2": NO2, "speed": speed, "vane": vane})
+                model = MOBILE_GPS
+                meas.update({"temperature": temperature, "humidity": humidity, "pressure": pressure, "CO": CO, 
+                                "NH3": NH3, "NO2": NO2, "speed": speed, "vane": vane, "PM1": PM1, "PM10": PM10, "PM25": PM25})
 
             timestamp = int(time.time())
             meas.update({'timestamp': timestamp})
@@ -102,7 +114,7 @@ class MQTTHandler(mqtt.Client):
                     public = sessions[self.client_id].public
             
             measurement = Measurement(public,
-                                     SDS011_MODEL,
+                                     model,
                                      geo_lat,
                                      geo_lon,
                                      meas)

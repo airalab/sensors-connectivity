@@ -79,6 +79,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                 NO2 = None
                 speed = None
                 vane = None
+                PM1 = None
+                PM10 = None
+                PM25 = None
 
                 if "temperature" in data.keys():
                     temperature = float(data["temperature"])
@@ -96,13 +99,21 @@ class RequestHandler(BaseHTTPRequestHandler):
                     speed = float(data["speed"])
                 if "vane" in data.keys():
                     vane = data["vane"]
+                if "PM1" in data.keys():
+                    PM1 = data["PM1"]
+                if "PM10" in data.keys():
+                    PM10 = data["PM10"]
+                if "PM25" in data.keys():
+                    PM25 = data["PM25"]
+
 
                 geo_lat = float(data["GPS_lat"])
                 geo_lon = float(data["GPS_lon"])
 
                 meas = {}
                 model = MOBILE_GPS
-                meas.update({"temperature": temperature, "humidity": humidity, "pressure": pressure, "CO": CO, "NH3": NH3, "NO2": NO2, "speed": speed, "vane": vane})
+                meas.update({"temperature": temperature, "humidity": humidity, "pressure": pressure, "CO": CO, 
+                                "NH3": NH3, "NO2": NO2, "speed": speed, "vane": vane, "PM1": PM1, "PM10": PM10, "PM25": PM25})
 
             with thlock:
                 if self.client_id not in sessions:
