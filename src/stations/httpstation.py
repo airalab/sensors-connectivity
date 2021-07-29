@@ -67,6 +67,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                         humidity = float(d["value"])
 
                 meas = {}
+                model = SDS011_MODEL
                 meas.update({'pm10': pm10, 'pm25': pm25, 'temperature': temperature, 'pressure': pressure, 'humidity': humidity})
             elif 'ID' in data.keys():
                 self.client_id = data["ID"]
@@ -100,6 +101,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 geo_lon = float(data["GPS_lon"])
 
                 meas = {}
+                model = MOBILE_GPS
                 meas.update({"temperature": temperature, "humidity": humidity, "pressure": pressure, "CO": CO, "NH3": NH3, "NO2": NO2, "speed": speed, "vane": vane})
 
             with thlock:
@@ -115,7 +117,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             #rospy.loginfo(f"time: {timestamp}")
             meas.update({'timestamp': timestamp})
             measurement = Measurement(public,
-                                     SDS011_MODEL,
+                                     model,
                                      geo_lat,
                                      geo_lon,
                                      meas)
