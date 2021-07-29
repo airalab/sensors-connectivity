@@ -112,7 +112,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                 meas = {}
                 model = MOBILE_GPS
-                meas.update({"temperature": temperature, "humidity": humidity, "pressure": pressure, "CO": CO, "NH3": NH3, "NO2": NO2, "speed": speed, "vane": vane})
+                meas.update({"temperature": temperature, "humidity": humidity, "pressure": pressure, "CO": CO, 
+                                "NH3": NH3, "NO2": NO2, "speed": speed, "vane": vane, "PM1": PM1, "PM10": PM10, "PM25": PM25})
 
             with thlock:
                 if self.client_id not in sessions:
