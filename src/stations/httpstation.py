@@ -42,6 +42,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     def _parser(self, data: dict) -> Measurement:
         global sessions
         global thlock
+        paskal = 133.32
 
         #rospy.loginfo(f"parser data: {data}")
         try:
@@ -62,7 +63,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     if "temperature" in d["value_type"]:
                         temperature = float(d["value"])
                     if "pressure" in d["value_type"]:
-                        pressure = float(d["value"])
+                        pressure = float(d["value"])/paskal
                     if "humidity" in d["value_type"]:
                         humidity = float(d["value"])
 
@@ -79,16 +80,16 @@ class RequestHandler(BaseHTTPRequestHandler):
                 NO2 = None
                 speed = None
                 vane = None
-                PM1 = None
-                PM10 = None
-                PM25 = None
+                pm1 = None
+                pm10 = None
+                pm25 = None
 
                 if "temperature" in data.keys():
                     temperature = float(data["temperature"])
                 if "humidity" in data.keys():
                     humidity = float(data["humidity"])
                 if "pressure" in data.keys():
-                    pressure = float(data["pressure"])
+                    pressure = float(data["pressure"])/paskal
                 if "CO" in data.keys():
                     CO = float(data["CO"])
                 if "NH3" in data.keys():
@@ -100,11 +101,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                 if "vane" in data.keys():
                     vane = data["vane"]
                 if "PM1" in data.keys():
-                    PM1 = data["PM1"]
+                    pm1 = data["PM1"]
                 if "PM10" in data.keys():
-                    PM10 = data["PM10"]
+                    pm10 = data["PM10"]
                 if "PM25" in data.keys():
-                    PM25 = data["PM25"]
+                    pm25 = data["PM25"]
 
 
                 geo_lat = float(data["GPS_lat"])
@@ -113,7 +114,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 meas = {}
                 model = MOBILE_GPS
                 meas.update({"temperature": temperature, "humidity": humidity, "pressure": pressure, "CO": CO, 
-                                "NH3": NH3, "NO2": NO2, "speed": speed, "vane": vane, "PM1": PM1, "PM10": PM10, "PM25": PM25})
+                                "NH3": NH3, "NO2": NO2, "speed": speed, "vane": vane, "pm1": pm1, "pm10": pm10, "pm25": pm25})
 
             with thlock:
                 if self.client_id not in sessions:
