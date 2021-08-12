@@ -32,6 +32,7 @@ class WorkerNode:
         self.feeders = self._populate_feeders()
         self.station_data = []
         rospy.loginfo("Worker node is launched")
+        print(f"nu,ber of threads after worker {threading.active_count()}")
 
 
     def _read_configuration(self) -> dict:
@@ -97,9 +98,11 @@ class WorkerNode:
             rospy.loginfo("Sending result to the feeders...")
             Timer(self.interval, send_result).start()
             for f in self.feeders:
+                class_name = f.get_classname()
                 t = threading.Thread(target=f.feed, args=(self.station_data,))
+                t.name = class_name
                 t.start()
-                t.join()
+                t.join(timeout=20)
            
         get_result()
         send_result()
