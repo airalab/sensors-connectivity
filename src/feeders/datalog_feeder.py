@@ -1,4 +1,5 @@
 import json
+from logging import raiseExceptions
 import subprocess
 import time
 import rospy
@@ -134,10 +135,10 @@ class DatalogFeeder(IFeeder):
             }
         )
         extrinsic = substrate.create_signed_extrinsic(call=call, keypair=self.keypair)
-        rospy.loginfo(f"extrincsic is: {extrinsic}")
+        rospy.loginfo(f"Extrincsic is: {extrinsic}")
         try:
             receipt = substrate.submit_extrinsic(extrinsic, wait_for_inclusion=True)
-            rospy.loginfo(f'ipfs hash sent and included in block {receipt.block_hash}')
+            rospy.loginfo(f'Ipfs hash sent and included in block {receipt.block_hash}')
         except Exception as e:
-            rospy.loginfo(f'something went wrong during extrinsic submission: {e}')
+            rospy.loginfo(f'Something went wrong during extrinsic submission: {e}')
         

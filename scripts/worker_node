@@ -5,6 +5,7 @@ import rospy
 import json
 
 # Standart, System and Third party
+import threading
 from threading import Timer
 import sentry_sdk
 
@@ -29,8 +30,10 @@ class WorkerNode:
 
         self.stations = self._populate_stations()
         self.feeders = self._populate_feeders()
-
+        self.station_data = []
         rospy.loginfo("Worker node is launched")
+        print(f"nu,ber of threads after worker {threading.active_count()}")
+
 
     def _read_configuration(self) -> dict:
         """Internal method
@@ -81,23 +84,31 @@ class WorkerNode:
 
         return f
 
+
     def spin(self):
-        def send_result():
-            """Main loop"""
-            rospy.loginfo("Starting process...")
 
+        def get_result():
+            rospy.loginfo("Getting data from the stations...")
+            Timer(self.interval, get_result).start()
             for s in self.stations:
-                station_data = s.get_data()
-                rospy.loginfo(f"{s.version}: {station_data}")
-
-                for f in self.feeders:
-                    f.feed(station_data)
-
+                self.station_data = s.get_data()
+                rospy.loginfo(f"{s.version}: {self.station_data}")
+            
+        def send_result():
+            rospy.loginfo("Sending result to the feeders...")
             Timer(self.interval, send_result).start()
-
+            for f in self.feeders:
+                class_name = f.get_classname()
+                t = threading.Thread(target=f.feed, args=(self.station_data,))
+                t.name = class_name
+                t.start()
+                t.join(timeout=20)
+           
+        get_result()
         send_result()
         rospy.spin()
 
 
 if __name__ == "__main__":
     WorkerNode().spin()
+    
