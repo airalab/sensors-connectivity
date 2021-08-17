@@ -26,6 +26,34 @@ def _sort_payload(data: dict) -> dict:
 
     return ordered
 
+def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> (str, str):
+        payload = {}
+        for m in buf:
+            if m.public in payload:
+                payload[m.public]["measurements"].append(m.measurement_check())
+            else:
+                payload[m.public] = {
+                    "model": m.model,
+                    "geo": "{},{}".format(m.geo_lat, m.geo_lon),
+                    "measurements": [
+                        m.measurement_check()
+                    ]
+                }
+
+        rospy.logdebug(f"Payload before sorting: {payload}")
+        payload = _sort_payload(payload)
+        rospy.logdebug(f"Payload sorted: {payload}")
+
+        temp = NamedTemporaryFile(mode="w", delete=False)
+        rospy.logdebug(f"Created temp file: {temp.name}")
+        temp.write(json.dumps(payload))
+        temp.close()
+        
+        #with ipfshttpclient.connect(endpoint, session=True) as client:
+        with ipfshttpclient.connect(endpoint) as client:
+            response = client.add(temp.name)
+            db.add_data("not sent", response["Hash"], json.dumps(payload))
+            return (response["Hash"], temp.name)
 
 class DatalogFeeder(IFeeder):
     """
@@ -58,7 +86,7 @@ class DatalogFeeder(IFeeder):
                 if self.buffer:
                     rospy.logdebug("About to publish collected data...")
                     rospy.logdebug(f"Buffer is {self.buffer}")
-                    ipfs_hash, file_path = self._get_multihash(self.buffer, self.ipfs_endpoint)
+                    ipfs_hash, file_path = _get_multihash(self.buffer, self.db, self.ipfs_endpoint)
                     self._pin_to_temporal(file_path)
                     self._to_datalog(ipfs_hash)
                 else:
@@ -68,35 +96,6 @@ class DatalogFeeder(IFeeder):
             else:
                 rospy.loginfo("Still collecting measurements...")
 
-    def _get_multihash(self, buf: set, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> (str, str):
-        payload = {}
-
-        for m in buf:
-            if m.public in payload:
-                payload[m.public]["measurements"].append(m.measurement_check())
-            else:
-                payload[m.public] = {
-                    "model": m.model,
-                    "geo": "{},{}".format(m.geo_lat, m.geo_lon),
-                    "measurements": [
-                        m.measurement_check()
-                    ]
-                }
-
-        rospy.logdebug(f"Payload before sorting: {payload}")
-        payload = _sort_payload(payload)
-        rospy.logdebug(f"Payload sorted: {payload}")
-
-        temp = NamedTemporaryFile(mode="w", delete=False)
-        rospy.logdebug(f"Created temp file: {temp.name}")
-        temp.write(json.dumps(payload))
-        temp.close()
-        
-        #with ipfshttpclient.connect(endpoint, session=True) as client:
-        with ipfshttpclient.connect(endpoint) as client:
-            response = client.add(temp.name)
-            self.db.add_data("not sent", response["Hash"], json.dumps(payload))
-            return (response["Hash"], temp.name)
 
     def _pin_to_temporal(self, file_path: str):
         username = self.config["datalog"]["temporal_username"]
