@@ -3,6 +3,7 @@
 # ROS
 import rospy
 import json
+import time 
 
 # Standart, System and Third party
 import threading
@@ -11,6 +12,7 @@ import sentry_sdk
 
 from stations import COMStation, HTTPStation, MQTTStation
 from feeders import LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
+from utils.database import DataBase
 
 
 class WorkerNode:
@@ -31,6 +33,7 @@ class WorkerNode:
         self.stations = self._populate_stations()
         self.feeders = self._populate_feeders()
         self.station_data = []
+        self.db = DataBase(self.config)
         rospy.loginfo("Worker node is launched")
 
 
@@ -103,10 +106,18 @@ class WorkerNode:
                 t.start()
                 t.join(timeout=20)
            
+        def db_watcher():
+            rospy.loginfo("Checking data base...")
+            Timer(3600, send_result).start()
+            for tuple in self.db.checker(time.time()):
+                for hash in tuple:
+                    self.feeders[2].to_datalog(hash)
+                     
+
         get_result()
         send_result()
+        db_watcher()
         rospy.spin()
-
 
 if __name__ == "__main__":
     WorkerNode().spin()
