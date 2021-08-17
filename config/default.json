@@ -1,6 +1,7 @@
 {
    "general":{
-      "publish_interval":30
+      "publish_interval":30,
+      "db_path": ""
    },
    "comstation":{
       "enable":false,

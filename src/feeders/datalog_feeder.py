@@ -6,12 +6,15 @@ import rospy
 from tempfile import NamedTemporaryFile
 import ipfshttpclient
 from substrateinterface import SubstrateInterface, Keypair
+from substrateinterface.exceptions import SubstrateRequestException
 import requests
 import threading
+from utils.database import DataBase
 
 from feeders import IFeeder
 from stations import StationData, Measurement
 from drivers.ping import PING_MODEL
+from utils.database import DataBase
 
 thlock = threading.RLock()
 
@@ -23,35 +26,34 @@ def _sort_payload(data: dict) -> dict:
 
     return ordered
 
-def _get_multihash(buf: set, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> (str, str):
-    payload = {}
+def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> (str, str):
+        payload = {}
+        for m in buf:
+            if m.public in payload:
+                payload[m.public]["measurements"].append(m.measurement_check())
+            else:
+                payload[m.public] = {
+                    "model": m.model,
+                    "geo": "{},{}".format(m.geo_lat, m.geo_lon),
+                    "measurements": [
+                        m.measurement_check()
+                    ]
+                }
 
-    for m in buf:
-        if m.public in payload:
-            payload[m.public]["measurements"].append(m.measurement_check())
-        else:
-            payload[m.public] = {
-                "model": m.model,
-                "geo": "{},{}".format(m.geo_lat, m.geo_lon),
-                "measurements": [
-                    m.measurement_check()
-                ]
-            }
+        rospy.logdebug(f"Payload before sorting: {payload}")
+        payload = _sort_payload(payload)
+        rospy.logdebug(f"Payload sorted: {payload}")
 
-    rospy.logdebug(f"Payload before sorting: {payload}")
-    payload = _sort_payload(payload)
-    rospy.logdebug(f"Payload sorted: {payload}")
-
-    temp = NamedTemporaryFile(mode="w", delete=False)
-    rospy.logdebug(f"Created temp file: {temp.name}")
-    temp.write(json.dumps(payload))
-    temp.close()
-
-    #with ipfshttpclient.connect(endpoint, session=True) as client:
-    with ipfshttpclient.connect(endpoint) as client:
-        response = client.add(temp.name)
-        return (response["Hash"], temp.name)
-
+        temp = NamedTemporaryFile(mode="w", delete=False)
+        rospy.logdebug(f"Created temp file: {temp.name}")
+        temp.write(json.dumps(payload))
+        temp.close()
+        
+        #with ipfshttpclient.connect(endpoint, session=True) as client:
+        with ipfshttpclient.connect(endpoint) as client:
+            response = client.add(temp.name)
+            db.add_data("not sent", response["Hash"], json.dumps(payload))
+            return (response["Hash"], temp.name)
 
 class DatalogFeeder(IFeeder):
     """
@@ -69,6 +71,8 @@ class DatalogFeeder(IFeeder):
         self.interval = self.config["datalog"]["dump_interval"]
         self.ipfs_endpoint = config["robonomics"]["ipfs_provider"] if config["robonomics"]["ipfs_provider"] else "/ip4/127.0.0.1/tcp/5001/http"
         self.keypair = Keypair.create_from_seed(seed_hex=self.config["datalog"]["suri"], ss58_format=32 ) 
+        self.db = DataBase(self.config)
+        self.db.create_table()
 
     def feed(self, data: [StationData]):
         if self.config["datalog"]["enable"]:
@@ -82,15 +86,16 @@ class DatalogFeeder(IFeeder):
                 if self.buffer:
                     rospy.logdebug("About to publish collected data...")
                     rospy.logdebug(f"Buffer is {self.buffer}")
-                    ipfs_hash, file_path = _get_multihash(self.buffer, self.ipfs_endpoint)
+                    ipfs_hash, file_path = _get_multihash(self.buffer, self.db, self.ipfs_endpoint)
                     self._pin_to_temporal(file_path)
                     self._to_datalog(ipfs_hash)
                 else:
                     rospy.loginfo("Nothing to publish")
                 self.buffer = set()
-                self.last_time = time.time()
+                # self.last_time = time.time()
             else:
                 rospy.loginfo("Still collecting measurements...")
+
 
     def _pin_to_temporal(self, file_path: str):
         username = self.config["datalog"]["temporal_username"]
@@ -136,9 +141,12 @@ class DatalogFeeder(IFeeder):
         )
         extrinsic = substrate.create_signed_extrinsic(call=call, keypair=self.keypair)
         rospy.loginfo(f"Extrincsic is: {extrinsic}")
+        self.last_time = time.time()
         try:
             receipt = substrate.submit_extrinsic(extrinsic, wait_for_inclusion=True)
             rospy.loginfo(f'Ipfs hash sent and included in block {receipt.block_hash}')
-        except Exception as e:
+            self.db.update_status("sent", ipfs_hash)
+        except SubstrateRequestException as e:
             rospy.loginfo(f'Something went wrong during extrinsic submission: {e}')
+
         
