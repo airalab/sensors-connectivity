@@ -32,7 +32,6 @@ class WorkerNode:
         self.feeders = self._populate_feeders()
         self.station_data = []
         rospy.loginfo("Worker node is launched")
-        print(f"nu,ber of threads after worker {threading.active_count()}")
 
 
     def _read_configuration(self) -> dict:
