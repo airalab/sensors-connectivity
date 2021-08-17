@@ -51,3 +51,13 @@ class DataBase():
                     cursor.execute("UPDATE datalog SET status = ? WHERE hash = ?", (status, hash))
 
 
+
+    def checker(self, current_time):
+        connection = self.connection()
+        cursor = connection.cursor()
+        time = current_time - 86400 # 24hrs
+        with contextlib.closing(connection) as conn: # auto-closes
+            with conn: # auto-commits
+                with contextlib.closing(cursor) as cursor: # auto-closes
+                    hashes = cursor.execute("SELECT hash FROM datalog WHERE time < ? AND status='not sent'", (time,)).fetchall()
+        return hashes
