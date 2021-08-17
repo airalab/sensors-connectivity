@@ -27,18 +27,19 @@ class DataBase():
                                                     id integer PRIMARY KEY,
                                                     status text,
                                                     hash text,
+                                                    time real,
                                                     payload blob
 
                             ); """     
         )
 
-    def add_data(self, status, hash, payload):
+    def add_data(self, status, hash, time, payload):
         connection = self.connection()
         cursor = connection.cursor()
         with contextlib.closing(connection) as conn: # auto-closes
             with conn: # auto-commits
                 with contextlib.closing(cursor) as cursor: # auto-closes
-                    cursor.execute("INSERT INTO datalog (status, hash, payload) VALUES (?, ?, ?)", (status, hash, payload))
+                    cursor.execute("INSERT INTO datalog (status, hash, time, payload) VALUES (?, ?, ?, ?)", (status, hash, time, payload))
 
 
     def update_status(self, status, hash):

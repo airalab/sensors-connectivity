@@ -52,7 +52,7 @@ def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/500
         #with ipfshttpclient.connect(endpoint, session=True) as client:
         with ipfshttpclient.connect(endpoint) as client:
             response = client.add(temp.name)
-            db.add_data("not sent", response["Hash"], json.dumps(payload))
+            db.add_data("not sent", response["Hash"], time.time(), json.dumps(payload))
             return (response["Hash"], temp.name)
 
 class DatalogFeeder(IFeeder):
