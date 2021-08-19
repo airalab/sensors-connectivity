@@ -108,7 +108,7 @@ class WorkerNode:
            
         def db_watcher():
             rospy.loginfo("Checking data base...")
-            Timer(3600, send_result).start()
+            Timer(3600, db_watcher).start()
             for tuple in self.db.checker(time.time()):
                 for hash in tuple:
                     self.feeders[2].to_datalog(hash)
