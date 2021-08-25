@@ -114,7 +114,7 @@ class DatalogFeeder(IFeeder):
     def to_datalog(self, ipfs_hash: str):
         rospy.loginfo(ipfs_hash)
         substrate = SubstrateInterface(
-            url="wss://ipci.rpc.robonomics.network",
+            url=self.config["datalog"]["remote"],
             ss58_format=32,
             type_registry_preset="substrate-node-template",
             type_registry={

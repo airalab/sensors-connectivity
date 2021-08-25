@@ -38,5 +38,10 @@
    },
    "dev":{
       "sentry":""
+   },
+   "frontier":{
+      "enable":true,
+      "suri":"",
+      "remote":"wss://kusama.rpc.robonomics.network"
    }
 }

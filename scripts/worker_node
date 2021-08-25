@@ -11,7 +11,7 @@ from threading import Timer
 import sentry_sdk
 
 from stations import COMStation, HTTPStation, MQTTStation
-from feeders import LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder
+from feeders import LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder, FrontierFeeder
 from utils.database import DataBase
 
 
@@ -82,7 +82,8 @@ class WorkerNode:
         """
         f = [LuftdatenFeeder(self.config),
              RobonomicsFeeder(self.config),
-             DatalogFeeder(self.config)]
+             DatalogFeeder(self.config),
+             FrontierFeeder(self.config)]
 
         return f
 
