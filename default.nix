@@ -1,5 +1,6 @@
 { stdenv
 , mkRosPackage
+, lib
 #, robonomics_comm-nightly
 , ros_comm
 , python3Packages
@@ -8,7 +9,7 @@
 mkRosPackage rec {
   name = "${pname}-${version}";
   pname = "sensors-connectivity";
-  version = "0.3.0";
+  version = "0.6.0";
 
   src = ./.;
 
@@ -28,7 +29,7 @@ mkRosPackage rec {
     xxhash
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Agent that offers data from sensors";
     homepage = http://github.com/airalab/sensors-connectivity;
     license = licenses.bsd3;
