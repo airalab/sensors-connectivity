@@ -45,4 +45,4 @@ class FrontierFeeder(IFeeder):
                     receipt = self.substrate.submit_extrinsic(extrinsic, wait_for_inclusion=True)
                     rospy.loginfo(f'Data sent to Robonomics datalog and included in block {receipt.block_hash}')
                 except SubstrateRequestException as e:
-                    rospy.loginfo(f'Something went wrong during extrinsic submission: {e}')
+                    rospy.loginfo(f'Something went wrong during extrinsic submission to Robonomics: {e}')
