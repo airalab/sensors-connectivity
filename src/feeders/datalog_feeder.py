@@ -138,9 +138,9 @@ class DatalogFeeder(IFeeder):
                 "record": ipfs_hash
             }
         )
+        self.last_time = time.time()
         extrinsic = substrate.create_signed_extrinsic(call=call, keypair=self.keypair)
         rospy.loginfo(f"Extrincsic is: {extrinsic}")
-        self.last_time = time.time()
         try:
             receipt = substrate.submit_extrinsic(extrinsic, wait_for_inclusion=True)
             rospy.loginfo(f'Ipfs hash sent and included in block {receipt.block_hash}')

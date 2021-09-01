@@ -60,4 +60,6 @@ class DataBase():
             with conn: # auto-commits
                 with contextlib.closing(cursor) as cursor: # auto-closes
                     hashes = cursor.execute("SELECT hash FROM datalog WHERE time < ? AND status='not sent'", (time,)).fetchall()
+                    cursor.execute("DELETE FROM datalog WHERE status='sent'")
         return hashes
+
