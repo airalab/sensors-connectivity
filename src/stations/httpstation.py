@@ -51,6 +51,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                 temperature = None
                 pressure = None
                 humidity = None
+                CCS_CO2 = None
+                CCS_TVOC = None
+
                 for d in data["sensordatavalues"]:
                     if d["value_type"] == "SDS_P1":
                         pm10 = float(d["value"])
@@ -66,10 +69,15 @@ class RequestHandler(BaseHTTPRequestHandler):
                         pressure = float(d["value"])/paskal
                     if "humidity" in d["value_type"]:
                         humidity = float(d["value"])
+                    if "CCS_CO2" in d["value_type"]:
+                        CCS_CO2 = float(d["value"])
+                    if "CCS_TVOC" in d["value_type"]:
+                        CCS_TVOC = float(d["value"])
+
 
                 meas = {}
                 model = SDS011_MODEL
-                meas.update({'pm10': pm10, 'pm25': pm25, 'temperature': temperature, 'pressure': pressure, 'humidity': humidity})
+                meas.update({'pm10': pm10, 'pm25': pm25, 'temperature': temperature, 'pressure': pressure, 'humidity': humidity, "CCS_CO2": CCS_CO2, "CCS_TVOC": CCS_TVOC})
             elif 'ID' in data.keys():
                 self.client_id = data["ID"]
                 temperature = None

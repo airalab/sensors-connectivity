@@ -10,7 +10,7 @@ class FrontierFeeder(IFeeder):
     def __init__(self, config: dict):
         super().__init__(config)
         self.substrate = SubstrateInterface(
-            url="wss://kusama.rpc.robonomics.network",
+            url="wss://main.frontier.rpc.robonomics.network",
             ss58_format=32,
             type_registry_preset="substrate-node-template",
             type_registry={
@@ -45,4 +45,6 @@ class FrontierFeeder(IFeeder):
                     receipt = self.substrate.submit_extrinsic(extrinsic, wait_for_inclusion=True)
                     rospy.loginfo(f'Data sent to Robonomics datalog and included in block {receipt.block_hash}')
                 except SubstrateRequestException as e:
-                    rospy.loginfo(f'Something went wrong during extrinsic submission: {e}')
+                    rospy.loginfo(f'Something went wrong during extrinsic submission to Robonomics: {e}')
+
+
