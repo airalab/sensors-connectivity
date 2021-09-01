@@ -90,7 +90,7 @@ class DatalogFeeder(IFeeder):
                     self.to_datalog(ipfs_hash)
                 else:
                     rospy.loginfo("Nothing to publish")
-                self.buffer = set()
+                # self.buffer = set()
                 # self.last_time = time.time()
             else:
                 rospy.loginfo("Still collecting measurements...")
@@ -138,7 +138,9 @@ class DatalogFeeder(IFeeder):
                 "record": ipfs_hash
             }
         )
+
         self.last_time = time.time()
+        self.buffer = set()
         extrinsic = substrate.create_signed_extrinsic(call=call, keypair=self.keypair)
         rospy.loginfo(f"Extrincsic is: {extrinsic}")
         try:
