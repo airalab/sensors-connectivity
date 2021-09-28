@@ -44,7 +44,6 @@ class WorkerNode:
         """
         config_path = rospy.get_param("~config")
         rospy.logdebug(config_path)
-
         try:
             with open(config_path) as f:
                 content = f.read()
@@ -81,9 +80,9 @@ class WorkerNode:
         If you make a new one, add initialization here.
         """
         f = [LuftdatenFeeder(self.config),
+             FrontierFeeder(self.config),
              RobonomicsFeeder(self.config),
-             DatalogFeeder(self.config),
-             FrontierFeeder(self.config)]
+             DatalogFeeder(self.config)]
 
         return f
 
@@ -110,9 +109,9 @@ class WorkerNode:
         def db_watcher():
             rospy.loginfo("Checking data base...")
             Timer(3600, db_watcher).start()
-            for tuple in self.db.checker(time.time()):
-                for hash in tuple:
-                    self.feeders[2].to_datalog(hash)
+            for data in self.db.checker(time.time()):
+                for hash in data:
+                    self.feeders[3].to_datalog(hash)
                      
 
         get_result()
@@ -122,4 +121,4 @@ class WorkerNode:
 
 if __name__ == "__main__":
     WorkerNode().spin()
-    
+

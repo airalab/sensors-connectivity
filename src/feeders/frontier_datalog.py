@@ -1,5 +1,6 @@
 from substrateinterface import SubstrateInterface, Keypair
 from substrateinterface.exceptions import SubstrateRequestException
+import time
 import rospy
 
 from feeders import IFeeder
@@ -31,7 +32,7 @@ class FrontierFeeder(IFeeder):
 
     def feed(self, data: [StationData]):
         if self.config["frontier"]["enable"]:
-            for d in data:
+            for d in data:   
                 call = self.substrate.compose_call(
                     call_module = "Datalog",
                     call_function = "record",
@@ -44,7 +45,9 @@ class FrontierFeeder(IFeeder):
                 try:
                     receipt = self.substrate.submit_extrinsic(extrinsic, wait_for_inclusion=True)
                     rospy.loginfo(f'Data sent to Robonomics datalog and included in block {receipt.block_hash}')
+                    #return
                 except SubstrateRequestException as e:
                     rospy.loginfo(f'Something went wrong during extrinsic submission to Robonomics: {e}')
-
+                    #return
+                    #time.sleep(12)
 

@@ -53,6 +53,37 @@ def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/500
             response = client.add(temp.name)
             db.add_data("not sent", response["Hash"], time.time(), json.dumps(payload))
             return (response["Hash"], temp.name)
+    
+def _substrate_connect(endpoint: str) -> SubstrateInterface:
+    substrate = SubstrateInterface(
+        url=endpoint,
+        ss58_format=32,
+        type_registry_preset="substrate-node-template",
+        type_registry={
+            "types": {
+                "Record": "Vec<u8>",
+                "<T as frame_system::Config>::AccountId": "AccountId",
+                "RingBufferItem": {
+                    "type": "struct",
+                    "type_mapping": [
+                        ["timestamp", "Compact<u64>"],
+                        ["payload", "Vec<u8>"],
+                    ],
+                },
+            }
+        },
+    )
+    return substrate
+
+def _substrate_call(substrate: SubstrateInterface, ipfs_hash: str):
+    call = substrate.compose_call(
+                    call_module = "Datalog",
+                    call_function = "record",
+                    call_params = {
+                        "record": ipfs_hash
+                    }
+                )
+    return call
 
 class DatalogFeeder(IFeeder):
     """
@@ -69,7 +100,6 @@ class DatalogFeeder(IFeeder):
         self.buffer = set()
         self.interval = self.config["datalog"]["dump_interval"]
         self.ipfs_endpoint = config["robonomics"]["ipfs_provider"] if config["robonomics"]["ipfs_provider"] else "/ip4/127.0.0.1/tcp/5001/http"
-        self.keypair = Keypair.create_from_seed(seed_hex=self.config["datalog"]["suri"], ss58_format=32 ) 
         self.db = DataBase(self.config)
         self.db.create_table()
 
@@ -111,43 +141,34 @@ class DatalogFeeder(IFeeder):
             if resp.status_code == 200:
                 rospy.loginfo("File pinned to Temporal Cloud")
 
+
     def to_datalog(self, ipfs_hash: str):
         rospy.loginfo(ipfs_hash)
-        substrate = SubstrateInterface(
-            url=self.config["datalog"]["remote"],
-            ss58_format=32,
-            type_registry_preset="substrate-node-template",
-            type_registry={
-                "types": {
-                    "Record": "Vec<u8>",
-                    "<T as frame_system::Config>::AccountId": "AccountId",
-                    "RingBufferItem": {
-                        "type": "struct",
-                        "type_mapping": [
-                            ["timestamp", "Compact<u64>"],
-                            ["payload", "Vec<u8>"],
-                        ],
-                    },
-                }
-            },
-        )
-        call = substrate.compose_call(
-            call_module = "Datalog",
-            call_function = "record",
-            call_params = {
-                "record": ipfs_hash
-            }
-        )
-
         self.last_time = time.time()
         self.buffer = set()
-        extrinsic = substrate.create_signed_extrinsic(call=call, keypair=self.keypair)
-        rospy.loginfo(f"Extrincsic is: {extrinsic}")
+        robonomics_keypair = Keypair.create_from_mnemonic(self.config["frontier"]["suri"]) 
+        ipci_keypair = Keypair.create_from_seed(self.config["datalog"]["suri"]) 
+        robonomics_connect = _substrate_connect(endpoint=self.config["frontier"]["remote"])
+        ipci_connect = _substrate_connect(endpoint=self.config["datalog"]["remote"])
+        robonomics_call = _substrate_call(substrate=robonomics_connect, ipfs_hash=ipfs_hash)
+        ipci_call = _substrate_call(substrate=ipci_connect, ipfs_hash=ipfs_hash)
+
+        robonomics_extrinsic = robonomics_connect.create_signed_extrinsic(call=robonomics_call, keypair=robonomics_keypair)
+        ipci_extrinsic = ipci_connect.create_signed_extrinsic(call=ipci_call, keypair=ipci_keypair)
+
         try:
-            receipt = substrate.submit_extrinsic(extrinsic, wait_for_inclusion=True)
-            rospy.loginfo(f'Ipfs hash sent and included in block {receipt.block_hash}')
+            ipci_receipt = ipci_connect.submit_extrinsic(ipci_extrinsic, wait_for_inclusion=True)
+            rospy.loginfo(f'Ipfs hash sent to DAO IPCI and included in block {ipci_receipt.block_hash}')
+        except SubstrateRequestException as e:
+            rospy.loginfo(f'Something went wrong during extrinsic submission to DAO IPCI: {e}')
+        try:
+            robonomics_receipt = robonomics_connect.submit_extrinsic(robonomics_extrinsic, wait_for_inclusion=True)
+            rospy.loginfo(f'Ipfs hash sent to Robonomics and included in block {robonomics_receipt.block_hash}')
             self.db.update_status("sent", ipfs_hash)
         except SubstrateRequestException as e:
-            rospy.loginfo(f'Something went wrong during extrinsic submission: {e}')
+            rospy.loginfo(f'Something went wrong during extrinsic submission to Robonomics: {e}')
+
 
         
+
+
