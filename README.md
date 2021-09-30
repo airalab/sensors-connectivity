@@ -5,7 +5,7 @@ Aira source package to input data from sensors. ROS-enabled telemetry agent
 
 The Aira package allows you to read data from a SDS011 sensor (and a few others) and publish to different output channels.
 That said Aira is able to form Demand and Result messages and a few other channels.
-Also it includes Datalog feature which is still experimental. It could be used to publish data to Substrate based blockchain by [Robonomics](https://parachain.robonomics.network/.
+Also it includes Datalog feature which is still experimental. It could be used to publish data to Substrate based blockchain by [Robonomics](https://parachain.robonomics.network/).
 
 ## Get a Package And Build
 
