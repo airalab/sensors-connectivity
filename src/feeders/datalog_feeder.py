@@ -9,8 +9,9 @@ from substrateinterface import SubstrateInterface, Keypair
 from substrateinterface.exceptions import SubstrateRequestException
 import requests
 import threading
-from utils.database import DataBase
+from pinatapy import PinataPy
 
+from utils.database import DataBase
 from feeders import IFeeder
 from stations import StationData, Measurement
 from drivers.ping import PING_MODEL
@@ -85,6 +86,20 @@ def _substrate_call(substrate: SubstrateInterface, ipfs_hash: str):
                 )
     return call
 
+def _pin_to_pinata(file_path: str, config):
+    pinata_api = config["datalog"]["pinata_api"]
+    pinata_secret = config["datalog"]["pinata_secret"]
+    if pinata_secret:
+        try:
+            rospy.loginfo("Pinning file to Pinata")
+            pinata = PinataPy(pinata_api, pinata_secret)
+            pinata.pin_file_to_ipfs(file_path)
+            hash = pinata.pin_list()["rows"][0]["ipfs_pin_hash"]
+            rospy.loginfo(f"File sent to pinata. Hash is {hash}")
+        except Exception as e:
+            rospy.loginfo(f"Failed while pining file to Pinata. Error: {e}")
+            
+
 class DatalogFeeder(IFeeder):
     """
     The feeder is responsible for collecting measurements and
@@ -117,6 +132,7 @@ class DatalogFeeder(IFeeder):
                     rospy.logdebug(f"Buffer is {self.buffer}")
                     ipfs_hash, file_path = _get_multihash(self.buffer, self.db, self.ipfs_endpoint)
                     self._pin_to_temporal(file_path)
+                    _pin_to_pinata(file_path, self.config)
                     self.to_datalog(ipfs_hash)
                 else:
                     rospy.loginfo("Nothing to publish")
