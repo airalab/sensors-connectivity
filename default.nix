@@ -27,6 +27,7 @@ mkRosPackage rec {
     substrate-interface_0_13_8
     paho-mqtt
     xxhash
+    pinatapy
   ];
 
   meta = with lib; {

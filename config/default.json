@@ -42,6 +42,6 @@
    "frontier":{
       "enable":true,
       "suri":"",
-      "remote":"wss://kusama.rpc.robonomics.network"
+      "remote":"wss://main.frontier.rpc.robonomics.network"
    }
 }

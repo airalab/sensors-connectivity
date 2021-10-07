@@ -30,13 +30,19 @@ class RequestHandler(BaseHTTPRequestHandler):
     def _set_headers(self):
         self.send_response(200)
         self.send_header("Content-type", "application/json")
+        self.send_header("sensors-count", f"{len(sessions)}")
         self.end_headers()
 
     def do_HEAD(self):
         self._set_headers()
 
     def do_GET(self):
+        rospy.loginfo("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
         self._set_headers()
+        rospy.loginfo(f"session length: {len(sessions)}")
+
+        
+
 
 
     def _parser(self, data: dict) -> Measurement:

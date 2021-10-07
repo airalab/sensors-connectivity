@@ -29,10 +29,3 @@ install(
     DESTINATION
         ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
 )
-
-install(
-    DIRECTORY
-        db/
-    DESTINATION
-        ${CATKIN_PACKAGE_SHARE_DESTINATION}/db
-)
