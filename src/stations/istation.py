@@ -8,7 +8,7 @@ import rospy
 import threading
 import copy
 
-STATION_VERSION = "v0.3.0"
+STATION_VERSION = "v0.7.0"
 thlock = threading.RLock()
 
 class Measurement():

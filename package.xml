@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>sensors_connectivity</name>
-  <version>0.3.0</version>
+  <version>0.7.0</version>
   <description>Agent that offers data from sensors</description>
   <author email="vadim.razorq@gmail.com">Vadim Manaenko</author>
   <maintainer email="vadim.razorq@aira.life">Vadim Manaenko</maintainer>
