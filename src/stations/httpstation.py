@@ -27,10 +27,13 @@ def _generate_pubkey(id) -> str:
 
 class RequestHandler(BaseHTTPRequestHandler):
 
-    def _set_headers(self):
+    def _set_headers(self, id = None):
         self.send_response(200)
         self.send_header("Content-type", "application/json")
         self.send_header("sensors-count", f"{len(sessions)}")
+        if id is not None:
+            self.send_header("on-server", f"{int(id) in sessions}")
+
         self.end_headers()
 
     def do_HEAD(self):
@@ -38,7 +41,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         rospy.loginfo("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
-        self._set_headers()
+        id = self.headers["Sensor-id"]
+        self._set_headers(id)
         rospy.loginfo(f"session length: {len(sessions)}")
 
         
@@ -143,13 +147,13 @@ class RequestHandler(BaseHTTPRequestHandler):
             #rospy.loginfo(f"time: {timestamp}")
             meas.update({'timestamp': timestamp})
             measurement = Measurement(public,
-                                     model,
-                                     geo_lat,
-                                     geo_lon,
-                                     meas)
+                                        model,
+                                        geo_lat,
+                                        geo_lon,
+                                        meas)
 
         except Exception as e:
-            rospy.logerr(e)
+            rospy.logerr(f'err in parser {e}')
             return
 
         return measurement
