@@ -147,10 +147,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             #rospy.loginfo(f"time: {timestamp}")
             meas.update({'timestamp': timestamp})
             measurement = Measurement(public,
-                                        model,
-                                        geo_lat,
-                                        geo_lon,
-                                        meas)
+                                    model,
+                                    geo_lat,
+                                    geo_lon,
+                                    meas)
 
         except Exception as e:
             rospy.logerr(f'err in parser {e}')
