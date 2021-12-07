@@ -23,8 +23,6 @@ def _generate_pubkey(id) -> str:
     verify_key_hex = verify_key.hexdigest()
     return str(verify_key_hex)
 
-
-
 class RequestHandler(BaseHTTPRequestHandler):
 
     def _set_headers(self, id = None):
@@ -33,7 +31,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("sensors-count", f"{len(sessions)}")
         if id is not None:
             self.send_header("on-server", f"{int(id) in sessions}")
-
         self.end_headers()
 
     def do_HEAD(self):
@@ -44,9 +41,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         id = self.headers["Sensor-id"]
         self._set_headers(id)
         rospy.loginfo(f"session length: {len(sessions)}")
-
-        
-
 
 
     def _parser(self, data: dict) -> Measurement:
@@ -88,6 +82,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 meas = {}
                 model = SDS011_MODEL
                 meas.update({'pm10': pm10, 'pm25': pm25, 'temperature': temperature, 'pressure': pressure, 'humidity': humidity, "CCS_CO2": CCS_CO2, "CCS_TVOC": CCS_TVOC})
+
             elif 'ID' in data.keys():
                 self.client_id = data["ID"]
                 temperature = None
@@ -124,6 +119,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     pm10 = data["PM10"]
                 if "PM25" in data.keys():
                     pm25 = data["PM25"]
+
 
 
                 geo_lat = float(data["GPS_lat"])
