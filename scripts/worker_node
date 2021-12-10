@@ -12,6 +12,7 @@ import sentry_sdk
 
 from stations import COMStation, HTTPStation, MQTTStation
 from feeders import LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder, FrontierFeeder
+from stations.trackargostation import TrackAgroStation
 from utils.database import DataBase
 
 
@@ -71,6 +72,9 @@ class WorkerNode:
 
         if self.config["mqttstation"]["enable"]:
             s.append(MQTTStation(self.config))
+        
+        if self.config["trackagro"]["enable"]:
+            s.append(TrackAgroStation(self.config))
 
         return s
 
