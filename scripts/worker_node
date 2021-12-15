@@ -84,7 +84,7 @@ class WorkerNode:
         If you make a new one, add initialization here.
         """
         f = [LuftdatenFeeder(self.config),
-             FrontierFeeder(self.config),
+            FrontierFeeder(self.config),
              RobonomicsFeeder(self.config),
              DatalogFeeder(self.config)]
 
@@ -97,7 +97,7 @@ class WorkerNode:
             rospy.loginfo("Getting data from the stations...")
             Timer(self.interval, get_result).start()
             for s in self.stations:
-                self.station_data = s.get_data()
+                self.station_data.append(s.get_data())
                 rospy.loginfo(f"{s.version}: {self.station_data}")
             
         def send_result():
@@ -105,10 +105,11 @@ class WorkerNode:
             Timer(self.interval, send_result).start()
             for f in self.feeders:
                 class_name = f.get_classname()
-                t = threading.Thread(target=f.feed, args=(self.station_data,))
-                t.name = class_name
-                t.start()
-                t.join(timeout=20)
+                for d in self.station_data:
+                    t = threading.Thread(target=f.feed, args=(d,))
+                    t.name = class_name
+                    t.start()
+                    t.join(timeout=20)
            
         def db_watcher():
             rospy.loginfo("Checking data base...")

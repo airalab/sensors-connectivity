@@ -200,7 +200,6 @@ class HTTPStation(IStation):
                 time.time() - self.start_time,
                 v
             ))
-
         return result
 
     def _drop_dead_sensors(self) -> dict:

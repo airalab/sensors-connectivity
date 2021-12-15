@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from os import times
 import urllib.request as ur
 from urllib import parse
 import ssl
@@ -8,6 +9,7 @@ import hashlib
 import threading
 import rospy
 import copy
+import typing as tp
 
 from stations import IStation, StationData, Measurement, STATION_VERSION
 from drivers.sds011 import SDS011_MODEL
@@ -27,13 +29,14 @@ class TrackAgroStation(IStation):
         super().__init__(config)
         self.headers = {"X-Token-Auth": config["trackagro"]["token"]}
         ssl._create_default_https_context = ssl._create_unverified_context
-        self.sessions = dict()
-        self.version = f"airalab-http-{STATION_VERSION}"
-        self.DEAD_SENSOR_TIME = 60 * 60  # 1 hour
-        self.client_id = None
+        self.sessions: tp.Dict[str, Measurement] = dict()
+        self.version: str = f"airalab-http-{STATION_VERSION}"
+        self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
+        self.client_id: str = None
+        self.time_from: int = "1637744400000"
         self._collecting_data()
 
-    def url_updater(self, till_time: float, from_time: float) -> str:
+    def url_updater(self, till_time: str, from_time: str) -> str:
         url = "https://api.ttrackagro.ru/telemetry"
         url_parse = parse.urlparse(url)
         query = url_parse.query
@@ -43,11 +46,17 @@ class TrackAgroStation(IStation):
         upd_query = parse.urlencode(dic)
         url_parse = url_parse._replace(query=upd_query)
         upd_url = parse.urlunparse(url_parse)
+        print(upd_url)
         return upd_url
 
-    def request_sendler(self) -> object:
-        url = self.url_updater("1637746203000", "1637744400000")
-        request = ur.Request(url, headers=self.headers)
+    def request_sendler(self) -> tp.List[tp.Dict[str, tp.Union[str, int, float]]]:
+        url = self.url_updater(
+            till_time=f"{int(time.time()) * 1000}", from_time=f"{self.time_from}"
+        )
+        try:
+            request = ur.Request(url, headers=self.headers)
+        except Exception as e:
+            rospy.loginfo(f"TrackAgro: error while sending request {e}")
         response_body = ur.urlopen(request).read()
         data = json.loads(response_body)
         return data
@@ -59,43 +68,45 @@ class TrackAgroStation(IStation):
                 self.client_id = d["id"]
                 if "position" in d["key"]:
                     if d["key"] == "position.longitude":
-                        geo_lon = d["value"]
+                        geo_lon = float(d["value"])
                     else:
-                        geo_lat = d["value"]
+                        geo_lat = float(d["value"])
                 else:
-                    if any(d["key"] in keys for keys in meas.keys()):
+                    if any(d["key"] == key for key in meas.keys()):
                         if d["ts"] > meas[d["key"]]["timestamp"]:
                             meas[d["key"]].update(
                                 {"value": d["value"], "timestamp": d["ts"]}
                             )
+                            timestamp = d["ts"]
+                            self.time_from = timestamp
                     else:
                         meas.update(
                             {d["key"]: {"value": d["value"], "timestamp": d["ts"]}}
                         )
-            timestamp = int(time.time())
+            parsed_meas = {}
+            for k, v in meas.items():
+                parsed_meas.update({k: v["value"]})
             model = SDS011_MODEL
-            meas.update({"timestamp": timestamp})
             with thlock:
                 if self.client_id not in self.sessions:
                     public = _generate_pubkey(str(self.client_id))
                 else:
                     public = self.sessions[self.client_id].public
-            measurement = Measurement(public, model, geo_lat, geo_lon, meas)
+            parsed_meas.update({"timestamp": timestamp / 1000})
+            measurement = Measurement(public, model, geo_lat, geo_lon, parsed_meas)
 
         except Exception as e:
-            rospy.logerr(f"TracArgo: error in parser {e}")
+            rospy.logerr(f"TracAgro: error in parser {e}")
             return
         return measurement
 
-    def _collecting_data(self):
+    def _collecting_data(self) -> None:
         threading.Timer(300, self.request_sendler).start()
         data = self.request_sendler()
         meas = self._parser(data)
-        print(f"parsed data: {meas}")
         with thlock:
             if meas:
                 self.sessions[self.client_id] = meas
-        print(f"sessions: {self.sessions}")
 
     def get_data(self) -> StationData:
         result = []
@@ -105,10 +116,9 @@ class TrackAgroStation(IStation):
                     self.version, self.mac_address, time.time() - self.start_time, v
                 )
             )
-        print(f"result: {result}")
         return result
 
-    def _drop_dead_sensors(self) -> dict:
+    def _drop_dead_sensors(self) -> tp.Dict[str, Measurement]:
         global thlock
         stripped = dict()
         current_time = int(time.time())
