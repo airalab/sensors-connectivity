@@ -43,5 +43,9 @@
       "enable":true,
       "suri":"",
       "remote":"wss://main.frontier.rpc.robonomics.network"
+   },
+   "trackagro": {
+      "enable":true,
+      "token":""
    }
 }

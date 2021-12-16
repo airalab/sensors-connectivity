@@ -8,6 +8,8 @@ import threading
 
 
 thlock = threading.RLock()
+
+
 def _to_pubsub_message(data: StationData) -> str:
     meas = data.measurement
 
@@ -15,9 +17,10 @@ def _to_pubsub_message(data: StationData) -> str:
     message[meas.public] = {
         "model": meas.model,
         "geo": "{},{}".format(meas.geo_lat, meas.geo_lon),
-        "measurement": meas.measurement_check()
+        "measurement": meas.measurement_check(),
     }
     return json.dumps(message)
+
 
 def _to_ping_message(data: StationData) -> str:
     meas = data.measurement
@@ -26,9 +29,7 @@ def _to_ping_message(data: StationData) -> str:
     message[meas.public] = {
         "model": meas.model,
         "timestamp": meas.timestamp,
-        "measurement": {
-            "geo": "{},{}".format(meas.geo_lat, meas.geo_lon)
-        }
+        "measurement": {"geo": "{},{}".format(meas.geo_lat, meas.geo_lon)},
     }
 
     return json.dumps(message)
@@ -46,7 +47,11 @@ class RobonomicsFeeder(IFeeder):
     def __init__(self, config: dict):
         super().__init__(config)
 
-        endpoint = config["robonomics"]["ipfs_provider"] if config["robonomics"]["ipfs_provider"] else "/ip4/127.0.0.1/tcp/5001/http"
+        endpoint = (
+            config["robonomics"]["ipfs_provider"]
+            if config["robonomics"]["ipfs_provider"]
+            else "/ip4/127.0.0.1/tcp/5001/http"
+        )
         self.ipfs_client = ipfshttpclient.connect(endpoint, session=True)
         self.topic = config["robonomics"]["ipfs_topic"]
 
@@ -54,10 +59,8 @@ class RobonomicsFeeder(IFeeder):
         if self.config["robonomics"]["enable"]:
             for d in data:
                 if d.measurement.public and d.measurement.model != PING_MODEL:
-                   pubsub_payload = _to_pubsub_message(d)
+                    pubsub_payload = _to_pubsub_message(d)
                 else:
-                   pubsub_payload = _to_ping_message(d)
-
+                    pubsub_payload = _to_ping_message(d)
                 rospy.loginfo(f"RobonomicsFeeder: {pubsub_payload}")
                 self.ipfs_client.pubsub.publish(self.topic, pubsub_payload)
-
