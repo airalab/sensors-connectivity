@@ -46,10 +46,9 @@ class TrackAgroStation(IStation):
         upd_query = parse.urlencode(dic)
         url_parse = url_parse._replace(query=upd_query)
         upd_url = parse.urlunparse(url_parse)
-        print(upd_url)
         return upd_url
 
-    def request_sendler(self) -> tp.List[tp.Dict[str, tp.Union[str, int, float]]]:
+    def _request_sendler(self) -> tp.List[tp.Dict[str, tp.Union[str, int, float]]]:
         url = self.url_updater(
             till_time=f"{int(time.time()) * 1000}", from_time=f"{self.time_from}"
         )
@@ -61,10 +60,14 @@ class TrackAgroStation(IStation):
         data = json.loads(response_body)
         return data
 
-    def _parser(self, data) -> Measurement:
+    def _parser(
+        self, data: tp.List[tp.Dict[str, tp.Union[str, int, float]]]
+    ) -> Measurement:
         meas = {}
         try:
             for d in data:
+                timestamp = d["ts"]
+                self.time_from = timestamp
                 self.client_id = d["id"]
                 if "position" in d["key"]:
                     if d["key"] == "position.longitude":
@@ -77,8 +80,7 @@ class TrackAgroStation(IStation):
                             meas[d["key"]].update(
                                 {"value": d["value"], "timestamp": d["ts"]}
                             )
-                            timestamp = d["ts"]
-                            self.time_from = timestamp
+
                     else:
                         meas.update(
                             {d["key"]: {"value": d["value"], "timestamp": d["ts"]}}
@@ -98,11 +100,12 @@ class TrackAgroStation(IStation):
         except Exception as e:
             rospy.logerr(f"TracAgro: error in parser {e}")
             return
+        print(measurement)
         return measurement
 
     def _collecting_data(self) -> None:
-        threading.Timer(300, self.request_sendler).start()
-        data = self.request_sendler()
+        threading.Timer(60, self._collecting_data).start()
+        data = self._request_sendler()
         meas = self._parser(data)
         with thlock:
             if meas:
