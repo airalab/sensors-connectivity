@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from os import times
 import urllib.request as ur
-from urllib import parse
+from urllib import parse, error
 import ssl
 import json
 import time
@@ -54,9 +54,10 @@ class TrackAgroStation(IStation):
         )
         try:
             request = ur.Request(url, headers=self.headers)
-        except Exception as e:
-            rospy.loginfo(f"TrackAgro: error while sending request {e}")
-        response_body = ur.urlopen(request).read()
+            response_body = ur.urlopen(request).read()
+        except (error.URLError, error.HTTPError)  as e:
+            rospy.logerr(f"TrackAgro: error while sending request {e}")
+            return
         data = json.loads(response_body)
         return data
 
@@ -88,6 +89,7 @@ class TrackAgroStation(IStation):
             parsed_meas = {}
             for k, v in meas.items():
                 parsed_meas.update({k: v["value"]})
+            parsed_meas.update({"pm10": "", "pm25": ""})
             model = SDS011_MODEL
             with thlock:
                 if self.client_id not in self.sessions:
