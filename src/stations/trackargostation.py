@@ -55,7 +55,7 @@ class TrackAgroStation(IStation):
         try:
             request = ur.Request(url, headers=self.headers)
             response_body = ur.urlopen(request).read()
-        except (error.URLError, error.HTTPError)  as e:
+        except (error.URLError, error.HTTPError) as e:
             rospy.logerr(f"TrackAgro: error while sending request {e}")
             return
         data = json.loads(response_body)
@@ -65,10 +65,9 @@ class TrackAgroStation(IStation):
         self, data: tp.List[tp.Dict[str, tp.Union[str, int, float]]]
     ) -> Measurement:
         meas = {}
+        timestamp = 0
         try:
             for d in data:
-                timestamp = d["ts"]
-                self.time_from = timestamp
                 self.client_id = d["id"]
                 if "position" in d["key"]:
                     if d["key"] == "position.longitude":
@@ -76,12 +75,13 @@ class TrackAgroStation(IStation):
                     else:
                         geo_lat = float(d["value"])
                 else:
+                    if d["ts"] > timestamp:
+                        timestamp = d["ts"]
                     if any(d["key"] == key for key in meas.keys()):
                         if d["ts"] > meas[d["key"]]["timestamp"]:
                             meas[d["key"]].update(
                                 {"value": d["value"], "timestamp": d["ts"]}
                             )
-
                     else:
                         meas.update(
                             {d["key"]: {"value": d["value"], "timestamp": d["ts"]}}
@@ -97,6 +97,7 @@ class TrackAgroStation(IStation):
                 else:
                     public = self.sessions[self.client_id].public
             parsed_meas.update({"timestamp": timestamp / 1000})
+            self.time_from = timestamp
             measurement = Measurement(public, model, geo_lat, geo_lon, parsed_meas)
 
         except Exception as e:
