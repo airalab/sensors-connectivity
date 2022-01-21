@@ -3,7 +3,9 @@
 , lib
 #, robonomics_comm-nightly
 , ros_comm
-, python3Packages
+, python38Packages
+, rospy
+, catkin_38
 }:
 
 mkRosPackage rec {
@@ -13,23 +15,29 @@ mkRosPackage rec {
 
   src = ./.;
 
-  propagatedBuildInputs = with python3Packages; [
+  propagatedBuildInputs = with python38Packages; [
     #robonomics_comm-nightly
     ros_comm
     setuptools
     pyserial
-    requests
+    requests_38
     sentry-sdk
     netifaces
     # protobuf
     pynacl
     ipfshttpclient
-    substrate-interface_0_13_8
+    # substrate-interface_0_13_8
     paho-mqtt
-    xxhash
+    # xxhash
     pinatapy
+    empy
+    rospy
+    catkin_38
+    robonomics-interface
+    # certifi38
   ];
 
+  doCheck=false;
   meta = with lib; {
     description = "Agent that offers data from sensors";
     homepage = http://github.com/airalab/sensors-connectivity;
