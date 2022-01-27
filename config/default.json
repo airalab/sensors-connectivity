@@ -20,7 +20,7 @@
       "port": 1883
    },
    "luftdaten":{
-      "enable":true
+      "enable":false
    },
    "robonomics":{
       "enable":true,
