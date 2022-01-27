@@ -5,7 +5,6 @@
 , ros_comm
 , python3Packages
 }:
-
 mkRosPackage rec {
   name = "${pname}-${version}";
   pname = "sensors-connectivity";
@@ -29,7 +28,6 @@ mkRosPackage rec {
     xxhash
     pinatapy
   ];
-
   meta = with lib; {
     description = "Agent that offers data from sensors";
     homepage = http://github.com/airalab/sensors-connectivity;
