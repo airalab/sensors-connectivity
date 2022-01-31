@@ -7,7 +7,7 @@ import json
 import time
 import hashlib
 import threading
-import rospy
+import logging
 import copy
 import typing as tp
 
