@@ -3,7 +3,7 @@
 import nacl.signing
 
 
-def main():
+def main() -> None:
     signing_key = nacl.signing.SigningKey.generate()
     signing_key_hex = bytes(signing_key).hex()
 
@@ -14,6 +14,6 @@ def main():
 
     print(f"Verifying key: {verify_key_hex}")
 
+
 if __name__ == "__main__":
     main()
-

@@ -56,7 +56,7 @@ class TrackAgroStation(IStation):
             request = ur.Request(url, headers=self.headers)
             response_body = ur.urlopen(request).read()
         except (error.URLError, error.HTTPError) as e:
-            rospy.logerr(f"TrackAgro: error while sending request {e}")
+            logging.warning(f"TrackAgro: error while sending request {e}")
             return
         data = json.loads(response_body)
         return data
@@ -101,7 +101,7 @@ class TrackAgroStation(IStation):
             measurement = Measurement(public, model, geo_lat, geo_lon, parsed_meas)
 
         except Exception as e:
-            rospy.logerr(f"TracAgro: error in parser {e}")
+            logging.warning(f"TracAgro: error in parser {e}")
             return
         print(measurement)
         return measurement
@@ -114,7 +114,7 @@ class TrackAgroStation(IStation):
             if meas:
                 self.sessions[self.client_id] = meas
 
-    def get_data(self) -> StationData:
+    def get_data(self) -> tp.List[StationData]:
         result = []
         for k, v in self._drop_dead_sensors().items():
             result.append(
@@ -124,7 +124,7 @@ class TrackAgroStation(IStation):
             )
         return result
 
-    def _drop_dead_sensors(self) -> tp.Dict[str, Measurement]:
+    def _drop_dead_sensors(self) -> dict:
         global thlock
         stripped = dict()
         current_time = int(time.time())

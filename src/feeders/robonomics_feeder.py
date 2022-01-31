@@ -1,10 +1,12 @@
 import json
-import rospy
+import typing as tp
+import logging
 import ipfshttpclient
+import threading
+
 from feeders import IFeeder
 from drivers.ping import PING_MODEL
 from stations import StationData
-import threading
 
 
 thlock = threading.RLock()
@@ -12,7 +14,6 @@ thlock = threading.RLock()
 
 def _to_pubsub_message(data: StationData) -> str:
     meas = data.measurement
-
     message = {}
     message[meas.public] = {
         "model": meas.model,
@@ -24,7 +25,6 @@ def _to_pubsub_message(data: StationData) -> str:
 
 def _to_ping_message(data: StationData) -> str:
     meas = data.measurement
-
     message = {}
     message[meas.public] = {
         "model": meas.model,
@@ -44,23 +44,23 @@ class RobonomicsFeeder(IFeeder):
     (same value and timestamp) it uses previously calculated IPFS hash
     """
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         super().__init__(config)
 
-        endpoint = (
+        endpoint: str = (
             config["robonomics"]["ipfs_provider"]
             if config["robonomics"]["ipfs_provider"]
             else "/ip4/127.0.0.1/tcp/5001/http"
         )
         self.ipfs_client = ipfshttpclient.connect(endpoint, session=True)
-        self.topic = config["robonomics"]["ipfs_topic"]
+        self.topic: str = config["robonomics"]["ipfs_topic"]
 
-    def feed(self, data: [StationData]):
+    def feed(self, data: tp.List[StationData]) -> None:
         if self.config["robonomics"]["enable"]:
             for d in data:
                 if d.measurement.public and d.measurement.model != PING_MODEL:
                     pubsub_payload = _to_pubsub_message(d)
                 else:
                     pubsub_payload = _to_ping_message(d)
-                rospy.loginfo(f"RobonomicsFeeder: {pubsub_payload}")
+                logging.info(f"RobonomicsFeeder: {pubsub_payload}")
                 self.ipfs_client.pubsub.publish(self.topic, pubsub_payload)

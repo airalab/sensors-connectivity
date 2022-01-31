@@ -6,11 +6,26 @@ import json
 import time
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Virtual Weather Station for Robonomics Connectivity Service")
-    parser.add_argument("--remote", help="set server's URL (default: http://127.0.0.1:8001/)", default="http://127.0.0.1:8001/")
-    parser.add_argument("--geo", default="59.944843, 30.294372", help="GPS position in lat,lon format (default: 59.944843, 30.294372)")
-    parser.add_argument("--period", default=60, help="measurement period (default: 60 seconds)", type=int)
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Virtual Weather Station for Robonomics Connectivity Service"
+    )
+    parser.add_argument(
+        "--remote",
+        help="set server's URL (default: http://127.0.0.1:8001/)",
+        default="http://127.0.0.1:8001/",
+    )
+    parser.add_argument(
+        "--geo",
+        default="59.944843, 30.294372",
+        help="GPS position in lat,lon format (default: 59.944843, 30.294372)",
+    )
+    parser.add_argument(
+        "--period",
+        default=60,
+        help="measurement period (default: 60 seconds)",
+        type=int,
+    )
 
     args = parser.parse_args()
 
@@ -31,56 +46,22 @@ def main():
         humidity = round(random.uniform(0, 100), 2)
         pressure = round(random.uniform(100, 300), 3)
 
-
         body = {
             "esp8266id": id,
             "software_version": "NRZ-2020-129",
             "sensordatavalues": [
-                {
-                    "value_type": "SDS_P1",
-                    "value": pm10
-                },
-                {
-                    "value_type": "SDS_P2",
-                    "value": pm25
-                },
-                {
-                    "value_type": "temperature",
-                    "value": temp
-                },
-                {
-                    "value_type": "humidity",
-                    "value": humidity
-                },
-                {
-                    "value_type": "pressure",
-                    "value": pressure
-                },
-                {
-                    "value_type": "samples",
-                    "value": "890618"
-                },
-                {
-                    "value_type": "min_micro",
-                    "value": "43"
-                },
-                {
-                    "value_type": "max_micro",
-                    "value": "21069"
-                },
-                {
-                    "value_type": "GPS_lat",
-                    "value": lat
-                },
-                {
-                    "value_type": "GPS_lon",
-                    "value": lon
-                },
-                {
-                    "value_type": "signal",
-                    "value": "-46"
-                }
-            ]
+                {"value_type": "SDS_P1", "value": pm10},
+                {"value_type": "SDS_P2", "value": pm25},
+                {"value_type": "temperature", "value": temp},
+                {"value_type": "humidity", "value": humidity},
+                {"value_type": "pressure", "value": pressure},
+                {"value_type": "samples", "value": "890618"},
+                {"value_type": "min_micro", "value": "43"},
+                {"value_type": "max_micro", "value": "21069"},
+                {"value_type": "GPS_lat", "value": lat},
+                {"value_type": "GPS_lon", "value": lon},
+                {"value_type": "signal", "value": "-46"},
+            ],
         }
         try:
             response = requests.post(url, data=json.dumps(body), headers=header)
@@ -89,6 +70,6 @@ def main():
             pass
         time.sleep(period)
 
+
 if __name__ == "__main__":
     main()
-

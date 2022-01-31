@@ -1,4 +1,6 @@
 # This is an interface for any kind of feeders
+import typing as tp
+import logging
 from stations import StationData
 
 
@@ -28,7 +30,7 @@ class IFeeder:
     def get_classname(cls):
         return cls.__name__
 
-    def feed(self, data: [StationData]):
+    def feed(self, data: tp.List[StationData]):
         """
         It's responsible for publishing data to an implemented channel
 

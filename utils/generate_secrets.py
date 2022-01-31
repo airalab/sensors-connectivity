@@ -4,7 +4,7 @@ import argparse
 import nacl.signing
 
 
-def write_array(arr: []) -> str:
+def write_array(arr: list) -> str:
     buff = ""
     i = 0
     while i < 32:
@@ -17,10 +17,20 @@ def write_array(arr: []) -> str:
             buff += "\n  "
     return buff
 
-def main():
-    parser = argparse.ArgumentParser(description="Generate signing and public key for Arduino/ESP firmware")
 
-    parser.add_argument("-o", "--output", metavar="path", type=str, default="", help="folder to store secret.h file")
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Generate signing and public key for Arduino/ESP firmware"
+    )
+
+    parser.add_argument(
+        "-o",
+        "--output",
+        metavar="path",
+        type=str,
+        default="",
+        help="folder to store secret.h file",
+    )
 
     args = parser.parse_args()
 
@@ -30,11 +40,11 @@ def main():
 
     signing_key = nacl.signing.SigningKey.generate()
     signing_array = [int(x) for x in bytes(signing_key)]
-    signing_letters = [ "0x{0:02X}".format(x) for x in signing_array]
+    signing_letters = ["0x{0:02X}".format(x) for x in signing_array]
 
     verify_key = signing_key.verify_key
     verify_array = [int(x) for x in bytes(verify_key)]
-    verify_letters = [ "0x{0:02X}".format(x) for x in verify_array]
+    verify_letters = ["0x{0:02X}".format(x) for x in verify_array]
     verify_key_hex = bytes(verify_key).hex()
 
     print("Put the following key to connectivities' ACL:")
@@ -53,4 +63,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

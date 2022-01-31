@@ -10,7 +10,7 @@ import sys
 import yaml
 
 
-def write_array(arr: []) -> str:
+def write_array(arr: list) -> str:
     buff = ""
     i = 0
     while i < 32:
@@ -23,23 +23,39 @@ def write_array(arr: []) -> str:
             buff += "\n  "
     return buff
 
+
 def generate_keys() -> tuple:
     signing_key = nacl.signing.SigningKey.generate()
     signing_array = [int(x) for x in bytes(signing_key)]
-    signing_letters = [ "0x{0:02X}".format(x) for x in signing_array]
+    signing_letters = ["0x{0:02X}".format(x) for x in signing_array]
 
     verify_key = signing_key.verify_key
     verify_array = [int(x) for x in bytes(verify_key)]
-    verify_letters = [ "0x{0:02X}".format(x) for x in verify_array]
+    verify_letters = ["0x{0:02X}".format(x) for x in verify_array]
 
     return signing_letters, verify_letters
 
-def main():
+
+def main() -> None:
     logging.basicConfig(level=logging.DEBUG)
     parser = argparse.ArgumentParser(description="Prepare and flush ESP firmware")
-    parser.add_argument("-s", metavar="source", type=str, default=".", help="firmware folder (default to current dir)")
-    parser.add_argument("-c", metavar="config", type=str, default="config.yaml", help="Path to configuration file")
-    parser.add_argument("-p", "--port", metavar="port", type=str, help="Port the board is connected to")
+    parser.add_argument(
+        "-s",
+        metavar="source",
+        type=str,
+        default=".",
+        help="firmware folder (default to current dir)",
+    )
+    parser.add_argument(
+        "-c",
+        metavar="config",
+        type=str,
+        default="config.yaml",
+        help="Path to configuration file",
+    )
+    parser.add_argument(
+        "-p", "--port", metavar="port", type=str, help="Port the board is connected to"
+    )
 
     args = parser.parse_args()
 
@@ -99,4 +115,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
