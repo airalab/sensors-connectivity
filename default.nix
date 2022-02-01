@@ -23,7 +23,7 @@ mkRosPackage rec {
     # protobuf
     pynacl
     ipfshttpclient
-    substrate-interface_0_13_8
+    substrate-interface
     paho-mqtt
     xxhash
     pinatapy
