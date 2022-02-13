@@ -1,4 +1,0 @@
-# Sensors Connectivity Agent
-
-The agent currently supports SDS011 sensor
-

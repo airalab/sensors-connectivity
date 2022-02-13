@@ -2,9 +2,9 @@ result
 __pycache__/
 .idea/
 venv/
-config/*
+*/config/*
 .pio/
-my.yaml
-!config/default.json
+!connectivity/config/default.json
+!connectivity/config/logging_template.py
 .vscode/*
-
+logs/

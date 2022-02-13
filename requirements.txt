@@ -2,3 +2,9 @@ platformio
 pynacl
 pyyaml
 requests
+sentry_sdk
+robonomics-interface==0.5.0
+ipfshttpclient==0.8.0a2
+pinatapy-vourhey
+netifaces
+paho-mqtt
