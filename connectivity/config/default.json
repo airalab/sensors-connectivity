@@ -1,51 +1,51 @@
 {
-   "general":{
-      "publish_interval":30,
+   "general": {
+      "publish_interval": 30,
       "db_path": ""
    },
-   "comstation":{
-      "enable":false,
-      "port":"/dev/ttyUSB0",
-      "work_period":300,
-      "geo":"",
-      "public_key":""
+   "comstation": {
+      "enable": false,
+      "port": "/dev/ttyUSB0",
+      "work_period": 300,
+      "geo": "",
+      "public_key": ""
    },
-   "httpstation":{
-      "enable":true,
-      "port":8001
+   "httpstation": {
+      "enable": true,
+      "port": 8001
    },
    "mqttstation": {
       "enable": false,
-      "host": "connectivity.robonomics.network",
+      "host": "localhost",
       "port": 1883
    },
-   "luftdaten":{
-      "enable":true
+   "luftdaten": {
+      "enable": false
    },
-   "robonomics":{
-      "enable":true,
-      "ipfs_provider":"/ip4/127.0.0.1/tcp/5001/http",
-      "ipfs_topic":"airalab.lighthouse.5.robonomics.eth"
+   "robonomics": {
+      "enable": true,
+      "ipfs_provider": "/ip4/127.0.0.1/tcp/5001/http",
+      "ipfs_topic": "airalab.lighthouse.5.robonomics.eth"
    },
-   "datalog":{
-      "enable":false,
-      "path":"",
-      "suri":"",
-      "remote":"wss://ipci.rpc.robonomics.network",
-      "dump_interval":3600,
-      "temporal_username":"",
-      "temporal_password":""
+   "datalog": {
+      "enable": false,
+      "path": "",
+      "suri": "",
+      "dump_interval": 60,
+      "temporal_username": "",
+      "temporal_password": "",
+      "pinata_api": "",
+      "pinata_secret": ""
    },
-   "dev":{
-      "sentry":""
+   "dev": {
+      "sentry": ""
    },
-   "frontier":{
-      "enable":true,
-      "suri":"",
-      "remote":"wss://main.frontier.rpc.robonomics.network"
+   "frontier": {
+      "enable": true,
+      "suri": ""
    },
    "trackagro": {
-      "enable":true,
-      "token":""
+      "enable": false,
+      "token": ""
    }
 }
