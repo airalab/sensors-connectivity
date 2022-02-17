@@ -8,7 +8,7 @@ from .ifeeder import IFeeder
 from ..drivers.ping import PING_MODEL
 from ..stations.istation import StationData
 import logging.config
-from config.logging import LOGGING_CONFIG
+from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")

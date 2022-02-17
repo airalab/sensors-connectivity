@@ -3,7 +3,6 @@ The code is borrowed from here https://github.com/ikalchev/py-sds011
 Thanks @ikalchev for work
 """
 import struct
-from tkinter.messagebox import NO
 import typing as tp
 import serial
 from ..stations.istation import Measurement

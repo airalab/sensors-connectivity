@@ -11,7 +11,7 @@ import logging.config
 from ..drivers.sds011 import SDS011_MODEL, MOBILE_GPS
 from .istation import IStation, StationData, Measurement, STATION_VERSION
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from config.logging import LOGGING_CONFIG
+from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")

@@ -8,7 +8,7 @@ import logging.config
 from .istation import IStation, StationData, STATION_VERSION, Measurement
 from ..drivers.sds011 import SDS011_MODEL, SDS011
 from collections import deque
-from config.logging import LOGGING_CONFIG
+from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")

@@ -13,7 +13,7 @@ import typing as tp
 
 from .istation import IStation, StationData, Measurement, STATION_VERSION
 from ..drivers.sds011 import SDS011_MODEL
-from config import LOGGING_CONFIG
+from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")

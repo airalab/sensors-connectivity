@@ -6,7 +6,7 @@ from .ifeeder import IFeeder
 from ..stations.istation import StationData, Measurement
 from ..drivers.ping import PING_MODEL
 import logging.config
-from config.logging import LOGGING_CONFIG
+from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
