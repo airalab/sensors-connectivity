@@ -38,7 +38,7 @@ class TrackAgroStation(IStation):
         self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
         self.client_id: str = None
         self.time_from: int = "1637744400000"
-        # self._collecting_data()
+        self._collecting_data()
 
     def url_updater(self, till_time: str, from_time: str) -> str:
         url = "https://api.ttrackagro.ru/telemetry"
@@ -110,7 +110,7 @@ class TrackAgroStation(IStation):
         return measurement
 
     def _collecting_data(self) -> None:
-        # threading.Timer(60, self._collecting_data).start()
+        threading.Timer(3600, self._collecting_data).start()
         data = self._request_sendler()
         meas = self._parser(data)
         with thlock:

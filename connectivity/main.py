@@ -11,6 +11,7 @@ from threading import Timer
 import os
 import sys
 import sentry_sdk
+import argparse
 
 from .src.stations import COMStation, HTTPStation, MQTTStation
 from .src.feeders import LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder, FrontierFeeder
@@ -21,23 +22,10 @@ from connectivity.config.logging import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
 
-# logger = logging.getLogger(__name__)
-# logger.propagate = False
-# handler = logging.StreamHandler(sys.stdout)
-# formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-# handler.setFormatter(formatter)
-# logger.addHandler(handler)
-# logger.setLevel(logging.DEBUG)
-
-
-# logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
 class WorkerNode:
     """The main class that initialize stations and feeders and launches the loop."""
-
-    def __init__(self) -> None:
-
-        self.config: dict = self._read_configuration()
+    def __init__(self, path: str) -> None:
+        self.config: dict = self._read_configuration(path)
         logging.debug(self.config)
         self.interval: int = self.config["general"]["publish_interval"]
         sentry_sdk.init(self.config["dev"]["sentry"])
@@ -47,12 +35,12 @@ class WorkerNode:
         self.station_data: list = []
         self.db: DataBase = DataBase(self.config)
 
-    def _read_configuration(self) -> dict:
+    def _read_configuration(self, config_path: str) -> dict:
         """Internal method
 
         Loads configuration.
         """
-        config_path = os.environ["CONFIG_PATH"]
+
         try:
             with open(config_path) as f:
                 content = f.read()
@@ -132,7 +120,10 @@ class WorkerNode:
         db_watcher()
 
 def run() -> None:
-    WorkerNode().spin()
+    parser = argparse.ArgumentParser(description="Add config path.")
+    parser.add_argument("path", type=str, help="config path")
+    args = parser.parse_args()
+    WorkerNode(args.path).spin()
 
 
 if __name__ == "__main__":
