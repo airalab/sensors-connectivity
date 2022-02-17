@@ -29,7 +29,6 @@
    },
    "datalog": {
       "enable": false,
-      "path": "",
       "suri": "",
       "dump_interval": 60,
       "temporal_username": "",
