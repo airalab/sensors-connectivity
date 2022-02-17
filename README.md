@@ -20,7 +20,7 @@ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poet
 ```
 git clone https://github.com/airalab/sensors-connectivity
 cd sensors-connectivity
-ppoetry install
+poetry install
 ```
 
 ## Documentation
