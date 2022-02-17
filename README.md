@@ -41,7 +41,12 @@ You also need to set a logging file. The template is stored in `connectivity/con
 
 ## Running
 
-After config and log files are setted, you can run the service, using this command:
+First, launch IPFS daemon:
+
+```
+ipfs daemon --enable-pubsub-experiment
+```
+After config and log files are setted, you can run the service: (in another terminal)
 
 ```
 poetry run sensors_connectivity "path/to/your/config/file"  
