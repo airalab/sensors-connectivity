@@ -9,10 +9,15 @@ Also it includes Datalog feature which is still experimental. It could be used t
 
 ## Requirements
 
-To build a python package [poetry](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions) should be installed. Assyming, you work with linux:
+To build a python package [poetry](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions) and  IPFS daemon should be installed. Assyming, you work with linux:
 
 ```
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+wget https://dist.ipfs.io/go-ipfs/v0.8.0/go-ipfs_v0.8.0_linux-amd64.tar.gz
+tar -xzf go-ipfs_v0.8.0_linux-amd64.tar.gz
+cd go-ipfs
+sudo bash install.sh 
+ipfs init
 ```
 
 ## Get a Package And Installing dependencies
