@@ -7,17 +7,58 @@ The Aira package allows you to read data from a SDS011 sensor (and a few others)
 That said Aira is able to form Demand and Result messages and a few other channels.
 Also it includes Datalog feature which is still experimental. It could be used to publish data to Substrate based blockchain by [Robonomics](https://parachain.robonomics.network/).
 
-## Requirements
+## Pre-requirements
 
-To build a python package [poetry](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions) and  IPFS daemon should be installed. Assyming, you work with linux:
+To build a python package IPFS daemon should be installed. Assyming, you work with linux:
 
 ```
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 wget https://dist.ipfs.io/go-ipfs/v0.8.0/go-ipfs_v0.8.0_linux-amd64.tar.gz
 tar -xzf go-ipfs_v0.8.0_linux-amd64.tar.gz
 cd go-ipfs
 sudo bash install.sh 
 ipfs init
+```
+
+# Installation as PyPi package
+
+```
+pip3 install sensors-connectivity
+```
+### Troubleshooting
+
+If installation breaks with `ERROR: Could not build wheels for py-sr25519-bindings which use PEP 517 and cannot be installed directly` you should run 
+
+```
+pip3 install py-sr25519-bindings
+```
+And run installation command again.
+
+## Configuration
+
+[Here](https://wiki.robonomics.network/docs/configuration-options-description/) you can find an article to set a proper configuration for your instance.
+
+## Running
+
+First, launch IPFS daemon:
+
+```
+ipfs daemon --enable-pubsub-experiment
+```
+After config and log files are setted, you can run the service: (in another terminal)
+
+```
+sensors-connectivity "path/to/your/config/file"
+```
+
+You will be able to see logs in your console.
+
+# Build from source
+## Requirements
+
+To build a python package fron source [poetry](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions) should be also installed. Assyming, you work with linux:
+
+```
+curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 ```
 
 ## Get a Package And Installing dependencies
@@ -31,13 +72,14 @@ poetry install
 ## Documentation
 
 To prepare a sensor for the work with the package follow instructions on [Robonomics Wiki](https://wiki.robonomics.network/docs/connect-sensor-to-robonomics/).
+
 ## Configuration
 
 [Here](https://wiki.robonomics.network/docs/configuration-options-description/) you can find an article to set a proper configuration for your instance.
 
 Make a copy of `default.json` and fill it using description from the article.
 
-You also need to set a logging file. The template is stored in `connectivity/config/logging_template.py`. Make a copy with name `logging.py`. Pay attention for the `file` handler. You need to cpecify the path (`filename`), where your logs will be stored in (do not forget to create this directory if it doesn't exist). You can figure any other handlers from the [library](https://docs.python.org/3.8/library/logging.html).
+You also can set a logging file. The default file for logs is `logging.py`, which uses only `console` handler.  Pay attention for the `file` handler. The template is stored in `connectivity/config/logging_template.py`. You can cpecify the path (`filename`), where your logs will be stored in (do not forget to create this directory if it doesn't exist). You can figure any other handlers from the [library](https://docs.python.org/3.8/library/logging.html).
 
 ## Running
 

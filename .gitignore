@@ -6,6 +6,7 @@ venv/
 .pio/
 !connectivity/config/default.json
 !connectivity/config/logging_template.py
+!connectivity/config/logging.py
 !connectivity/config/__init__.py
 .vscode/*
 logs/

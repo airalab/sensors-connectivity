@@ -121,9 +121,9 @@ class WorkerNode:
 
 def run() -> None:
     parser = argparse.ArgumentParser(description="Add config path.")
-    parser.add_argument("path", type=str, help="config path")
+    parser.add_argument("config_path", type=str, help="config path")
     args = parser.parse_args()
-    WorkerNode(args.path).spin()
+    WorkerNode(args.config_path).spin()
 
 
 if __name__ == "__main__":
