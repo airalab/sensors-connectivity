@@ -37,7 +37,7 @@ class TrackAgroStation(IStation):
         self.version: str = f"airalab-http-{STATION_VERSION}"
         self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
         self.client_id: str = None
-        self.time_from: int = "1637744400000"
+        self.time_from: int = "1645169200000"
         self._collecting_data()
 
     def url_updater(self, till_time: str, from_time: str) -> str:
@@ -103,7 +103,9 @@ class TrackAgroStation(IStation):
             parsed_meas.update({"timestamp": timestamp / 1000})
             self.time_from = timestamp
             measurement = Measurement(public, model, geo_lat, geo_lon, parsed_meas)
-
+        except UnboundLocalError:
+            pass
+            return
         except Exception as e:
             logger.warning(f"TracAgro: error in parser {e}")
             return
