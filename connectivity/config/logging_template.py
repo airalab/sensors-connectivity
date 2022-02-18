@@ -17,7 +17,7 @@ LOGGING_CONFIG = {
             "formatter": "standart",
             "class": "logging.handlers.RotatingFileHandler",
             "filename": "connectivity/logs/sensors-connectivity.log",
-            "maxBytes": 1024000,
+            "maxBytes": 102400000,
             "backupCount": 10,
         },
     },

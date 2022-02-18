@@ -103,7 +103,7 @@ class TrackAgroStation(IStation):
             parsed_meas.update({"timestamp": timestamp / 1000})
             self.time_from = timestamp
             measurement = Measurement(public, model, geo_lat, geo_lon, parsed_meas)
-        except UnboundLocalError:
+        except (UnboundLocalError, TypeError):
             pass
             return
         except Exception as e:
@@ -121,7 +121,6 @@ class TrackAgroStation(IStation):
 
     def get_data(self) -> tp.List[StationData]:
         result = []
-        self._collecting_data()
         for k, v in self._drop_dead_sensors().items():
             result.append(
                 StationData(
