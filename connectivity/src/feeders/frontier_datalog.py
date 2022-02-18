@@ -20,12 +20,12 @@ class FrontierFeeder(IFeeder):
         if self.config["frontier"]["enable"]:
             interface = RI.RobonomicsInterface(seed=self.config["datalog"]["suri"])
             for d in data:
-                # try:
-                robonomics_receipt = interface.record_datalog(f"{d.measurement}")
-                logger.info(
-                    f"Frontier Datalog: Data sent to Robonomics datalog and included in block {robonomics_receipt}"
-                )
-                # except Exception as e:
-                #     logger.warning(
-                #         f"Frontier Datalog: Something went wrong during extrinsic submission to Robonomics: {e}"
-                #     )
+                try:
+                    robonomics_receipt = interface.record_datalog(f"{d.measurement}")
+                    logger.info(
+                        f"Frontier Datalog: Data sent to Robonomics datalog and included in block {robonomics_receipt}"
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"Frontier Datalog: Something went wrong during extrinsic submission to Robonomics: {e}"
+                    )
