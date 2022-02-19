@@ -13,17 +13,25 @@ import sys
 import sentry_sdk
 import argparse
 
+from connectivity.config.logging import LOGGING_CONFIG
 from .src.stations import COMStation, HTTPStation, MQTTStation
-from .src.feeders import LuftdatenFeeder, RobonomicsFeeder, DatalogFeeder, FrontierFeeder
+from .src.feeders import (
+    LuftdatenFeeder,
+    RobonomicsFeeder,
+    DatalogFeeder,
+    FrontierFeeder,
+)
 from .src.stations.trackargostation import TrackAgroStation
 from .utils.database import DataBase
-from connectivity.config.logging import LOGGING_CONFIG
+
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
 
+
 class WorkerNode:
     """The main class that initialize stations and feeders and launches the loop."""
+
     def __init__(self, path: str) -> None:
         self.config: dict = self._read_configuration(path)
         logging.debug(self.config)
@@ -118,6 +126,7 @@ class WorkerNode:
         get_result()
         send_result()
         db_watcher()
+
 
 def run() -> None:
     parser = argparse.ArgumentParser(description="Add config path.")
