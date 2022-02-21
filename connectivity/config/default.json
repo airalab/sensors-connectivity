@@ -1,0 +1,50 @@
+{
+   "general": {
+      "publish_interval": 30,
+      "db_path": ""
+   },
+   "comstation": {
+      "enable": false,
+      "port": "/dev/ttyUSB0",
+      "work_period": 300,
+      "geo": "",
+      "public_key": ""
+   },
+   "httpstation": {
+      "enable": true,
+      "port": 8001
+   },
+   "mqttstation": {
+      "enable": false,
+      "host": "localhost",
+      "port": 1883
+   },
+   "luftdaten": {
+      "enable": false
+   },
+   "robonomics": {
+      "enable": true,
+      "ipfs_provider": "/ip4/127.0.0.1/tcp/5001/http",
+      "ipfs_topic": "airalab.lighthouse.5.robonomics.eth"
+   },
+   "datalog": {
+      "enable": false,
+      "suri": "",
+      "dump_interval": 60,
+      "temporal_username": "",
+      "temporal_password": "",
+      "pinata_api": "",
+      "pinata_secret": ""
+   },
+   "dev": {
+      "sentry": ""
+   },
+   "frontier": {
+      "enable": true,
+      "suri": ""
+   },
+   "trackagro": {
+      "enable": false,
+      "token": ""
+   }
+}

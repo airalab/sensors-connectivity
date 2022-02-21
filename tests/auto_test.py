@@ -1,6 +1,11 @@
 import random
 import requests, json
 import time
+import logging.config
+from config.logging import LOGGING_CONFIG
+
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger(__name__)
 
 id = 1
 
@@ -64,9 +69,7 @@ while id < 102000:
     try:
       response = requests.post('http://connectivity.robonomics.network :65/', data=json.dumps(body), headers=header)
       id += 1
-      print(response)
-      print(id)
     except Exception as e:
-      print(e)
+      logger.warning(e)
       pass
     time.sleep(20)

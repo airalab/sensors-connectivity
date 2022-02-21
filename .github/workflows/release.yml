@@ -1,0 +1,31 @@
+
+name: Python application
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+    - name: Build package
+      run: |
+        poetry --version
+        poetry build
+    - name: Publish package
+      run: |
+        poetry publish -u "__token__" -p ${{ secrets.PYPI_API_TOKEN }} 
