@@ -22,16 +22,9 @@ ipfs init
 # Installation as PyPi package
 
 ```
+pip3 install py-sr25519-bindings
 pip3 install sensors-connectivity
 ```
-### Troubleshooting
-
-If installation breaks with `ERROR: Could not build wheels for py-sr25519-bindings which use PEP 517 and cannot be installed directly` you should run 
-
-```
-pip3 install py-sr25519-bindings
-```
-And run installation command again.
 
 ## Configuration
 
@@ -47,7 +40,7 @@ ipfs daemon --enable-pubsub-experiment
 After config and log files are setted, you can run the service: (in another terminal)
 
 ```
-sensors-connectivity "path/to/your/config/file"
+sensors_connectivity "path/to/your/config/file"
 ```
 
 You will be able to see logs in your console and in `~/.logs/connectivity`.
