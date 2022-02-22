@@ -43,7 +43,7 @@ After config and log files are setted, you can run the service: (in another term
 sensors_connectivity "path/to/your/config/file"
 ```
 
-You will be able to see logs in your console and in `~/.logs/connectivity`.
+You will be able to see logs in your console and in `~/.logs`.
 
 # Build from source
 ## Requirements
@@ -72,7 +72,7 @@ To prepare a sensor for the work with the package follow instructions on [Robono
 
 Make a copy of `default.json` and fill it using description from the article.
 
-You also can set a logging file. The default file for logs is `logging.py`, which uses `console` and `file` handler by default. Pay attention for the `file` handler. The template is stored in `connectivity/config/logging_template.py`. You can cpecify the path (`filename`), where your logs will be stored in (do not forget to create this directory if it doesn't exist). Default path for logs is `~/.logs/connectivity`. You can figure any other handlers from the [library](https://docs.python.org/3.8/library/logging.html).
+You also can set a logging file. The default file for logs is `logging.py`, which uses `console` and `file` handler by default. Pay attention for the `file` handler. The template is stored in `connectivity/config/logging_template.py`. You can cpecify the path (`filename`), where your logs will be stored in (do not forget to create this directory if it doesn't exist). Default path for logs is `~/.logs`. You can figure any other handlers from the [library](https://docs.python.org/3.8/library/logging.html).
 
 ## Running
 
