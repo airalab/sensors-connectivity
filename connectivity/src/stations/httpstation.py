@@ -7,16 +7,17 @@ import copy
 import hashlib
 import typing as tp
 import logging.config
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from ..drivers.sds011 import SDS011_MODEL, MOBILE_GPS
 from .istation import IStation, StationData, Measurement, STATION_VERSION
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
 thlock = threading.RLock()
 sessions = dict()
+last_sensors_update = time.time()
 
 def _generate_pubkey(id: str) -> str:
     verify_key = hashlib.sha256(id.encode("utf-8"))
@@ -26,9 +27,15 @@ def _generate_pubkey(id: str) -> str:
 
 class RequestHandler(BaseHTTPRequestHandler):
     def _set_headers(self, id: str = None) -> None:
+        global last_sensors_update
         self.send_response(200)
         self.send_header("Content-type", "application/json")
-        self.send_header("sensors-count", f"{len(sessions)}")
+        updating_sensors_interval = 60 * 60 # 1hr, how often sensors will switch server
+        if (time.time() - last_sensors_update) > updating_sensors_interval:
+            self.send_header("sensors-count", "0")
+            last_sensors_update = time.time()
+        else:
+            self.send_header("sensors-count", f"{len(sessions)}")
         if id is not None:
             self.send_header("on-server", f"{int(id) in sessions}")
         self.end_headers()
