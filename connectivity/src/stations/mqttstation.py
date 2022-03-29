@@ -62,6 +62,27 @@ class MQTTHandler(mqtt.Client):
                         pressure = float(d["value"]) / paskal
                     if "humidity" in d["value_type"]:
                         humidity = float(d["value"])
+                    if "CCS_CO2" in d["value_type"]:
+                        CCS_CO2 = float(d["value"])
+                    if "CCS_TVOC" in d["value_type"]:
+                        CCS_TVOC = float(d["value"])
+                    if "GC" in d["value_type"]:
+                        GC = float(d["value"])
+
+                meas = {}
+                model = SDS011_MODEL
+                meas.update(
+                    {
+                        "pm10": pm10,
+                        "pm25": pm25,
+                        "temperature": temperature,
+                        "pressure": pressure,
+                        "humidity": humidity,
+                        "CCS_CO2": CCS_CO2,
+                        "CCS_TVOC": CCS_TVOC,
+                        "GC": GC,
+                    }
+                )
 
                 meas = {}
                 model = SDS011_MODEL
