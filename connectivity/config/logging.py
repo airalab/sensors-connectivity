@@ -2,7 +2,7 @@ import sys
 import os
 
 try:
-    os.mkdir(f"{os.path.expanduser('~')}/.logs/connectivity")
+    os.mkdir(f"{os.path.expanduser('~')}/.logs")
 except FileExistsError:
     pass
 
@@ -22,7 +22,7 @@ LOGGING_CONFIG = {
             "level": "INFO",
             "formatter": "standart",
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": f"{os.path.expanduser('~')}/.logs/connectivity/sensors-connectivity.log",
+            "filename": f"{os.path.expanduser('~')}/.logs/sensors-connectivity.log",
             "maxBytes": 102400000,
             "backupCount": 10,
         },
