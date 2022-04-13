@@ -97,9 +97,7 @@ class WorkerNode:
         return f
 
     def spin(self) -> None:
-        @self.c.count_exceptions()
         def get_result() -> None:
-            self.c.inc()
             self.station_data.clear()
             logger.info("Getting data from the stations...")
             Timer(self.interval, get_result).start()
