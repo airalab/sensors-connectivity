@@ -116,16 +116,16 @@ class WorkerNode:
                     t.start()
                     t.join(timeout=20)
 
-#        def db_watcher() -> None:
-#            logger.info("Checking data base...")
-#            Timer(3600, db_watcher).start()
-#            for data in self.db.checker(time.time()):
-#                for hash in data:
-#                    self.feeders[3].to_datalog(hash)
+        def db_watcher() -> None:
+            logger.info("Checking data base...")
+            Timer(3600, db_watcher).start()
+            for data in self.db.checker(time.time()):
+                for hash in data:
+                    self.feeders[3].to_datalog(hash)
 
         get_result()
         send_result()
-#        db_watcher()
+        db_watcher()
 
 
 def run() -> None:
