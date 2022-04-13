@@ -15,10 +15,16 @@ from ..drivers.ping import PING_MODEL
 import logging.config
 from connectivity.config.logging import LOGGING_CONFIG
 
+from prometheus_client import Enum
+
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
 
 thlock = threading.RLock()
+
+DATALOG_STATUS_METRIC = Enum('connectivity_sensors_datalog_feeder', 'This will give last status of datalog feeder',
+                             states=['starting', 'success', 'error'])
+DATALOG_STATUS_METRIC.state('starting')
 
 
 def _sort_payload(data: dict) -> dict:
@@ -150,8 +156,10 @@ class DatalogFeeder(IFeeder):
             logger.info(
                 f"Datalog Feeder: Ipfs hash sent to Robonomics Parachain and included in block {robonomics_receipt}"
             )
+            DATALOG_STATUS_METRIC.state('success')
             self.db.update_status("sent", ipfs_hash)
         except Exception as e:
             logger.warning(
                 f"Datalog Feeder: Something went wrong during extrinsic submission to Robonomics: {e}"
             )
+            DATALOG_STATUS_METRIC.state('error')

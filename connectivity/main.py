@@ -11,6 +11,7 @@ import os
 import sys
 import sentry_sdk
 import argparse
+from prometheus_client import start_http_server
 
 from connectivity.config.logging import LOGGING_CONFIG
 from .src.stations import COMStation, HTTPStation, MQTTStation
@@ -96,7 +97,9 @@ class WorkerNode:
         return f
 
     def spin(self) -> None:
+        @self.c.count_exceptions()
         def get_result() -> None:
+            self.c.inc()
             self.station_data.clear()
             logger.info("Getting data from the stations...")
             Timer(self.interval, get_result).start()
@@ -115,22 +118,23 @@ class WorkerNode:
                     t.start()
                     t.join(timeout=20)
 
-        def db_watcher() -> None:
-            logger.info("Checking data base...")
-            Timer(3600, db_watcher).start()
-            for data in self.db.checker(time.time()):
-                for hash in data:
-                    self.feeders[3].to_datalog(hash)
+#        def db_watcher() -> None:
+#            logger.info("Checking data base...")
+#            Timer(3600, db_watcher).start()
+#            for data in self.db.checker(time.time()):
+#                for hash in data:
+#                    self.feeders[3].to_datalog(hash)
 
         get_result()
         send_result()
-        db_watcher()
+#        db_watcher()
 
 
 def run() -> None:
     parser = argparse.ArgumentParser(description="Add config path.")
     parser.add_argument("config_path", type=str, help="config path")
     args = parser.parse_args()
+    start_http_server(8000)
     WorkerNode(args.config_path).spin()
 
 
