@@ -11,6 +11,7 @@ import os
 import sys
 import sentry_sdk
 import argparse
+from prometheus_client import start_http_server
 
 from connectivity.config.logging import LOGGING_CONFIG
 from .src.stations import COMStation, HTTPStation, MQTTStation
@@ -131,6 +132,7 @@ def run() -> None:
     parser = argparse.ArgumentParser(description="Add config path.")
     parser.add_argument("config_path", type=str, help="config path")
     args = parser.parse_args()
+    start_http_server(8000)
     WorkerNode(args.config_path).spin()
 
 

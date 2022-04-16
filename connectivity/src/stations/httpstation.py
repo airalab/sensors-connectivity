@@ -8,6 +8,7 @@ import hashlib
 import typing as tp
 import logging.config
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from prometheus_client import Gauge
 
 from ..drivers.sds011 import SDS011_MODEL, MOBILE_GPS
 from .istation import IStation, StationData, Measurement, STATION_VERSION
@@ -18,6 +19,8 @@ logger = logging.getLogger("sensors-connectivity")
 thlock = threading.RLock()
 sessions = dict()
 last_sensors_update = time.time()
+
+ALIVE_SENSORS_METRIC = Gauge('connectivity_sensors_alive_total', 'return number of active sessions')
 
 
 def _generate_pubkey(id: str) -> str:
@@ -230,5 +233,5 @@ class HTTPStation(IStation):
                     stripped[k] = v
                 else:
                     del sessions[k]
-
+        ALIVE_SENSORS_METRIC.set(len(stripped))
         return stripped
