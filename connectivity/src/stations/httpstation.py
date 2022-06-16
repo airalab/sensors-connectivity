@@ -8,6 +8,8 @@ import hashlib
 import typing as tp
 import logging.config
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from prometheus_client import Gauge
+from functools import reduce
 
 from ..drivers.sds011 import SDS011_MODEL, MOBILE_GPS
 from .istation import IStation, StationData, Measurement, STATION_VERSION
@@ -18,6 +20,10 @@ logger = logging.getLogger("sensors-connectivity")
 thlock = threading.RLock()
 sessions = dict()
 last_sensors_update = time.time()
+
+ALIVE_SENSORS_METRIC = Gauge(
+    "connectivity_sensors_alive_total", "return number of active sessions"
+)
 
 
 def _generate_pubkey(id: str) -> str:
@@ -52,6 +58,38 @@ class RequestHandler(BaseHTTPRequestHandler):
         self._set_headers(id)
         logger.info(f"HTTP Station session length: {len(sessions)}")
 
+    def _SDS011_values_saver(self, meas: dict, value: dict) -> dict:
+        "Reducer callback for SDS011 sensors"
+        extra_data = [
+            "GPS",
+            "micro",
+            "signal",
+            "samples",
+            "interval",
+        ]  # values which shouldn't be stored in meas dict
+        paskal = 133.32
+        if any(x in value["value_type"] for x in extra_data):
+            return meas
+        if "_" in value["value_type"] and not "CCS" in value["value_type"]:
+            if "pressure" in value["value_type"]:
+                meas[value["value_type"].split("_")[1]] = float(value["value"]) / paskal
+            else:
+                meas[value["value_type"].split("_")[1]] = value["value"]
+        else:
+            meas[value["value_type"]] = value["value"]
+        return meas
+
+    def _mobile_sensor_data_saver(self, meas: dict, value: str) -> dict:
+        "Reducer callback for mobile GPS sensor's data"
+        key, item = value
+        paskal = 133.32
+        if "GPS" in key or "ID" in key:
+            return meas
+        if "pressure" in key:
+            meas[key] = float(item) / paskal
+        meas[key] = item
+        return meas
+
     def _parser(self, data: dict) -> Measurement:
         global sessions
         global thlock
@@ -59,107 +97,21 @@ class RequestHandler(BaseHTTPRequestHandler):
         try:
             if "esp8266id" in data.keys():
                 self.client_id = int(data["esp8266id"])
-                temperature = None
-                pressure = None
-                humidity = None
-                CCS_CO2 = None
-                CCS_TVOC = None
-                GC = None
-
                 for d in data["sensordatavalues"]:
-                    if d["value_type"] == "SDS_P1":
-                        pm10 = float(d["value"])
-                    if d["value_type"] == "SDS_P2":
-                        pm25 = float(d["value"])
                     if d["value_type"] == "GPS_lat":
                         geo_lat = d["value"]
                     if d["value_type"] == "GPS_lon":
                         geo_lon = d["value"]
-                    if "temperature" in d["value_type"]:
-                        temperature = float(d["value"])
-                    if "pressure" in d["value_type"]:
-                        pressure = float(d["value"]) / paskal
-                    if "humidity" in d["value_type"]:
-                        humidity = float(d["value"])
-                    if "CCS_CO2" in d["value_type"]:
-                        CCS_CO2 = float(d["value"])
-                    if "CCS_TVOC" in d["value_type"]:
-                        CCS_TVOC = float(d["value"])
-                    if "GC" in d["value_type"]:
-                        GC = float(d["value"])
 
-                meas = {}
                 model = SDS011_MODEL
-                meas.update(
-                    {
-                        "pm10": pm10,
-                        "pm25": pm25,
-                        "temperature": temperature,
-                        "pressure": pressure,
-                        "humidity": humidity,
-                        "CCS_CO2": CCS_CO2,
-                        "CCS_TVOC": CCS_TVOC,
-                        "GC": GC,
-                    }
-                )
+                meas = reduce(self._SDS011_values_saver, data["sensordatavalues"], {})
 
             elif "ID" in data.keys():
                 self.client_id = data["ID"]
-                temperature = None
-                pressure = None
-                humidity = None
-                CO = None
-                NH3 = None
-                NO2 = None
-                speed = None
-                vane = None
-                pm1 = None
-                pm10 = None
-                pm25 = None
-
-                if "temperature" in data.keys():
-                    temperature = float(data["temperature"])
-                if "humidity" in data.keys():
-                    humidity = float(data["humidity"])
-                if "pressure" in data.keys():
-                    pressure = float(data["pressure"]) / paskal
-                if "CO" in data.keys():
-                    CO = float(data["CO"])
-                if "NH3" in data.keys():
-                    NH3 = float(data["NH3"])
-                if "NO2" in data.keys():
-                    NO2 = float(data["NO2"])
-                if "speed" in data.keys():
-                    speed = float(data["speed"])
-                if "vane" in data.keys():
-                    vane = data["vane"]
-                if "PM1" in data.keys():
-                    pm1 = data["PM1"]
-                if "PM10" in data.keys():
-                    pm10 = data["PM10"]
-                if "PM25" in data.keys():
-                    pm25 = data["PM25"]
-
-                geo_lat = float(data["GPS_lat"])
-                geo_lon = float(data["GPS_lon"])
-
-                meas = {}
+                geo_lat = float(data.get("GPS_lat"))
+                geo_lon = float(data.get("GPS_lon"))
+                meas = reduce(self._mobile_sensor_data_saver, data.items(), {})
                 model = MOBILE_GPS
-                meas.update(
-                    {
-                        "temperature": temperature,
-                        "humidity": humidity,
-                        "pressure": pressure,
-                        "CO": CO,
-                        "NH3": NH3,
-                        "NO2": NO2,
-                        "speed": speed,
-                        "vane": vane,
-                        "pm1": pm1,
-                        "pm10": pm10,
-                        "pm25": pm25,
-                    }
-                )
 
             with thlock:
                 if self.client_id not in sessions:
@@ -180,7 +132,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         global sessions
         ctype, pdict = cgi.parse_header(self.headers["content-type"])
         length = int(self.headers.get("content-length"))
-        self.data = json.loads(self.rfile.read(length))
+        d = self.rfile.read(length).decode().replace("SDS_P1", "SDS_pm10").replace("SDS_P2", "SDS_pm25")
+        self.data = json.loads(d)
         meas = self._parser(self.data)
         with thlock:
             if meas:
@@ -230,5 +183,5 @@ class HTTPStation(IStation):
                     stripped[k] = v
                 else:
                     del sessions[k]
-
+        ALIVE_SENSORS_METRIC.set(len(stripped))
         return stripped
