@@ -40,7 +40,7 @@
       "sentry": ""
    },
    "frontier": {
-      "enable": true,
+      "enable": false,
       "suri": ""
    },
    "trackagro": {

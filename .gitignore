@@ -8,5 +8,6 @@ venv/
 !connectivity/config/logging_template.py
 !connectivity/config/logging.py
 !connectivity/config/__init__.py
+!connectivity/config/README.md
 .vscode/*
 logs/
