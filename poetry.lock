@@ -7,7 +7,7 @@ optional = false
 python-versions = ">=3.5"
 
 [package.extras]
-tests = ["mypy", "PyHamcrest (>=2.0.2)", "pytest (>=4.6)", "pytest-benchmark", "pytest-cov", "pytest-flake8"]
+tests = ["PyHamcrest (>=2.0.2)", "mypy", "pytest (>=4.6)", "pytest-benchmark", "pytest-cov", "pytest-flake8"]
 
 [[package]]
 name = "certifi"
@@ -96,7 +96,7 @@ optional = false
 python-versions = ">=3.5, <4"
 
 [package.extras]
-dev = ["bumpversion (>=0.5.3,<1)", "pytest-watch (>=4.1.0,<5)", "wheel", "twine", "ipython", "pytest (==5.4.1)", "pytest-xdist", "tox (==3.14.6)", "flake8 (==3.7.9)", "isort (>=4.2.15,<5)", "mypy (==0.770)", "pydocstyle (>=5.0.0,<6)", "Sphinx (>=1.6.5,<2)", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)"]
+dev = ["Sphinx (>=1.6.5,<2)", "bumpversion (>=0.5.3,<1)", "flake8 (==3.7.9)", "ipython", "isort (>=4.2.15,<5)", "mypy (==0.770)", "pydocstyle (>=5.0.0,<6)", "pytest (==5.4.1)", "pytest-watch (>=4.1.0,<5)", "pytest-xdist", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)", "tox (==3.14.6)", "twine", "wheel"]
 doc = ["Sphinx (>=1.6.5,<2)", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)"]
 lint = ["flake8 (==3.7.9)", "isort (>=4.2.15,<5)", "mypy (==0.770)", "pydocstyle (>=5.0.0,<6)"]
 pycryptodome = ["pycryptodome (>=3.6.6,<4)"]
@@ -117,10 +117,10 @@ eth-utils = ">=1.8.2,<2.0.0"
 
 [package.extras]
 coincurve = ["coincurve (>=7.0.0,<13.0.0)"]
-dev = ["tox (==3.20.0)", "bumpversion (==0.5.3)", "twine", "eth-utils (>=1.8.2,<2.0.0)", "eth-typing (>=2.2.1,<3.0.0)", "flake8 (==3.0.4)", "mypy (==0.782)", "asn1tools (>=0.146.2,<0.147)", "factory-boy (>=3.0.1,<3.1)", "pyasn1 (>=0.4.5,<0.5)", "pytest (==5.4.1)", "hypothesis (>=5.10.3,<6.0.0)", "eth-hash", "eth-hash"]
-eth-keys = ["eth-utils (>=1.8.2,<2.0.0)", "eth-typing (>=2.2.1,<3.0.0)"]
+dev = ["asn1tools (>=0.146.2,<0.147)", "bumpversion (==0.5.3)", "eth-hash[pycryptodome]", "eth-hash[pysha3]", "eth-typing (>=2.2.1,<3.0.0)", "eth-utils (>=1.8.2,<2.0.0)", "factory-boy (>=3.0.1,<3.1)", "flake8 (==3.0.4)", "hypothesis (>=5.10.3,<6.0.0)", "mypy (==0.782)", "pyasn1 (>=0.4.5,<0.5)", "pytest (==5.4.1)", "tox (==3.20.0)", "twine"]
+eth-keys = ["eth-typing (>=2.2.1,<3.0.0)", "eth-utils (>=1.8.2,<2.0.0)"]
 lint = ["flake8 (==3.0.4)", "mypy (==0.782)"]
-test = ["asn1tools (>=0.146.2,<0.147)", "factory-boy (>=3.0.1,<3.1)", "pyasn1 (>=0.4.5,<0.5)", "pytest (==5.4.1)", "hypothesis (>=5.10.3,<6.0.0)", "eth-hash", "eth-hash"]
+test = ["asn1tools (>=0.146.2,<0.147)", "eth-hash[pycryptodome]", "eth-hash[pysha3]", "factory-boy (>=3.0.1,<3.1)", "hypothesis (>=5.10.3,<6.0.0)", "pyasn1 (>=0.4.5,<0.5)", "pytest (==5.4.1)"]
 
 [[package]]
 name = "eth-typing"
@@ -131,7 +131,7 @@ optional = false
 python-versions = ">=3.5, <4"
 
 [package.extras]
-dev = ["bumpversion (>=0.5.3,<1)", "pytest-watch (>=4.1.0,<5)", "wheel", "twine", "ipython", "pytest (>=4.4,<4.5)", "pytest-xdist", "tox (>=2.9.1,<3)", "flake8 (==3.8.3)", "isort (>=4.2.15,<5)", "mypy (==0.782)", "pydocstyle (>=3.0.0,<4)", "Sphinx (>=1.6.5,<2)", "sphinx-rtd-theme (>=0.1.9)"]
+dev = ["Sphinx (>=1.6.5,<2)", "bumpversion (>=0.5.3,<1)", "flake8 (==3.8.3)", "ipython", "isort (>=4.2.15,<5)", "mypy (==0.782)", "pydocstyle (>=3.0.0,<4)", "pytest (>=4.4,<4.5)", "pytest-watch (>=4.1.0,<5)", "pytest-xdist", "sphinx-rtd-theme (>=0.1.9)", "tox (>=2.9.1,<3)", "twine", "wheel"]
 doc = ["Sphinx (>=1.6.5,<2)", "sphinx-rtd-theme (>=0.1.9)"]
 lint = ["flake8 (==3.8.3)", "isort (>=4.2.15,<5)", "mypy (==0.782)", "pydocstyle (>=3.0.0,<4)"]
 test = ["pytest (>=4.4,<4.5)", "pytest-xdist", "tox (>=2.9.1,<3)"]
@@ -151,7 +151,7 @@ eth-typing = ">=2.2.1,<3.0.0"
 toolz = {version = ">0.8.2,<1", markers = "implementation_name == \"pypy\""}
 
 [package.extras]
-dev = ["bumpversion (>=0.5.3,<1)", "pytest-watch (>=4.1.0,<5)", "wheel (>=0.30.0,<1.0.0)", "twine (>=1.13,<2)", "ipython", "hypothesis (>=4.43.0,<5.0.0)", "pytest (==5.4.1)", "pytest-xdist", "tox (==3.14.6)", "black (>=18.6b4,<19)", "flake8 (==3.7.9)", "isort (>=4.2.15,<5)", "mypy (==0.720)", "pydocstyle (>=5.0.0,<6)", "pytest (>=3.4.1,<4.0.0)", "Sphinx (>=1.6.5,<2)", "sphinx-rtd-theme (>=0.1.9,<2)", "towncrier (>=19.2.0,<20)"]
+dev = ["Sphinx (>=1.6.5,<2)", "black (>=18.6b4,<19)", "bumpversion (>=0.5.3,<1)", "flake8 (==3.7.9)", "hypothesis (>=4.43.0,<5.0.0)", "ipython", "isort (>=4.2.15,<5)", "mypy (==0.720)", "pydocstyle (>=5.0.0,<6)", "pytest (==5.4.1)", "pytest (>=3.4.1,<4.0.0)", "pytest-watch (>=4.1.0,<5)", "pytest-xdist", "sphinx-rtd-theme (>=0.1.9,<2)", "towncrier (>=19.2.0,<20)", "tox (==3.14.6)", "twine (>=1.13,<2)", "wheel (>=0.30.0,<1.0.0)"]
 doc = ["Sphinx (>=1.6.5,<2)", "sphinx-rtd-theme (>=0.1.9,<2)", "towncrier (>=19.2.0,<20)"]
 lint = ["black (>=18.6b4,<19)", "flake8 (==3.7.9)", "isort (>=4.2.15,<5)", "mypy (==0.720)", "pydocstyle (>=5.0.0,<6)", "pytest (>=3.4.1,<4.0.0)"]
 test = ["hypothesis (>=4.43.0,<5.0.0)", "pytest (==5.4.1)", "pytest-xdist", "tox (==3.14.6)"]
@@ -223,7 +223,7 @@ optional = false
 python-versions = "*"
 
 [package.extras]
-proxy = ["pysocks"]
+proxy = ["PySocks"]
 
 [[package]]
 name = "pinatapy-vourhey"
@@ -299,8 +299,8 @@ python-versions = ">=3.6"
 cffi = ">=1.4.1"
 
 [package.extras]
-docs = ["sphinx (>=1.6.5)", "sphinx-rtd-theme"]
-tests = ["pytest (>=3.2.1,!=3.3.0)", "hypothesis (>=3.27.0)"]
+docs = ["sphinx (>=1.6.5)", "sphinx_rtd_theme"]
+tests = ["hypothesis (>=3.27.0)", "pytest (>=3.2.1,!=3.3.0)"]
 
 [[package]]
 name = "pyserial"
@@ -387,11 +387,11 @@ celery = ["celery (>=3)"]
 chalice = ["chalice (>=1.16.0)"]
 django = ["django (>=1.8)"]
 falcon = ["falcon (>=1.4)"]
-flask = ["flask (>=0.11)", "blinker (>=1.1)"]
+flask = ["blinker (>=1.1)", "flask (>=0.11)"]
 httpx = ["httpx (>=0.16.0)"]
-pure_eval = ["pure-eval", "executing", "asttokens"]
+pure_eval = ["asttokens", "executing", "pure-eval"]
 pyspark = ["pyspark (>=2.4.4)"]
-quart = ["quart (>=0.16.1)", "blinker (>=1.1)"]
+quart = ["blinker (>=1.1)", "quart (>=0.16.1)"]
 rq = ["rq (>=0.6)"]
 sanic = ["sanic (>=0.8)"]
 sqlalchemy = ["sqlalchemy (>=1.2)"]
@@ -449,8 +449,8 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
 
 [package.extras]
-brotli = ["brotlicffi (>=0.8.0)", "brotli (>=1.0.9)", "brotlipy (>=0.6.0)"]
-secure = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "certifi", "ipaddress"]
+brotli = ["brotli (>=1.0.9)", "brotlicffi (>=0.8.0)", "brotlipy (>=0.6.0)"]
+secure = ["certifi", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "ipaddress", "pyOpenSSL (>=0.14)"]
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
@@ -485,7 +485,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8, <4.0"
-content-hash = "aa7e1ccbc94525d38179c9bfdff8cd05b2b3e8370221283c987ff55c71563be1"
+content-hash = "896c4cae857b2e9cc7a23c53e593ddadee08071cb7c6b55e478dc379abd04482"
 
 [metadata.files]
 base58 = [
@@ -650,12 +650,14 @@ py-bip39-bindings = [
     {file = "py_bip39_bindings-0.1.9-cp310-cp310-macosx_10_7_x86_64.whl", hash = "sha256:ced918c247a0344c1c2d86f8663a1620d0e37615e536d0510b727939ce9cf7d5"},
     {file = "py_bip39_bindings-0.1.9-cp310-cp310-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:d084eeebcd56703e17dfeba62d22e66c3737c46a41a59fb30695d963df19dea8"},
     {file = "py_bip39_bindings-0.1.9-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:64c95b00436ea1f59c2f1437bc92352a258d8ebeae05f3a321e758f97b303de7"},
+    {file = "py_bip39_bindings-0.1.9-cp310-cp310-manylinux_2_28_armv7l.whl", hash = "sha256:ea861ae6a56f536453035b18e6bf09a34643da05433880b36d271c7852c1c58f"},
     {file = "py_bip39_bindings-0.1.9-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:2a4f92766a5e20cd12e7bc6397755fa42686b2fa9dc6eca5e3099a307a9bf170"},
     {file = "py_bip39_bindings-0.1.9-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:8813b8cfb4940aea98a56bd89e0d0549b1bded938cc989f41a841a43c5532120"},
     {file = "py_bip39_bindings-0.1.9-cp310-none-win32.whl", hash = "sha256:e8535c02fdcb14e909925a76efd1583bc88b08bb663dbb2a7005649fe6c66e60"},
     {file = "py_bip39_bindings-0.1.9-cp310-none-win_amd64.whl", hash = "sha256:3e8299e8322aef1cf0e5b243a9b08b7c244fac2d60c3c1b677476c6472491ffe"},
     {file = "py_bip39_bindings-0.1.9-cp37-cp37m-macosx_10_7_x86_64.whl", hash = "sha256:5ea35850ac414cc8c3ae8244c9dcc30439ef7bd775c6c9d37641650fbc7f4cc5"},
     {file = "py_bip39_bindings-0.1.9-cp37-cp37m-manylinux_2_28_aarch64.whl", hash = "sha256:3181bee74c65fdc40a9239d49c275c0ca3b39c8210df050c3d097fa764abadbc"},
+    {file = "py_bip39_bindings-0.1.9-cp37-cp37m-manylinux_2_28_armv7l.whl", hash = "sha256:9df7e09151e27b2fc7c484de270035b42ac3dde1018165961d1c9ba82c63b4cb"},
     {file = "py_bip39_bindings-0.1.9-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:01324e56ef6069b020a5ebe3771b769080fb51b22f5bc6299b30045a0aa066f7"},
     {file = "py_bip39_bindings-0.1.9-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:02906b7f6c747a5e7e27f6065709fea6212bd2d67f3094164b3e9a5166fe05a6"},
     {file = "py_bip39_bindings-0.1.9-cp37-none-win32.whl", hash = "sha256:304364c9d0e15f38374746afbe247f14f67bab7631dce01973eb1ea09a0a7966"},
@@ -663,6 +665,7 @@ py-bip39-bindings = [
     {file = "py_bip39_bindings-0.1.9-cp38-cp38-macosx_10_7_x86_64.whl", hash = "sha256:7bf684de485de183d78b1d1036997990dd54f475bae34fa7c140ad324a16536a"},
     {file = "py_bip39_bindings-0.1.9-cp38-cp38-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:8f1027635f92e2d7e239d83515c9eeb807f662e7e9505b916ace16f0a654be21"},
     {file = "py_bip39_bindings-0.1.9-cp38-cp38-manylinux_2_28_aarch64.whl", hash = "sha256:b74a8d76f35573f99e3293edaf4a9a8c2ce188bc80e7cf5236ae572c2f723a95"},
+    {file = "py_bip39_bindings-0.1.9-cp38-cp38-manylinux_2_28_armv7l.whl", hash = "sha256:22e5cacc4b655b968d9f3148e015784224482261a65ce6b602d21f785d71b57a"},
     {file = "py_bip39_bindings-0.1.9-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:1bfc5c0795e3d0d1e7d4de22332e16d451eac8fb66110de7218fe9fe93fc9f1d"},
     {file = "py_bip39_bindings-0.1.9-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:925c3b39acc8c9630a0e39414e3fb685f4198e19994434868f6c3d197ee17d31"},
     {file = "py_bip39_bindings-0.1.9-cp38-none-win32.whl", hash = "sha256:de04164b4913b5d46982cb8feca9a9356bdb0256eb26a00eb6c06c8de59af766"},
@@ -670,6 +673,7 @@ py-bip39-bindings = [
     {file = "py_bip39_bindings-0.1.9-cp39-cp39-macosx_10_7_x86_64.whl", hash = "sha256:4171ffa7927f9cd298e24bfbf7910cd62b011b4f87669f1b728a64dfc2ce2ca2"},
     {file = "py_bip39_bindings-0.1.9-cp39-cp39-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:bb31363d762851d831eafc98195314b7330842ff931b1d88baa90d332ff9511d"},
     {file = "py_bip39_bindings-0.1.9-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:391feea42c80a970f0bc1b8730f6aa4a8c02e7728bccea455f4ed02ec8fe7761"},
+    {file = "py_bip39_bindings-0.1.9-cp39-cp39-manylinux_2_28_armv7l.whl", hash = "sha256:2972b4da68f79a50ef366e4992a02059c19d0129d8354013a0f90c7f9ae082ef"},
     {file = "py_bip39_bindings-0.1.9-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:d80dfe842f42a342e68ab766410e68e60b6c4cb1cb5f53d831f172bc50e32445"},
     {file = "py_bip39_bindings-0.1.9-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:98aa3a05f417dd34b91a5370a242c532296467a7da75f5d65591f67a087384fa"},
     {file = "py_bip39_bindings-0.1.9-cp39-none-win32.whl", hash = "sha256:8fc423efff6335960865170b9f1be406f0148b2071da54a3fdb5945e914ca859"},
@@ -681,6 +685,7 @@ py-ed25519-bindings = [
     {file = "py_ed25519_bindings-1.0.1-cp310-cp310-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:888f0a03abf41a437ce85fe0b1dc89f15373e8307e999eb3e7936587cfbae086"},
     {file = "py_ed25519_bindings-1.0.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:ab58aa0e31a0815a02df6f519c03205084f9c872a2cecc938e218cc7409d7f78"},
     {file = "py_ed25519_bindings-1.0.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:da1c1c3a803147258ca413046ddcf663529c371af256bb12766b26aadfd92636"},
+    {file = "py_ed25519_bindings-1.0.1-cp310-cp310-manylinux_2_28_armv7l.whl", hash = "sha256:3d893bf30dac17e7656c1b6feae05be336fef100b383a8eb4dfba8310e1ac1cb"},
     {file = "py_ed25519_bindings-1.0.1-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:f536b620301be1f60ae1b0c5d7280013aa804a6e3accb4f67e14b6fb9c12f03a"},
     {file = "py_ed25519_bindings-1.0.1-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:d88ea99eed9d4acce6446ab74778fc83968016bbdda2881c53d815ea22f2949a"},
     {file = "py_ed25519_bindings-1.0.1-cp310-none-win32.whl", hash = "sha256:575b3cce1b4e389f510175c19ccbb81656ee35d5c645a354b53894ea6dd9e52d"},
@@ -688,6 +693,7 @@ py-ed25519-bindings = [
     {file = "py_ed25519_bindings-1.0.1-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d9be9533354ba347f42440d7f2c02641a66376dbbe607c3af3797ffce9980a0f"},
     {file = "py_ed25519_bindings-1.0.1-cp37-cp37m-macosx_10_7_x86_64.whl", hash = "sha256:b5dabe758bf5a02d80776efa54597b3352c5fcabd3de32d8527062cc697b220f"},
     {file = "py_ed25519_bindings-1.0.1-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6759723ccfc1536ba34aac3adc44012327b826acd41872a7e47470031fed81d6"},
+    {file = "py_ed25519_bindings-1.0.1-cp37-cp37m-manylinux_2_28_armv7l.whl", hash = "sha256:7a8675b05dece74dc0dfe4336a3fea336fb20f2983915caf0fecc7aede85cf2a"},
     {file = "py_ed25519_bindings-1.0.1-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:cdbf38ae7ab0d840a5e9d9ed1a8bacc62923ea56aec2ec1fb06b752aa8362f0e"},
     {file = "py_ed25519_bindings-1.0.1-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:dba6a5ad79423cc59eec97863c5b6801c4e6e8fc9587f1650800fe27fac0ba8f"},
     {file = "py_ed25519_bindings-1.0.1-cp37-none-win32.whl", hash = "sha256:44ec0bafdc24b2ba5775ed9264264ab49c1e26c1715a4f5b5e01f352aed0d827"},
@@ -696,6 +702,7 @@ py-ed25519-bindings = [
     {file = "py_ed25519_bindings-1.0.1-cp38-cp38-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:103bd4d1537434fc5472e44239c61c0d5469e51d97265cfcb3b70cdce9373c9a"},
     {file = "py_ed25519_bindings-1.0.1-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:4c4350c8c67115b4901dd053bd9b4a3de46f5ac54e03e8a3b66bf282be5ede48"},
     {file = "py_ed25519_bindings-1.0.1-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cabf2d85797c0abb044ce7f3de51455bf636eb98972bcb4b849ad2ba43779ba2"},
+    {file = "py_ed25519_bindings-1.0.1-cp38-cp38-manylinux_2_28_armv7l.whl", hash = "sha256:82aed86451911779e1c03b986644a88428b778624e36831a1a85789769e9a109"},
     {file = "py_ed25519_bindings-1.0.1-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:3f0709d52672b0d5a0251585243485e318907050805a177139a1aeb197978cc1"},
     {file = "py_ed25519_bindings-1.0.1-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:959e87a338ba4b7a076eacd79eb62d555e28b7407439f693c0a554c1ec252d3c"},
     {file = "py_ed25519_bindings-1.0.1-cp38-none-win32.whl", hash = "sha256:a4739bb5499a3f1f3b239043c4e4263f4227dfd8114de63643bdf0c8f524813b"},
@@ -704,6 +711,7 @@ py-ed25519-bindings = [
     {file = "py_ed25519_bindings-1.0.1-cp39-cp39-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:a107c90a9ba6841264cfd4ac6a4e58a1ee155d7d2aef61463ee306f61a0aa382"},
     {file = "py_ed25519_bindings-1.0.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:daa6dee550f44422f4318e8cb3e22e2b5b29e9122ba0563f1dc024d4d6a4c761"},
     {file = "py_ed25519_bindings-1.0.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ecc41a0427d5f54adaeefcfb3166224d26672508b34ebf5f6e1697a74f0372d5"},
+    {file = "py_ed25519_bindings-1.0.1-cp39-cp39-manylinux_2_28_armv7l.whl", hash = "sha256:fc5880c2141a9e136949f88fa2ca8ea090582c7af7a9bbe9ad21db7e1b2a508a"},
     {file = "py_ed25519_bindings-1.0.1-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:fb277a16a1551dfa4b3febdc0e4bbf56eec3cb369e082417a0f8c496ebc6bc5b"},
     {file = "py_ed25519_bindings-1.0.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:71ac6e3ce7e688f89d8adc1b87a892142c48233dede723f0e8a092010119d112"},
     {file = "py_ed25519_bindings-1.0.1-cp39-none-win32.whl", hash = "sha256:1efd5306db2c0e4dea73772220ea6861ba4fa582fc9b43c8a3219d177c434dfe"},
@@ -716,6 +724,7 @@ py-sr25519-bindings = [
     {file = "py_sr25519_bindings-0.1.4-cp310-cp310-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:14a06ca42d5fd07673138bf9970db9091059a1e4d704545bdf156dd05de3e3c6"},
     {file = "py_sr25519_bindings-0.1.4-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:2ec17c935f8ae9a00bb5d6adac6cc455fd6052042959ace5563448c355e2960a"},
     {file = "py_sr25519_bindings-0.1.4-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9e5118cc7e1a77083307d260ccda21a0ec14efb0b98535f8fc9e2c54c7594836"},
+    {file = "py_sr25519_bindings-0.1.4-cp310-cp310-manylinux_2_28_armv7l.whl", hash = "sha256:34635da67e6798bb4535543e63c3e1d3b19f17a4df1f9b613c69b66fc8296fa3"},
     {file = "py_sr25519_bindings-0.1.4-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:b901675f8ea8ca4a6e55887ea48448a3f6bf55f22baa4acfa77d7c844e82e9db"},
     {file = "py_sr25519_bindings-0.1.4-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:34786ba33f602d9d4f2495bd29d9f0cb357813a6ee8ae5cd9d37dbda86c141a4"},
     {file = "py_sr25519_bindings-0.1.4-cp310-none-win32.whl", hash = "sha256:f7ca8f4e62aee8bc33916f6422e8ac5ffeeb96bc11f7ca52792354b771216bd8"},
@@ -723,6 +732,7 @@ py-sr25519-bindings = [
     {file = "py_sr25519_bindings-0.1.4-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1121e5da273c81b2e7ba0ca4bef8a89c527a6e25ed3110a95e93fd2caa04c50b"},
     {file = "py_sr25519_bindings-0.1.4-cp37-cp37m-macosx_10_7_x86_64.whl", hash = "sha256:9e07cc588754da27c03185e2d3823537790f616b5aab3df1703ca0f6f578114c"},
     {file = "py_sr25519_bindings-0.1.4-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6715852eb2ea733c4978b77f9a049cc9eb763d54270d5b1263b198256656c38e"},
+    {file = "py_sr25519_bindings-0.1.4-cp37-cp37m-manylinux_2_28_armv7l.whl", hash = "sha256:6be4f52320d021fe8a86d72d71fae821b6c251f12b36e7e3deee5a1140da55b6"},
     {file = "py_sr25519_bindings-0.1.4-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:67dd46da0a571859418fc938af15ab9a0586e47244d21f0f26c5cbf4daf10a3b"},
     {file = "py_sr25519_bindings-0.1.4-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:aed508e15e695c5e3147be936db7a40f7bf5cb0a4078a9eb0e25fbdeb7c08982"},
     {file = "py_sr25519_bindings-0.1.4-cp37-none-win32.whl", hash = "sha256:1fb9ca7b65e60b64bd6e81ee2d5e6556d93b317af3c95a2e24bf45a3c44041a0"},
@@ -731,6 +741,7 @@ py-sr25519-bindings = [
     {file = "py_sr25519_bindings-0.1.4-cp38-cp38-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:d1b1b51d997363a264fb3f91978f21ea784f5ee50ed26e11ed0a0f26c497a4eb"},
     {file = "py_sr25519_bindings-0.1.4-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:4940ebfcb482b33468c41dda9e8c19137c14cc3b993e1084e55387c6acfa11ab"},
     {file = "py_sr25519_bindings-0.1.4-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:72b49cba419f5c76436bf06de4575ee27713afd8b867c4c14cb7a29e1046c30a"},
+    {file = "py_sr25519_bindings-0.1.4-cp38-cp38-manylinux_2_28_armv7l.whl", hash = "sha256:9b80e4aa4037b1e8fd3d5ff0fb4e2c3d92e04b2936f29c79d5411c5a22562f25"},
     {file = "py_sr25519_bindings-0.1.4-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:3f52666b02075483dfdd294b9d0fd903eaf96ac7140e5be45390b25ded52ca6a"},
     {file = "py_sr25519_bindings-0.1.4-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:d1c1247b4bf4c5670767e8a35bc259b425b275c8d72c6e3f1cfac47cf9b80e89"},
     {file = "py_sr25519_bindings-0.1.4-cp38-none-win32.whl", hash = "sha256:ce3639509e87ab04652c62aab626f13a80e308347047173bf74749397d0be539"},
@@ -739,6 +750,7 @@ py-sr25519-bindings = [
     {file = "py_sr25519_bindings-0.1.4-cp39-cp39-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:197892cd89077baf2be51e3307a40de2c32006a2b89fec7d767a1d0b2749712d"},
     {file = "py_sr25519_bindings-0.1.4-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:3845f55a88dcba825c16e65fc9e26742cbb9103fba5229fd0c3e9e8deffd323b"},
     {file = "py_sr25519_bindings-0.1.4-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0046dda17c554376f5ba11ea91163b1b883ac61fcc1b1ba588e31b1cb58add28"},
+    {file = "py_sr25519_bindings-0.1.4-cp39-cp39-manylinux_2_28_armv7l.whl", hash = "sha256:465c2ae7e3191f24ac10519aece185772a6b9d6179b8948fad78c3b1dbe77d8c"},
     {file = "py_sr25519_bindings-0.1.4-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:42097fab2702186a6591471bc366d7c804c7c30744acd59d6c6a38fdcad4bedb"},
     {file = "py_sr25519_bindings-0.1.4-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:8e62369aca9455131330cf63b0fcec3be198cabad936317321aa0db9d143435b"},
     {file = "py_sr25519_bindings-0.1.4-cp39-none-win32.whl", hash = "sha256:0a09f5886a706fcee6786f94dd59a04bdc95f2d6c4b7e1b3118ca805d322a055"},
