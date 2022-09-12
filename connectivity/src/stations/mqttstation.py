@@ -26,14 +26,15 @@ def _generate_pubkey(id: str) -> str:
 
 
 class MQTTHandler(mqtt.Client):
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(self, host: str, port: int, topic: str) -> None:
         mqtt.Client.__init__(self)
         self.host: str = host
         self.port: int = port
+        self.topic: str = topic
 
     def on_connect(self, client, obj, flags, rc) -> None:
         logger.info(f"MQTT Station: Connected to mqtt with result code {str(rc)}")
-        self.subscribe("/freertos_mqtt_robonomics_example/#", 0)
+        self.subscribe(self.topic, 0)
 
     def _parser(self, data: dict) -> Measurement:
         global sessions
@@ -195,7 +196,8 @@ class MQTTStation(IStation):
         self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
         host: str = config["mqttstation"]["host"]
         port: int = int(config["mqttstation"]["port"])
-        client = MQTTHandler(host, port)
+        topic: str = config["mqttstation"]["topic"]
+        client = MQTTHandler(host, port, topic)
         rc = client.run()
 
     def get_data(self) -> tp.List[StationData]:
