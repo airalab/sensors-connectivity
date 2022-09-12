@@ -45,14 +45,6 @@
     {
       "value_type": "signal",
       "value": "-57"
-    },
-    {
-      "value_type": "GPS_lon",
-      "value": 100
-    },
-    {
-      "value_type": "GPS_lon",
-      "value": 200
     }
   ]
 }
