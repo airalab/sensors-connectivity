@@ -26,15 +26,26 @@ def _generate_pubkey(id: str) -> str:
 
 
 class MQTTHandler(mqtt.Client):
-    def __init__(self, host: str, port: int, topic: str) -> None:
+    def __init__(
+        self, host: str, port: int, topic: str, username: str, password: str
+    ) -> None:
         mqtt.Client.__init__(self)
         self.host: str = host
         self.port: int = port
         self.topic: str = topic
+        self.username: str = username
+        self.password: str = password
+        if self.username and self.password:
+            self.username_pw_set(username=self.username, password=self.password)
 
     def on_connect(self, client, obj, flags, rc) -> None:
-        logger.info(f"MQTT Station: Connected to mqtt with result code {str(rc)}")
-        self.subscribe(self.topic, 0)
+        if rc == 0:
+            logger.info(f"MQTT Station: Connected OK with result code {str(rc)}")
+            self.subscribe(self.topic, 0)
+        elif rc == 5:
+            logger.error(f"MQTT Station: Connection Refused: Authorization error")
+        else:
+            logger.error(f"MQTT Station: Connection refused with result code {str(rc)}")
 
     def _parser(self, data: dict) -> Measurement:
         global sessions
@@ -182,7 +193,7 @@ class MQTTHandler(mqtt.Client):
                 sessions[self.client_id] = parse_data
 
     def on_subscribe(self, client, userdata, mid, granted_qos) -> None:
-        logger.info(f"Subscribed {str(mid)}, client {client}")
+        logger.info(f"Subscribed {str(mid)} to topic {self.topic}")
 
     def run(self) -> None:
         self.connect_async(self.host, self.port, 60)
@@ -197,7 +208,9 @@ class MQTTStation(IStation):
         host: str = config["mqttstation"]["host"]
         port: int = int(config["mqttstation"]["port"])
         topic: str = config["mqttstation"]["topic"]
-        client = MQTTHandler(host, port, topic)
+        username: str = config["mqttstation"]["username"]
+        password: str = config["mqttstation"]["password"]
+        client = MQTTHandler(host, port, topic, username, password)
         rc = client.run()
 
     def get_data(self) -> tp.List[StationData]:

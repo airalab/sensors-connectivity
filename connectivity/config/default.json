@@ -18,7 +18,10 @@
       "enable": false,
       "host": "localhost",
       "port": 1883,
-      "topic": "/freertos_mqtt_robonomics_example/#"
+      "topic": "/freertos_mqtt_robonomics_example/#",
+      "username": "",
+      "password": ""
+
    },
    "luftdaten": {
       "enable": false
