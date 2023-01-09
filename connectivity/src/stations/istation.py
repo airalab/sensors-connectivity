@@ -11,19 +11,21 @@ import typing as tp
 STATION_VERSION = "v0.8.0"
 thlock = threading.RLock()
 
-class Measurement():
+
+class Measurement:
 
     """
     Represents a single measurement
     """
-    
-    def __init__(self, public: str, model: int, geo_lat: float, geo_lon: float, measurement: dict) -> None:
+
+    def __init__(
+        self, public: str, model: int, geo_lat: float, geo_lon: float, measurement: dict
+    ) -> None:
         self.public: str = public
         self.model: int = model
         self.geo_lat: float = geo_lat
         self.geo_lon: float = geo_lon
         self.measurement: dict = measurement
-         
 
     def measurement_check(self) -> dict:
         with thlock:
@@ -104,10 +106,11 @@ class IStation:
         :return: StationData object
         """
 
-        return [StationData(
-            self.version,
-            self.mac_address,
-            time.time() - self.start_time,
-            Measurement()
-        )]
-
+        return [
+            StationData(
+                self.version,
+                self.mac_address,
+                time.time() - self.start_time,
+                Measurement(),
+            )
+        ]

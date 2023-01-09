@@ -3,7 +3,7 @@ import time
 import typing as tp
 from tempfile import NamedTemporaryFile
 import ipfshttpclient
-import robonomicsinterface as RI
+from robonomicsinterface import Datalog, Account
 import requests
 import threading
 from pinatapy import PinataPy
@@ -150,9 +150,10 @@ class DatalogFeeder(IFeeder):
         logger.info(ipfs_hash)
         self.last_time = time.time()
         self.buffer = set()
-        interface = RI.RobonomicsInterface(seed=self.config["datalog"]["suri"])
+        account = Account(seed=self.config["datalog"]["suri"])
+        datalog = Datalog(account)
         try:
-            robonomics_receipt = interface.record_datalog(ipfs_hash)
+            robonomics_receipt = datalog.record(ipfs_hash)
             logger.info(
                 f"Datalog Feeder: Ipfs hash sent to Robonomics Parachain and included in block {robonomics_receipt}"
             )

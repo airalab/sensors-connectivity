@@ -1,4 +1,4 @@
-import robonomicsinterface as RI
+from robonomicsinterface import Datalog, Account
 import typing as tp
 import logging
 
@@ -18,10 +18,11 @@ class FrontierFeeder(IFeeder):
 
     def feed(self, data: tp.List[StationData]) -> None:
         if self.config["frontier"]["enable"]:
-            interface = RI.RobonomicsInterface(seed=self.config["datalog"]["suri"])
+            account = Account(seed=self.config["datalog"]["suri"])
+            datalog = Datalog(account)
             for d in data:
                 try:
-                    robonomics_receipt = interface.record_datalog(f"{d.measurement}")
+                    robonomics_receipt = datalog.record(f"{d.measurement}")
                     logger.info(
                         f"Frontier Datalog: Data sent to Robonomics datalog and included in block {robonomics_receipt}"
                     )

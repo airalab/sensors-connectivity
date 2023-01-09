@@ -13,6 +13,8 @@ from functools import reduce
 
 from ..drivers.sds011 import SDS011_MODEL, MOBILE_GPS
 from .istation import IStation, StationData, Measurement, STATION_VERSION
+from ..sensors import SDS011
+
 from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
@@ -24,12 +26,6 @@ last_sensors_update = time.time()
 ALIVE_SENSORS_METRIC = Gauge(
     "connectivity_sensors_alive_total", "return number of active sessions"
 )
-
-
-def _generate_pubkey(id: str) -> str:
-    verify_key = hashlib.sha256(id.encode("utf-8"))
-    verify_key_hex = verify_key.hexdigest()
-    return str(verify_key_hex)
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -58,86 +54,17 @@ class RequestHandler(BaseHTTPRequestHandler):
         self._set_headers(id)
         logger.info(f"HTTP Station session length: {len(sessions)}")
 
-    def _SDS011_values_saver(self, meas: dict, value: dict) -> dict:
-        "Reducer callback for SDS011 sensors"
-        extra_data = [
-            "GPS",
-            "micro",
-            "signal",
-            "samples",
-            "interval",
-        ]  # values which shouldn't be stored in meas dict
-        paskal = 133.32
-        if any(x in value["value_type"] for x in extra_data):
-            return meas
-        if "_" in value["value_type"] and not "CCS" in value["value_type"]:
-            if "pressure" in value["value_type"]:
-                meas[value["value_type"].split("_")[1]] = float(value["value"]) / paskal
-            else:
-                meas[value["value_type"].split("_")[1]] = value["value"]
-        else:
-            meas[value["value_type"]] = value["value"]
-        return meas
-
-    def _mobile_sensor_data_saver(self, meas: dict, value: str) -> dict:
-        "Reducer callback for mobile GPS sensor's data"
-        key, item = value
-        paskal = 133.32
-        if "GPS" in key or "ID" in key:
-            return meas
-        if "pressure" in key:
-            meas[key] = float(item) / paskal
-        meas[key] = item
-        return meas
-
-    def _parser(self, data: dict) -> Measurement:
-        global sessions
-        global thlock
-        paskal = 133.32
-        try:
-            if "esp8266id" in data.keys():
-                self.client_id = int(data["esp8266id"])
-                for d in data["sensordatavalues"]:
-                    if d["value_type"] == "GPS_lat":
-                        geo_lat = d["value"]
-                    if d["value_type"] == "GPS_lon":
-                        geo_lon = d["value"]
-
-                model = SDS011_MODEL
-                meas = reduce(self._SDS011_values_saver, data["sensordatavalues"], {})
-
-            elif "ID" in data.keys():
-                self.client_id = data["ID"]
-                geo_lat = float(data.get("GPS_lat"))
-                geo_lon = float(data.get("GPS_lon"))
-                meas = reduce(self._mobile_sensor_data_saver, data.items(), {})
-                model = MOBILE_GPS
-
-            with thlock:
-                if self.client_id not in sessions:
-                    public = _generate_pubkey(str(self.client_id))
-                else:
-                    public = sessions[self.client_id].public
-
-            timestamp = int(time.time())
-            meas.update({"timestamp": timestamp})
-            measurement = Measurement(public, model, geo_lat, geo_lon, meas)
-
-        except Exception as e:
-            logger.warning(f"HTTP Station: Error in parser {e}")
-            return
-        return measurement
-
     def do_POST(self) -> None:
         global sessions
         ctype, pdict = cgi.parse_header(self.headers["content-type"])
         length = int(self.headers.get("content-length"))
         d = self.rfile.read(length).decode().replace("SDS_P1", "SDS_pm10").replace("SDS_P2", "SDS_pm25")
         self.data = json.loads(d)
-        meas = self._parser(self.data)
+        if "esp8266id" in self.data.keys():
+            meas = SDS011(self.data)
         with thlock:
             if meas:
-                sessions[self.client_id] = meas
+                sessions[meas.id] = meas
         self._set_headers()
 
 
