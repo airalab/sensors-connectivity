@@ -3,7 +3,7 @@ import time
 import netifaces
 from datetime import timedelta
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import threading
 import copy
 import typing as tp
@@ -71,7 +71,7 @@ def _get_mac() -> str:
     mac = _i.replace(":", "")
     return mac
 
-
+@dataclass
 class IStation:
     """
     Station is an input/source of data
@@ -84,21 +84,20 @@ class IStation:
     Have a look at COMStation and HTTPStation implementation.
     """
 
-    def __init__(self, config: dict) -> None:
-        """
-        The station is responsible for its own settings
-        :param config: configuration dictionary
-        """
+    version: str = field(init=False)
+    start_time: float = time.time()
+    mac_address: str = _get_mac()
+    uptime: float = field(init=False)
+    measurement: dict = field(init=False)
+    # """
+    # The station is responsible for its own settings
+    # :param config: configuration dictionary
+    # """
 
-        self.config: dict = config
-        self.version: tp.Literal["v0.8.0"] = STATION_VERSION
-        self.start_time: float = time.time()
-        self.mac_address: str = _get_mac()
+    # def __str__(self):
+    #     return f"{{Version: {self.version}, Start: {self.start_time}, MAC: {self.mac_address}}}"
 
-    def __str__(self):
-        return f"{{Version: {self.version}, Start: {self.start_time}, MAC: {self.mac_address}}}"
-
-    def get_data(self) -> tp.List[StationData]:
+    def get_data(self) -> tp.List[dict]:
         """
         Must return a new record of data or last measured data
         Depending on a configuration file this method could be called
@@ -107,10 +106,10 @@ class IStation:
         """
 
         return [
-            StationData(
-                self.version,
-                self.mac_address,
-                time.time() - self.start_time,
-                Measurement(),
-            )
+            {
+                "Version": self.version,
+                "MAC": self.mac_address,
+                "Uptime": self.uptime,
+                "measurement": self.measurement
+            }
         ]

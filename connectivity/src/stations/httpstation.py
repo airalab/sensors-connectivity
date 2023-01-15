@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from ctypes import resize
 import threading
 import time
 import json
@@ -9,11 +10,10 @@ import typing as tp
 import logging.config
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from prometheus_client import Gauge
-from functools import reduce
 
 from ..drivers.sds011 import SDS011_MODEL, MOBILE_GPS
-from .istation import IStation, StationData, Measurement, STATION_VERSION
-from ..sensors import SDS011
+from .istation import IStation, STATION_VERSION
+from ..sensors import EnvironmentalBox
 
 from connectivity.config.logging import LOGGING_CONFIG
 
@@ -58,10 +58,15 @@ class RequestHandler(BaseHTTPRequestHandler):
         global sessions
         ctype, pdict = cgi.parse_header(self.headers["content-type"])
         length = int(self.headers.get("content-length"))
-        d = self.rfile.read(length).decode().replace("SDS_P1", "SDS_pm10").replace("SDS_P2", "SDS_pm25")
+        d = (
+            self.rfile.read(length)
+            .decode()
+            .replace("SDS_P1", "SDS_pm10")
+            .replace("SDS_P2", "SDS_pm25")
+        )
         self.data = json.loads(d)
         if "esp8266id" in self.data.keys():
-            meas = SDS011(self.data)
+            meas = EnvironmentalBox(self.data)
         with thlock:
             if meas:
                 sessions[meas.id] = meas
@@ -81,21 +86,27 @@ class HTTP_server(threading.Thread):
 
 class HTTPStation(IStation):
     def __init__(self, config: dict) -> None:
-        super().__init__(config)
+        # super().__init__(config)
         port: int = int(config["httpstation"]["port"])
         HTTP_server(port).start()
         self.version: str = f"airalab-http-{STATION_VERSION}"
         self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
 
-    def get_data(self) -> tp.List[StationData]:
+    def get_data(self) -> tp.List[dict]:
         global sessions
         result = []
         for k, v in self._drop_dead_sensors().items():
+            self.uptime = time.time() - self.start_time
+            print(f"v: {v}")
             result.append(
-                StationData(
-                    self.version, self.mac_address, time.time() - self.start_time, v
-                )
+                {
+                    "Version": self.version,
+                    "MAC": self.mac_address,
+                    "Uptime": self.uptime,
+                    "measurement": v,
+                }
             )
+            print(f"result: {result}")
         return result
 
     def _drop_dead_sensors(self) -> dict:

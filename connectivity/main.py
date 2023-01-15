@@ -103,6 +103,7 @@ class WorkerNode:
             Timer(self.interval, get_result).start()
             for s in self.stations:
                 self.station_data.append(s.get_data())
+            print(self.station_data)
             logger.info(f"{s.version}: {self.station_data}")
 
         def send_result() -> None:

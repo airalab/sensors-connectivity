@@ -16,7 +16,7 @@ def main():
     lon = round(random.uniform(0.000000, 49.999999), 6)
     id = round(random.randrange(0, 100000))
     body = {
-      "esp8266id": 28190,
+      "esp8266id": id,
       "software_version": "NRZ-2020-129",
       "sensordatavalues": [
         {

@@ -6,7 +6,6 @@ import threading
 
 from .ifeeder import IFeeder
 from ..drivers.ping import PING_MODEL
-from ..stations.istation import StationData
 import logging.config
 from connectivity.config.logging import LOGGING_CONFIG
 
@@ -17,18 +16,18 @@ logger = logging.getLogger("sensors-connectivity")
 thlock = threading.RLock()
 
 
-def _to_pubsub_message(data: StationData) -> str:
+def _to_pubsub_message(data: dict) -> str:
     meas = data.measurement
     message = {}
     message[meas.public] = {
         "model": meas.model,
         "geo": "{},{}".format(meas.geo_lat, meas.geo_lon),
-        "measurement": meas.measurement_check(),
+        "measurement": meas.measurements,
     }
     return json.dumps(message)
 
 
-def _to_ping_message(data: StationData) -> str:
+def _to_ping_message(data: dict) -> str:
     meas = data.measurement
     message = {}
     message[meas.public] = {
@@ -60,10 +59,11 @@ class RobonomicsFeeder(IFeeder):
         self.ipfs_client = ipfshttpclient.connect(endpoint, session=True)
         self.topic: str = config["robonomics"]["ipfs_topic"]
 
-    def feed(self, data: tp.List[StationData]) -> None:
+    def feed(self, data: tp.List[dict]) -> None:
         if self.config["robonomics"]["enable"]:
             for d in data:
-                if d.measurement.public and d.measurement.model != PING_MODEL:
+                print(f"in feeder d: {d}")
+                if d.measurement.public and d.model != PING_MODEL:
                     pubsub_payload = _to_pubsub_message(d)
                 else:
                     pubsub_payload = _to_ping_message(d)
