@@ -98,14 +98,7 @@ class HTTPStation(IStation):
         for k, v in self._drop_dead_sensors().items():
             self.uptime = time.time() - self.start_time
             print(f"v: {v}")
-            result.append(
-                {
-                    "Version": self.version,
-                    "MAC": self.mac_address,
-                    "Uptime": self.uptime,
-                    "measurement": v,
-                }
-            )
+            result.append(v)
             print(f"result: {result}")
         return result
 

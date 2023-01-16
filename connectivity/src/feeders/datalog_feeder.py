@@ -30,6 +30,7 @@ DATALOG_STATUS_METRIC.state('starting')
 def _sort_payload(data: dict) -> dict:
     ordered = {}
     for k, v in data.items():
+        logger.debug(f"Datalog Feeder: in sorted k: {k}, v:{v}")
         meas = sorted(v["measurements"], key=lambda x: x["timestamp"])
         ordered[k] = {"model": v["model"], "geo": v["geo"], "measurements": meas}
     return ordered
@@ -104,9 +105,9 @@ class DatalogFeeder(IFeeder):
         if self.config["datalog"]["enable"]:
             if data:
                 for d in data:
-                    if d.measurement.public and d.measurement.model != PING_MODEL:
-                        logger.debug(f"DatalogFeeder: Adding data to buffer: {d.measurement}")
-                        self.buffer.add(d.measurement)
+                    if d.public and d.model != PING_MODEL:
+                        logger.debug(f"DatalogFeeder: Adding data to buffer: {d}")
+                        self.buffer.add(str(d))
 
                 if (time.time() - self.last_time) >= self.interval:
                     if self.buffer:

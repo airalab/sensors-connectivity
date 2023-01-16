@@ -102,14 +102,5 @@ class IStation:
         Must return a new record of data or last measured data
         Depending on a configuration file this method could be called
         more often than new data is received
-        :return: StationData object
+        :return: List of measurements
         """
-
-        return [
-            {
-                "Version": self.version,
-                "MAC": self.mac_address,
-                "Uptime": self.uptime,
-                "measurement": self.measurement
-            }
-        ]
