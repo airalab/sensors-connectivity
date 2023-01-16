@@ -30,7 +30,6 @@ DATALOG_STATUS_METRIC.state('starting')
 def _sort_payload(data: dict) -> dict:
     ordered = {}
     for k, v in data.items():
-        logger.debug(f"Datalog Feeder: in sorted k: {k}, v:{v}")
         meas = sorted(v["measurements"], key=lambda x: x["timestamp"])
         ordered[k] = {"model": v["model"], "geo": v["geo"], "measurements": meas}
     return ordered
@@ -41,7 +40,6 @@ def _get_multihash(
 ) -> tp.Dict[str, str]:
     payload = {}
     for m in buf:
-        print(f"m in buff: {m}")
         if m.public in payload:
             payload[m.public]["measurements"].append(m.measurement)
         else:
