@@ -6,7 +6,7 @@ from ..drivers.sds011 import SDS011_MODEL
 from .base import Device
 
 
-@dataclass(repr=False)
+@dataclass(repr=False, eq=False)
 class EnvironmentalBox(Device):
     data: dict = field(repr=False)
 
@@ -21,8 +21,10 @@ class EnvironmentalBox(Device):
             if d["value_type"] == "GPS_lon":
                 self.geo_lon = d["value"]
         self.measurement = reduce(self._SDS011_values_saver, sensors_data, {})
-        self.measurement.update({"timestamp": time.time()})
+        self.timestamp = time.time()
+        self.measurement.update({"timestamp": self.timestamp})
         self.measurement.update({"model": self.model})
+
 
     def _SDS011_values_saver(self, meas: dict, value: dict) -> dict:
         "Reducer callback for SDS011 sensors"

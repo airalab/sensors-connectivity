@@ -41,13 +41,14 @@ def _get_multihash(
 ) -> tp.Dict[str, str]:
     payload = {}
     for m in buf:
+        print(f"m in buff: {m}")
         if m.public in payload:
-            payload[m.public]["measurements"].append(m.measurement_check())
+            payload[m.public]["measurements"].append(m.measurement)
         else:
             payload[m.public] = {
                 "model": m.model,
                 "geo": "{},{}".format(m.geo_lat, m.geo_lon),
-                "measurements": [m.measurement_check()],
+                "measurements": [m.measurement],
             }
 
     logger.debug(f"Payload before sorting: {payload}")
@@ -107,7 +108,7 @@ class DatalogFeeder(IFeeder):
                 for d in data:
                     if d.public and d.model != PING_MODEL:
                         logger.debug(f"DatalogFeeder: Adding data to buffer: {d}")
-                        self.buffer.add(str(d))
+                        self.buffer.add(d)
 
                 if (time.time() - self.last_time) >= self.interval:
                     if self.buffer:
@@ -121,8 +122,6 @@ class DatalogFeeder(IFeeder):
                         self.to_datalog(ipfs_hash)
                     else:
                         logger.info("Datalog Feeder:Nothing to publish")
-                    # self.buffer = set()
-                    # self.last_time = time.time()
                 else:
                     logger.info("Datalog Feeder: Still collecting measurements...")
 

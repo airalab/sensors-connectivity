@@ -2,13 +2,14 @@ from dataclasses import dataclass, field
 import hashlib
 
 
-@dataclass
+@dataclass()
 class Device:
     id: int = field(init=False)
     public: str = field(init=False)
     geo_lat: float = field(init=False)
     geo_lon: float = field(init=False)
     model: int = field(init=False)
+    timestamp: float = field(init=False)
     measurement: dict = field(init=False)
 
     def __post_init__(self) -> None:
@@ -24,3 +25,6 @@ class Device:
 
     def __repr__(self) -> str:
         return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), model: {self.model}, measurements: {self.measurement}}}"
+
+    def __hash__(self) -> int:
+        return hash((self.id, self.timestamp))
