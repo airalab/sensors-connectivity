@@ -13,7 +13,7 @@ LOGGING_CONFIG = {
     },
     "handlers": {
         "console": {
-            "level": "DEBUG",
+            "level": "INFO",
             "formatter": "standart",
             "class": "logging.StreamHandler",
             "stream": sys.stdout,
@@ -30,7 +30,7 @@ LOGGING_CONFIG = {
     "loggers": {
         "sensors-connectivity": {
             "handlers": ["console", "file"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": False,
         },
     },

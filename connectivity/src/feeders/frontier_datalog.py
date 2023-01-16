@@ -3,8 +3,6 @@ import typing as tp
 import logging
 
 from .ifeeder import IFeeder
-from ..stations.istation import StationData, Measurement
-from ..drivers.ping import PING_MODEL
 import logging.config
 from connectivity.config.logging import LOGGING_CONFIG
 
@@ -16,7 +14,7 @@ class FrontierFeeder(IFeeder):
     def __init__(self, config: dict) -> None:
         super().__init__(config)
 
-    def feed(self, data: tp.List[StationData]) -> None:
+    def feed(self, data: tp.List[dict]) -> None:
         if self.config["frontier"]["enable"]:
             account = Account(seed=self.config["datalog"]["suri"])
             datalog = Datalog(account)

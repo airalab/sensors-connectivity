@@ -1,75 +1,15 @@
 # This is an interface for a station
 import time
-import netifaces
 from datetime import timedelta
 import json
 from dataclasses import dataclass, field
 import threading
 import copy
 import typing as tp
+import netifaces
 
 STATION_VERSION = "v0.8.0"
 thlock = threading.RLock()
-
-
-class Measurement:
-
-    """
-    Represents a single measurement
-    """
-
-    def __init__(
-        self, public: str, model: int, geo_lat: float, geo_lon: float, measurement: dict
-    ) -> None:
-        self.public: str = public
-        self.model: int = model
-        self.geo_lat: float = geo_lat
-        self.geo_lon: float = geo_lon
-        self.measurement: dict = measurement
-
-    def measurement_check(self) -> dict:
-        with thlock:
-            data_copy = copy.deepcopy(self.measurement)
-            for key, value in data_copy.items():
-                if value is None:
-                    del self.measurement[key]
-        return self.measurement
-
-    def __str__(self) -> str:
-
-        return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), measurements: {self.measurement_check()}}}"
-
-
-@dataclass
-class StationData:
-    """
-    It's a wrapper for a measurement with some additional information
-    """
-
-    version: str
-    mac: str
-    uptime: float
-    measurement: Measurement
-
-    def __str__(self) -> str:
-        uptime = str(timedelta(seconds=self.uptime))
-        return f"{{MAC: {self.mac}, Uptime: {uptime}, M: {self.measurement}}}"
-
-    def __repr__(self) -> str:
-        uptime = str(timedelta(seconds=self.uptime))
-        return f"{{MAC: {self.mac}, Uptime: {uptime}, M: {self.measurement}}}"
-
-
-def _get_mac() -> str:
-    for interface in netifaces.interfaces():
-        if interface != "lo":
-            if 17 in netifaces.ifaddresses(interface):
-                _i = netifaces.ifaddresses(interface)
-                _i = _i[17][0]["addr"]
-                break
-
-    mac = _i.replace(":", "")
-    return mac
 
 @dataclass
 class IStation:
@@ -84,11 +24,7 @@ class IStation:
     Have a look at COMStation and HTTPStation implementation.
     """
 
-    version: str = field(init=False)
-    start_time: float = time.time()
-    mac_address: str = _get_mac()
-    uptime: float = field(init=False)
-    measurement: dict = field(init=False)
+    # measurement: dict = field(init=False)
     # """
     # The station is responsible for its own settings
     # :param config: configuration dictionary
@@ -104,3 +40,4 @@ class IStation:
         more often than new data is received
         :return: List of measurements
         """
+        raise NotImplementedError("Subclass must implement get_data()!")

@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import hashlib
+import time
 
 
 @dataclass()
@@ -13,7 +14,9 @@ class Device:
     measurement: dict = field(init=False)
 
     def __post_init__(self) -> None:
-        pass
+        self.timestamp = int(time.time())
+        self.measurement.update({"timestamp": self.timestamp})
+        self.measurement.update({"model": self.model})
 
     def generate_pubkey(self, id: str) -> str:
         verify_key = hashlib.sha256(id.encode("utf-8"))

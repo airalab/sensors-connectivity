@@ -10,8 +10,7 @@ from pinatapy import PinataPy
 
 from connectivity.utils.database import DataBase
 from .ifeeder import IFeeder
-from ..stations.istation import StationData, Measurement
-from ..drivers.ping import PING_MODEL
+from ...constants import PING_MODEL
 import logging.config
 from connectivity.config.logging import LOGGING_CONFIG
 
@@ -100,7 +99,7 @@ class DatalogFeeder(IFeeder):
         self.db: DataBase = DataBase(self.config)
         self.db.create_table()
 
-    def feed(self, data: tp.List[StationData]) -> None:
+    def feed(self, data: tp.List[dict]) -> None:
         if self.config["datalog"]["enable"]:
             if data:
                 for d in data:

@@ -9,12 +9,6 @@ import serial
 from ...constants import MOBILE_GPS
 from ..sensors import SensorSDS011
 
-
-
-# SDS011_MODEL = 2  # unique model for the driver
-# MOBILE_GPS = 3
-
-
 def sds011_codec(data: bytes, pk: str) -> dict:
     unpacked = struct.unpack("<ffff", data)
     meas = SensorSDS011(public_key=pk, data=unpacked)

@@ -11,7 +11,7 @@ import logging.config
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from prometheus_client import Gauge
 
-from ..drivers.sds011 import SDS011_MODEL, MOBILE_GPS
+from ...constants import SDS011_MODEL, MOBILE_GPS
 from .istation import IStation, STATION_VERSION
 from ..sensors import EnvironmentalBox
 
@@ -88,15 +88,14 @@ class HTTPStation(IStation):
     def __init__(self, config: dict) -> None:
         # super().__init__(config)
         port: int = int(config["httpstation"]["port"])
+        self.version = STATION_VERSION
         HTTP_server(port).start()
-        self.version: str = f"airalab-http-{STATION_VERSION}"
         self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
 
     def get_data(self) -> tp.List[dict]:
         global sessions
         result = []
         for k, v in self._drop_dead_sensors().items():
-            self.uptime = time.time() - self.start_time
             result.append(v)
         return result
 
@@ -108,7 +107,7 @@ class HTTPStation(IStation):
         with thlock:
             sessions_copy = copy.deepcopy(sessions)
             for k, v in sessions_copy.items():
-                if (current_time - v.measurement["timestamp"]) < self.DEAD_SENSOR_TIME:
+                if (current_time - v.timestamp) < self.DEAD_SENSOR_TIME:
                     stripped[k] = v
                 else:
                     del sessions[k]

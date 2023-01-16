@@ -1,7 +1,5 @@
 # This is an interface for any kind of feeders
 import typing as tp
-import logging
-from ..stations import StationData
 
 
 class IFeeder:
@@ -14,7 +12,7 @@ class IFeeder:
     input2 -  sensors-connectivity  - feeder2
     input3 /                        \ feeder3
 
-    Every feeder must implement `feed()` method that requires a StationData argument
+    Every feeder must implement `feed()` method that requires a dict with measurements argument
     """
 
     def __init__(self, config: dict):
@@ -30,11 +28,11 @@ class IFeeder:
     def get_classname(cls):
         return cls.__name__
 
-    def feed(self, data: tp.List[StationData]):
+    def feed(self, data: tp.List[dict]):
         """
         It's responsible for publishing data to an implemented channel
 
-        :param data: StationData object that holds necessary data including measurements
+        :param data: dict with measurements that holds necessary data including measurements
         :return: nothing
         """
         raise NotImplementedError("Subclass must implement this!")

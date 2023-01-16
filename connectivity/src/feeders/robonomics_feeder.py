@@ -5,7 +5,7 @@ import ipfshttpclient
 import threading
 
 from .ifeeder import IFeeder
-from ..drivers.ping import PING_MODEL
+from ...constants import PING_MODEL
 import logging.config
 from connectivity.config.logging import LOGGING_CONFIG
 
