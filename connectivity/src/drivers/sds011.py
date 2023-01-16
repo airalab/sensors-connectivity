@@ -5,39 +5,26 @@ Thanks @ikalchev for work
 import struct
 import typing as tp
 import serial
-from ..stations.istation import Measurement
+
+from ...constants import MOBILE_GPS
+from ..sensors import SensorSDS011
 
 
-SDS011_MODEL = 2  # unique model for the driver
-MOBILE_GPS = 3
+
+# SDS011_MODEL = 2  # unique model for the driver
+# MOBILE_GPS = 3
 
 
-def sds011_codec(data: bytes, pk: str, timestamp: int) -> Measurement:
+def sds011_codec(data: bytes, pk: str) -> dict:
     unpacked = struct.unpack("<ffff", data)
-
-    return Measurement(
-        pk,
-        SDS011_MODEL,
-        round(unpacked[0], 2),
-        round(unpacked[1], 2),
-        round(unpacked[2], 6),
-        round(unpacked[3], 6),
-        timestamp,
-    )
+    meas = SensorSDS011(public_key=pk, data=unpacked)
+    return meas
 
 
-def sds011_gps_codec(data: bytes, pk: str, timestamp: int) -> Measurement:
+def sds011_gps_codec(data: bytes, pk: str) -> dict:
     unpacked = struct.unpack("<ffff", data)
-
-    return Measurement(
-        pk,
-        MOBILE_GPS,
-        round(unpacked[0], 2),
-        round(unpacked[1], 2),
-        round(unpacked[2], 6),
-        round(unpacked[3], 6),
-        timestamp,
-    )
+    meas = SensorSDS011(public_key=pk, data=unpacked, model=MOBILE_GPS)
+    return meas
 
 
 # TODO: Commands against the sensor should read the reply and return success status.
