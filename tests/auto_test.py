@@ -12,6 +12,8 @@ header = {"Content-type": "application/json"}
 def main():
     pm10 = round(random.uniform(0.1, 100.99), 3)
     pm25 = round(random.uniform(0.1, 100.99), 3)
+    humidity = round(random.uniform(0, 100))
+    temperature = round(random.uniform(-50, 50), 3)
     lat = round(random.uniform(0.000000, 60.000000), 6)
     lon = round(random.uniform(0.000000, 49.999999), 6)
     id = round(random.randrange(0, 100000))
@@ -29,11 +31,11 @@ def main():
         },
         {
           "value_type": "temperature",
-          "value": "22.93"
+          "value": temperature
         },
         {
           "value_type": "humidity",
-          "value": "39.44"
+          "value": humidity
         },
         {
         "value_type": "samples",

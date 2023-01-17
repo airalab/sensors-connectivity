@@ -5,13 +5,12 @@ from urllib import parse, error
 import ssl
 import json
 import time
-import hashlib
 import threading
 import logging.config
-import copy
 import typing as tp
 
-from .istation import IStation, STATION_VERSION
+from .istation import IStation
+from ...constants import STATION_VERSION
 from ..sensors import TrackAgro
 from connectivity.config.logging import LOGGING_CONFIG
 
@@ -69,20 +68,10 @@ class TrackAgroStation(IStation):
 
     def get_data(self) -> tp.List[dict]:
         global sessions
+        global thlock
+        with thlock:
+            stripped = self.drop_dead_sensors(self.sessions)
         result = []
-        for k, v in self._drop_dead_sensors().items():
+        for k, v in stripped.items():
             result.append(v)
         return result
-
-    def _drop_dead_sensors(self) -> dict:
-        global thlock
-        stripped = dict()
-        current_time = int(time.time())
-        with thlock:
-            sessions_copy = copy.deepcopy(self.sessions)
-            for k, v in sessions_copy.items():
-                if (current_time - v.timestamp) < self.DEAD_SENSOR_TIME:
-                    stripped[k] = v
-                else:
-                    del self.sessions[k]
-        return stripped

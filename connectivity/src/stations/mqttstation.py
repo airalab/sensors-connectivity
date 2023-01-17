@@ -2,14 +2,12 @@
 import paho.mqtt.client as mqtt
 import typing as tp
 import threading
-import time
 import json
-import copy
-import hashlib
 import logging.config
 
 from ..sensors import EnvironmentalBox
-from .istation import IStation, STATION_VERSION
+from .istation import IStation
+from ...constants import STATION_VERSION
 from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
@@ -73,22 +71,11 @@ class MQTTStation(IStation):
 
     def get_data(self) -> tp.List[dict]:
         global sessions
+        global thlock
         result = []
-        for k, v in self._drop_dead_sensors().items():
+        with thlock:
+            stripped = self.drop_dead_sensors(sessions)
+        for k, v in stripped.items():
             result.append(v)
         return result
-
-    def _drop_dead_sensors(self) -> dict:
-        global sessions
-        global thlock
-        stripped = dict()
-        current_time = int(time.time())
-        with thlock:
-            sessions_copy = copy.deepcopy(sessions)
-            for k, v in sessions_copy.items():
-                if (current_time - v.timestamp) < self.DEAD_SENSOR_TIME:
-                    stripped[k] = v
-                else:
-                    del sessions[k]
-        return stripped
 

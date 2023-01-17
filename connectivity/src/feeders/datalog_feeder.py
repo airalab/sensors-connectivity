@@ -21,9 +21,12 @@ logger = logging.getLogger("sensors-connectivity")
 
 thlock = threading.RLock()
 
-DATALOG_STATUS_METRIC = Enum('connectivity_sensors_datalog_feeder', 'This will give last status of datalog feeder',
-                             states=['starting', 'success', 'error'])
-DATALOG_STATUS_METRIC.state('starting')
+DATALOG_STATUS_METRIC = Enum(
+    "connectivity_sensors_datalog_feeder",
+    "This will give last status of datalog feeder",
+    states=["starting", "success", "error"],
+)
+DATALOG_STATUS_METRIC.state("starting")
 
 
 def _sort_payload(data: dict) -> dict:
@@ -74,7 +77,9 @@ def _pin_to_pinata(file_path: str, config: dict) -> None:
             hash = pinata.pin_list()["rows"][0]["ipfs_pin_hash"]
             logger.info(f"DatalogFeeder: File sent to pinata. Hash is {hash}")
         except Exception as e:
-            logger.warning(f"DatalogFeeder: Failed while pining file to Pinata. Error: {e}")
+            logger.warning(
+                f"DatalogFeeder: Failed while pining file to Pinata. Error: {e}"
+            )
 
 
 class DatalogFeeder(IFeeder):
@@ -109,7 +114,9 @@ class DatalogFeeder(IFeeder):
 
                 if (time.time() - self.last_time) >= self.interval:
                     if self.buffer:
-                        logger.debug("Datalog Feeder: About to publish collected data...")
+                        logger.debug(
+                            "Datalog Feeder: About to publish collected data..."
+                        )
                         logger.debug(f"Datalog Feeder: Buffer is {self.buffer}")
                         ipfs_hash, file_path = _get_multihash(
                             self.buffer, self.db, self.ipfs_endpoint
@@ -154,10 +161,10 @@ class DatalogFeeder(IFeeder):
             logger.info(
                 f"Datalog Feeder: Ipfs hash sent to Robonomics Parachain and included in block {robonomics_receipt}"
             )
-            DATALOG_STATUS_METRIC.state('success')
+            DATALOG_STATUS_METRIC.state("success")
             self.db.update_status("sent", ipfs_hash)
         except Exception as e:
             logger.warning(
                 f"Datalog Feeder: Something went wrong during extrinsic submission to Robonomics: {e}"
             )
-            DATALOG_STATUS_METRIC.state('error')
+            DATALOG_STATUS_METRIC.state("error")

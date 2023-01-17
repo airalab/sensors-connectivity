@@ -1,14 +1,10 @@
 # This is an interface for a station
 import time
-from datetime import timedelta
-import json
 from dataclasses import dataclass, field
 import threading
 import copy
 import typing as tp
-import netifaces
 
-STATION_VERSION = "v0.8.0"
 thlock = threading.RLock()
 
 @dataclass
@@ -24,14 +20,18 @@ class IStation:
     Have a look at COMStation and HTTPStation implementation.
     """
 
-    # measurement: dict = field(init=False)
-    # """
-    # The station is responsible for its own settings
-    # :param config: configuration dictionary
-    # """
+    DEAD_SENSOR_TIME: int = field(init=False)
 
-    # def __str__(self):
-    #     return f"{{Version: {self.version}, Start: {self.start_time}, MAC: {self.mac_address}}}"
+    def drop_dead_sensors(self, sessions: dict) -> dict:
+        stripped = dict()
+        current_time = int(time.time())
+        sessions_copy = copy.deepcopy(sessions)
+        for k, v in sessions_copy.items():
+            if (current_time - v.timestamp) < self.DEAD_SENSOR_TIME:
+                stripped[k] = v
+            else:
+                del sessions[k]
+        return stripped
 
     def get_data(self) -> tp.List[dict]:
         """

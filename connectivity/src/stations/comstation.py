@@ -5,7 +5,8 @@ import typing as tp
 import logging.config
 from collections import deque
 
-from .istation import IStation, STATION_VERSION
+from .istation import IStation
+from ...constants import STATION_VERSION
 from ..drivers.sds011 import SDS011
 from ..sensors import SensorSDS011
 from connectivity.config.logging import LOGGING_CONFIG
