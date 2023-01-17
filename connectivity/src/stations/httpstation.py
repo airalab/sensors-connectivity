@@ -11,7 +11,7 @@ from prometheus_client import Gauge
 
 from .istation import IStation
 from ...constants import STATION_VERSION
-from ..sensors import EnvironmentalBox
+from ..sensors import EnvironmentalBox, MobileLab
 
 from connectivity.config.logging import LOGGING_CONFIG
 
@@ -65,6 +65,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.data = json.loads(d)
         if "esp8266id" in self.data.keys():
             meas = EnvironmentalBox(self.data)
+        elif "ID" in self.data.keys():
+            meas = MobileLab(self.data)
         with thlock:
             if meas:
                 sessions[meas.id] = meas

@@ -5,7 +5,7 @@ import time
 
 @dataclass()
 class Device:
-    id: int = field(init=False)
+    id: str = field(init=False)
     public: str = field(init=False)
     geo_lat: float = field(init=False)
     geo_lon: float = field(init=False)

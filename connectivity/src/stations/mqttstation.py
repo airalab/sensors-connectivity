@@ -5,7 +5,7 @@ import threading
 import json
 import logging.config
 
-from ..sensors import EnvironmentalBox
+from ..sensors import EnvironmentalBox, MobileLab
 from .istation import IStation
 from ...constants import STATION_VERSION
 from connectivity.config.logging import LOGGING_CONFIG
@@ -44,6 +44,8 @@ class MQTTHandler(mqtt.Client):
         data = json.loads(msg.payload.decode())
         if "esp8266id" in data.keys():
             meas = EnvironmentalBox(data)
+        elif "ID" in data.keys():
+            meas = MobileLab(data)
         with thlock:
             if meas:
                 sessions[meas.id] = meas
