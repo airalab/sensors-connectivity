@@ -36,7 +36,8 @@ py-sr25519-bindings = "^0.2.0"
 
 [tool.poetry.scripts]
 sensors_connectivity = "connectivity.main:run"
-test = "tests.auto_test:main"
+test_environmental_box = "tests.environmental_box_test:main"
+test_mobile_lab = "tests.mobile_lab_test:main"
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]
