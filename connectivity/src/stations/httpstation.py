@@ -62,11 +62,11 @@ class RequestHandler(BaseHTTPRequestHandler):
             .replace("SDS_P1", "SDS_pm10")
             .replace("SDS_P2", "SDS_pm25")
         )
-        self.data = json.loads(d)
-        if "esp8266id" in self.data.keys():
-            meas = EnvironmentalBox(self.data)
-        elif "ID" in self.data.keys():
-            meas = MobileLab(self.data)
+        data = json.loads(d)
+        if "esp8266id" in data.keys():
+            meas = EnvironmentalBox(data)
+        elif "ID" in data.keys():
+            meas = MobileLab(data)
         with thlock:
             if meas:
                 sessions[meas.id] = meas
