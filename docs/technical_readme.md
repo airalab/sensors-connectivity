@@ -10,5 +10,5 @@ It is possible to implement 3 new entities:
 
 If you implemented a new station or feeder do not forget to add it to `_populate_stations` or `_populate_feeders` in `main.py` respectively. If you add a new sensor do not forget to add it to the corresponding station (according to the protocol your sensor uses to send data).
 
-[sheme]: <https://github.com/airalab/sensors-connectivity/blob/refactoring/docs/connectivity.jpg>
+[sheme]: <https://github.com/airalab/sensors-connectivity/blob/refactoring/docs/img/connectivity.jpg>
 
