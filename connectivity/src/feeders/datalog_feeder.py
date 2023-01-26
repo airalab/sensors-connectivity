@@ -3,7 +3,7 @@ import time
 import typing as tp
 from tempfile import NamedTemporaryFile
 import ipfshttpclient
-from robonomicsinterface import Datalog, Account
+from robonomicsinterface import Datalog, Account, RWS
 import requests
 import threading
 from pinatapy import PinataPy
@@ -155,9 +155,17 @@ class DatalogFeeder(IFeeder):
         self.last_time = time.time()
         self.buffer = set()
         account = Account(seed=self.config["datalog"]["suri"])
-        datalog = Datalog(account)
+        rws = RWS(account)
         try:
-            robonomics_receipt = datalog.record(ipfs_hash)
+            if rws.get_days_left():
+                rws_sub_owner = account.get_address()
+                if not rws.is_in_sub(sub_owner_addr=rws_sub_owner, addr=rws_sub_owner):
+                    rws.set_devices([rws_sub_owner])
+                rws_datalog = Datalog(account, rws_sub_owner=rws_sub_owner)
+                robonomics_receipt = rws_datalog.record(ipfs_hash)
+            else:
+                datalog = Datalog(account)
+                robonomics_receipt = datalog.record(ipfs_hash)
             logger.info(
                 f"Datalog Feeder: Ipfs hash sent to Robonomics Parachain and included in block {robonomics_receipt}"
             )
