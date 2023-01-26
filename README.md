@@ -105,6 +105,15 @@ Example of output:
 2022-02-17 19:31:51,249 - INFO - Getting data from the stations...
 ```
 
+## Development
+
+Testing with HTTP Station:
+```
+poetry run test_mobile_lab
+test_environmental_box
+```
+For more information about development see `/docs`.
+
 ## Troubleshooting
 
 ### Python.h: No such file or directory

@@ -16,7 +16,6 @@ from prometheus_client import start_http_server
 from connectivity.config.logging import LOGGING_CONFIG
 from .src.stations import COMStation, HTTPStation, MQTTStation
 from .src.feeders import (
-    LuftdatenFeeder,
     RobonomicsFeeder,
     DatalogFeeder,
     FrontierFeeder,
@@ -88,7 +87,6 @@ class WorkerNode:
         If you make a new one, add initialization here.
         """
         f = [
-            LuftdatenFeeder(self.config),
             FrontierFeeder(self.config),
             RobonomicsFeeder(self.config),
             DatalogFeeder(self.config),
@@ -121,7 +119,7 @@ class WorkerNode:
             Timer(3600, db_watcher).start()
             for data in self.db.checker(time.time()):
                 for hash in data:
-                    self.feeders[3].to_datalog(hash)
+                    self.feeders[2].to_datalog(hash)
 
         get_result()
         send_result()
