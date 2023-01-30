@@ -29,6 +29,12 @@ DATALOG_STATUS_METRIC = Enum(
 )
 DATALOG_STATUS_METRIC.state("starting")
 
+DATALOG_MEMORY_METRIC = Enum(
+    "connectivity_sensors_memory_datalog_feeder",
+    "This will give last status of free memoory in datalog feeder",
+    states=["success", "error"],
+)
+
 
 def _sort_payload(data: dict) -> dict:
     ordered = {}
@@ -55,11 +61,15 @@ def _get_multihash(
     logger.debug(f"Payload before sorting: {payload}")
     payload = _sort_payload(payload)
     logger.debug(f"Payload sorted: {payload}")
+    try:
+        temp = NamedTemporaryFile(mode="w", delete=False)
+        logger.debug(f"Created temp file: {temp.name}")
+        temp.write(json.dumps(payload))
+        temp.close()
+        DATALOG_MEMORY_METRIC.state("success")
+    except Exception as e:
+        DATALOG_MEMORY_METRIC.state("error")
 
-    temp = NamedTemporaryFile(mode="w", delete=False)
-    logger.debug(f"Created temp file: {temp.name}")
-    temp.write(json.dumps(payload))
-    temp.close()
 
     with ipfshttpclient.connect(endpoint) as client:
         response = client.add(temp.name)
