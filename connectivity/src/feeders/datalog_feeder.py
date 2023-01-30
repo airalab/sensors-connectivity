@@ -6,6 +6,7 @@ import ipfshttpclient
 from robonomicsinterface import Datalog, Account, RWS
 import requests
 import threading
+import os
 from pinatapy import PinataPy
 
 from connectivity.utils.database import DataBase
@@ -123,6 +124,7 @@ class DatalogFeeder(IFeeder):
                         )
                         self._pin_to_temporal(file_path)
                         _pin_to_pinata(file_path, self.config)
+                        os.unlink(file_path)
                         self.to_datalog(ipfs_hash)
                     else:
                         logger.info("Datalog Feeder:Nothing to publish")
