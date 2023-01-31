@@ -5,8 +5,7 @@ import ipfshttpclient
 import threading
 
 from .ifeeder import IFeeder
-from ..drivers.ping import PING_MODEL
-from ..stations.istation import StationData
+from ...constants import PING_MODEL
 import logging.config
 from connectivity.config.logging import LOGGING_CONFIG
 
@@ -17,24 +16,22 @@ logger = logging.getLogger("sensors-connectivity")
 thlock = threading.RLock()
 
 
-def _to_pubsub_message(data: StationData) -> str:
-    meas = data.measurement
+def _to_pubsub_message(data: dict) -> str:
     message = {}
-    message[meas.public] = {
-        "model": meas.model,
-        "geo": "{},{}".format(meas.geo_lat, meas.geo_lon),
-        "measurement": meas.measurement_check(),
+    message[data.public] = {
+        "model": data.model,
+        "geo": "{},{}".format(data.geo_lat, data.geo_lon),
+        "measurement": data.measurement,
     }
     return json.dumps(message)
 
 
-def _to_ping_message(data: StationData) -> str:
-    meas = data.measurement
+def _to_ping_message(data: dict) -> str:
     message = {}
-    message[meas.public] = {
-        "model": meas.model,
-        "timestamp": meas.timestamp,
-        "measurement": {"geo": "{},{}".format(meas.geo_lat, meas.geo_lon)},
+    message[data.public] = {
+        "model": data.model,
+        "timestamp": data.measurement.timestamp,
+        "measurement": {"geo": "{},{}".format(data.geo_lat, data.geo_lon)},
     }
 
     return json.dumps(message)
@@ -60,10 +57,10 @@ class RobonomicsFeeder(IFeeder):
         self.ipfs_client = ipfshttpclient.connect(endpoint, session=True)
         self.topic: str = config["robonomics"]["ipfs_topic"]
 
-    def feed(self, data: tp.List[StationData]) -> None:
+    def feed(self, data: tp.List[dict]) -> None:
         if self.config["robonomics"]["enable"]:
             for d in data:
-                if d.measurement.public and d.measurement.model != PING_MODEL:
+                if d.public and d.model != PING_MODEL:
                     pubsub_payload = _to_pubsub_message(d)
                 else:
                     pubsub_payload = _to_ping_message(d)

@@ -3,15 +3,15 @@ import time
 import typing as tp
 from tempfile import NamedTemporaryFile
 import ipfshttpclient
-import robonomicsinterface as RI
+from robonomicsinterface import Datalog, Account, RWS
 import requests
 import threading
+import os
 from pinatapy import PinataPy
 
 from connectivity.utils.database import DataBase
 from .ifeeder import IFeeder
-from ..stations.istation import StationData, Measurement
-from ..drivers.ping import PING_MODEL
+from ...constants import PING_MODEL
 import logging.config
 from connectivity.config.logging import LOGGING_CONFIG
 
@@ -22,9 +22,18 @@ logger = logging.getLogger("sensors-connectivity")
 
 thlock = threading.RLock()
 
-DATALOG_STATUS_METRIC = Enum('connectivity_sensors_datalog_feeder', 'This will give last status of datalog feeder',
-                             states=['starting', 'success', 'error'])
-DATALOG_STATUS_METRIC.state('starting')
+DATALOG_STATUS_METRIC = Enum(
+    "connectivity_sensors_datalog_feeder",
+    "This will give last status of datalog feeder",
+    states=["starting", "success", "error"],
+)
+DATALOG_STATUS_METRIC.state("starting")
+
+DATALOG_MEMORY_METRIC = Enum(
+    "connectivity_sensors_memory_datalog_feeder",
+    "This will give last status of free memoory in datalog feeder",
+    states=["success", "error"],
+)
 
 
 def _sort_payload(data: dict) -> dict:
@@ -41,22 +50,26 @@ def _get_multihash(
     payload = {}
     for m in buf:
         if m.public in payload:
-            payload[m.public]["measurements"].append(m.measurement_check())
+            payload[m.public]["measurements"].append(m.measurement)
         else:
             payload[m.public] = {
                 "model": m.model,
                 "geo": "{},{}".format(m.geo_lat, m.geo_lon),
-                "measurements": [m.measurement_check()],
+                "measurements": [m.measurement],
             }
 
     logger.debug(f"Payload before sorting: {payload}")
     payload = _sort_payload(payload)
     logger.debug(f"Payload sorted: {payload}")
+    try:
+        temp = NamedTemporaryFile(mode="w", delete=False)
+        logger.debug(f"Created temp file: {temp.name}")
+        temp.write(json.dumps(payload))
+        temp.close()
+        DATALOG_MEMORY_METRIC.state("success")
+    except Exception as e:
+        DATALOG_MEMORY_METRIC.state("error")
 
-    temp = NamedTemporaryFile(mode="w", delete=False)
-    logger.debug(f"Created temp file: {temp.name}")
-    temp.write(json.dumps(payload))
-    temp.close()
 
     with ipfshttpclient.connect(endpoint) as client:
         response = client.add(temp.name)
@@ -75,7 +88,9 @@ def _pin_to_pinata(file_path: str, config: dict) -> None:
             hash = pinata.pin_list()["rows"][0]["ipfs_pin_hash"]
             logger.info(f"DatalogFeeder: File sent to pinata. Hash is {hash}")
         except Exception as e:
-            logger.warning(f"DatalogFeeder: Failed while pining file to Pinata. Error: {e}")
+            logger.warning(
+                f"DatalogFeeder: Failed while pining file to Pinata. Error: {e}"
+            )
 
 
 class DatalogFeeder(IFeeder):
@@ -100,28 +115,29 @@ class DatalogFeeder(IFeeder):
         self.db: DataBase = DataBase(self.config)
         self.db.create_table()
 
-    def feed(self, data: tp.List[StationData]) -> None:
+    def feed(self, data: tp.List[dict]) -> None:
         if self.config["datalog"]["enable"]:
             if data:
                 for d in data:
-                    if d.measurement.public and d.measurement.model != PING_MODEL:
-                        logger.debug(f"DatalogFeeder: Adding data to buffer: {d.measurement}")
-                        self.buffer.add(d.measurement)
+                    if d.public and d.model != PING_MODEL:
+                        logger.debug(f"DatalogFeeder: Adding data to buffer: {d}")
+                        self.buffer.add(d)
 
                 if (time.time() - self.last_time) >= self.interval:
                     if self.buffer:
-                        logger.debug("Datalog Feeder: About to publish collected data...")
+                        logger.debug(
+                            "Datalog Feeder: About to publish collected data..."
+                        )
                         logger.debug(f"Datalog Feeder: Buffer is {self.buffer}")
                         ipfs_hash, file_path = _get_multihash(
                             self.buffer, self.db, self.ipfs_endpoint
                         )
                         self._pin_to_temporal(file_path)
                         _pin_to_pinata(file_path, self.config)
+                        os.unlink(file_path)
                         self.to_datalog(ipfs_hash)
                     else:
                         logger.info("Datalog Feeder:Nothing to publish")
-                    # self.buffer = set()
-                    # self.last_time = time.time()
                 else:
                     logger.info("Datalog Feeder: Still collecting measurements...")
 
@@ -150,16 +166,25 @@ class DatalogFeeder(IFeeder):
         logger.info(ipfs_hash)
         self.last_time = time.time()
         self.buffer = set()
-        interface = RI.RobonomicsInterface(seed=self.config["datalog"]["suri"])
+        account = Account(seed=self.config["datalog"]["suri"])
+        rws = RWS(account)
         try:
-            robonomics_receipt = interface.record_datalog(ipfs_hash)
+            if rws.get_days_left():
+                rws_sub_owner = account.get_address()
+                if not rws.is_in_sub(sub_owner_addr=rws_sub_owner, addr=rws_sub_owner):
+                    rws.set_devices([rws_sub_owner])
+                rws_datalog = Datalog(account, rws_sub_owner=rws_sub_owner)
+                robonomics_receipt = rws_datalog.record(ipfs_hash)
+            else:
+                datalog = Datalog(account)
+                robonomics_receipt = datalog.record(ipfs_hash)
             logger.info(
                 f"Datalog Feeder: Ipfs hash sent to Robonomics Parachain and included in block {robonomics_receipt}"
             )
-            DATALOG_STATUS_METRIC.state('success')
+            DATALOG_STATUS_METRIC.state("success")
             self.db.update_status("sent", ipfs_hash)
         except Exception as e:
             logger.warning(
                 f"Datalog Feeder: Something went wrong during extrinsic submission to Robonomics: {e}"
             )
-            DATALOG_STATUS_METRIC.state('error')
+            DATALOG_STATUS_METRIC.state("error")
