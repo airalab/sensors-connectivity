@@ -6,6 +6,7 @@ import ipfshttpclient
 from robonomicsinterface import Datalog, Account, RWS
 import requests
 import threading
+import os
 from pinatapy import PinataPy
 
 from connectivity.utils.database import DataBase
@@ -27,6 +28,12 @@ DATALOG_STATUS_METRIC = Enum(
     states=["starting", "success", "error"],
 )
 DATALOG_STATUS_METRIC.state("starting")
+
+DATALOG_MEMORY_METRIC = Enum(
+    "connectivity_sensors_memory_datalog_feeder",
+    "This will give last status of free memoory in datalog feeder",
+    states=["success", "error"],
+)
 
 
 def _sort_payload(data: dict) -> dict:
@@ -54,11 +61,15 @@ def _get_multihash(
     logger.debug(f"Payload before sorting: {payload}")
     payload = _sort_payload(payload)
     logger.debug(f"Payload sorted: {payload}")
+    try:
+        temp = NamedTemporaryFile(mode="w", delete=False)
+        logger.debug(f"Created temp file: {temp.name}")
+        temp.write(json.dumps(payload))
+        temp.close()
+        DATALOG_MEMORY_METRIC.state("success")
+    except Exception as e:
+        DATALOG_MEMORY_METRIC.state("error")
 
-    temp = NamedTemporaryFile(mode="w", delete=False)
-    logger.debug(f"Created temp file: {temp.name}")
-    temp.write(json.dumps(payload))
-    temp.close()
 
     with ipfshttpclient.connect(endpoint) as client:
         response = client.add(temp.name)
@@ -123,6 +134,7 @@ class DatalogFeeder(IFeeder):
                         )
                         self._pin_to_temporal(file_path)
                         _pin_to_pinata(file_path, self.config)
+                        os.unlink(file_path)
                         self.to_datalog(ipfs_hash)
                     else:
                         logger.info("Datalog Feeder:Nothing to publish")
