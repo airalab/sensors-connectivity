@@ -38,7 +38,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_header("sensors-count", f"{len(sessions)}")
         if id is not None:
-            self.send_header("on-server", f"{int(id) in sessions}")
+            self.send_header("on-server", f"{str(id) in sessions}")
         self.end_headers()
 
     def do_HEAD(self) -> None:
