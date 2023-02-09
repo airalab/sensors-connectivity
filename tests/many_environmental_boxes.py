@@ -1,3 +1,7 @@
+"""
+This script allows to test HTTP Station on several servers. Defaults servers are localhost on port 31133
+and 31112.
+"""
 from asyncio import tasks
 from cmath import log
 import random
@@ -17,10 +21,6 @@ class Sensor():
         self.id: int = id
         self.lat: float = coords[0]
         self.lon: float = coords[1]
-        self.pm10: float = round(random.uniform(0.1, 100.99), 3)
-        self.pm25: float = round(random.uniform(0.1, 100.99), 3)
-        self.humidity: float = round(random.uniform(0, 100))
-        self.temperature: float = round(random.uniform(-50, 50), 3)
         self.list_of_servers = ["localhost:31113", "localhost:31112"]
 
     def get_server(self) -> str:
@@ -41,25 +41,29 @@ class Sensor():
     
     def post_data(self, server_with_port: str) -> None:
         header = {"Content-type": "application/json"}
+        pm10: float = round(random.uniform(0.1, 100.99), 3)
+        pm25: float = round(random.uniform(0.1, 100.99), 3)
+        humidity: float = round(random.uniform(0, 100))
+        temperature: float = round(random.uniform(-50, 50), 3)
         body = {
         "esp8266id": self.id,
         "software_version": "NRZ-2020-129",
         "sensordatavalues": [
             {
             "value_type": "SDS_P1",
-            "value": self.pm10
+            "value": pm10
             },
             {
             "value_type": "SDS_P2",
-            "value": self.pm25
+            "value": pm25
             },
             {
             "value_type": "temperature",
-            "value": self.temperature
+            "value": temperature
             },
             {
             "value_type": "humidity",
-            "value": self.humidity
+            "value": humidity
             },
             {
             "value_type": "samples",
