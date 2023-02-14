@@ -29,16 +29,21 @@ ALIVE_SENSORS_METRIC = Gauge(
 class RequestHandler(BaseHTTPRequestHandler):
     def _set_headers(self, id: str = None) -> None:
         global last_sensors_update
+        global sessions
         self.send_response(200)
         self.send_header("Content-type", "application/json")
-        updating_sensors_interval = 60 * 60  # 1hr, how often sensors will switch server
+        updating_sensors_interval = 160 # 1hr, how often sensors will switch server
         if (time.time() - last_sensors_update) > updating_sensors_interval:
             self.send_header("sensors-count", "0")
             last_sensors_update = time.time()
+            logger.debug(f"sessions before rotation: {sessions}")
+            with thlock:
+                sessions.clear()
+            logger.debug(f"sessions after rotation: {sessions}")
         else:
             self.send_header("sensors-count", f"{len(sessions)}")
         if id is not None:
-            self.send_header("on-server", f"{int(id) in sessions}")
+            self.send_header("on-server", f"{str(id) in sessions}")
         self.end_headers()
 
     def do_HEAD(self) -> None:
@@ -80,6 +85,7 @@ class HTTP_server(threading.Thread):
 
     def run(self) -> None:
         self.server_address = ("", self.port)
+        logger.debug(f"HTTP Station on port: {self.port}")
         self.httpd = HTTPServer(self.server_address, RequestHandler)
         self.httpd.serve_forever()
 
@@ -90,7 +96,7 @@ class HTTPStation(IStation):
         port: int = int(config["httpstation"]["port"])
         self.version = STATION_VERSION
         HTTP_server(port).start()
-        self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
+        self.DEAD_SENSOR_TIME: int = 150  # 1 hour
 
     def get_data(self) -> tp.List[dict]:
         global sessions
