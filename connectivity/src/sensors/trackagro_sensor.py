@@ -1,13 +1,13 @@
-from dataclasses import dataclass
+import logging.config
 import time
 import typing
 import typing as tp
-import logging.config
+from dataclasses import dataclass
 
+from connectivity.config.logging import LOGGING_CONFIG
 
 from ...constants import SDS011_MODEL
 from .base import Device
-from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
@@ -15,10 +15,18 @@ logger = logging.getLogger("sensors-connectivity")
 
 @dataclass(repr=False, eq=False)
 class TrackAgro(Device):
+    """Represents TrackAgro device.
+
+    :param data: Unparsed data from the sensors.
+    :param _time_from: The starting time from which to request data.
+    """
+
     data: tp.List[tp.Dict[str, tp.Union[str, int, float]]]
     _time_from: int
 
     def __post_init__(self) -> None:
+        """Parse data from sensor and store into the corresponding variables."""
+
         self.model = SDS011_MODEL
         meas = self._parse_data()
         if meas:
@@ -30,6 +38,11 @@ class TrackAgro(Device):
         return self._time_from
 
     def _parse_data(self) -> dict | None:
+        """Parse data from the sensor.
+
+        :return: Parsed dictionary with measurements if success, None otherwise.
+        """
+
         self.timestamp = 0
         meas = {}
         try:
@@ -45,13 +58,9 @@ class TrackAgro(Device):
                         self.timestamp = d["ts"]
                     if any(d["key"] == key for key in meas.keys()):
                         if d["ts"] > meas[d["key"]]["timestamp"]:
-                            meas[d["key"]].update(
-                                {"value": d["value"], "timestamp": d["ts"]}
-                            )
+                            meas[d["key"]].update({"value": d["value"], "timestamp": d["ts"]})
                     else:
-                        meas.update(
-                            {d["key"]: {"value": d["value"], "timestamp": d["ts"]}}
-                        )
+                        meas.update({d["key"]: {"value": d["value"], "timestamp": d["ts"]}})
             parsed_meas = {}
             for k, v in meas.items():
                 parsed_meas.update({k: v["value"]})

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import sqlite3
-from sqlite3.dbapi2 import connect
 import contextlib
+import sqlite3
 import typing as tp
+from sqlite3.dbapi2 import connect
 
 
 class DataBase:

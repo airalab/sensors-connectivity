@@ -1,10 +1,12 @@
-from dataclasses import dataclass, field
 import hashlib
 import time
+from dataclasses import dataclass, field
 
 
 @dataclass()
 class Device:
+    """Base interface for a sensor. Initialize all variables and formate message with measurements."""
+
     id: str = field(init=False)
     public: str = field(init=False)
     geo_lat: float = field(init=False)
@@ -19,6 +21,12 @@ class Device:
         self.measurement.update({"model": self.model})
 
     def generate_pubkey(self, id: str) -> str:
+        """Generate public key for a sensor based on its id.
+        
+        :param id: Unique id of a sensor.
+        :return: Public key of a sensor.
+        """
+
         verify_key = hashlib.sha256(id.encode("utf-8"))
         verify_key_hex = verify_key.hexdigest()
         return str(verify_key_hex)

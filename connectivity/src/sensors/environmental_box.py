@@ -1,15 +1,23 @@
+import time
 from dataclasses import dataclass, field
 from functools import reduce
-import time
 
-from ...constants import SDS011_MODEL, PASKAL2MMHG
+from ...constants import PASKAL2MMHG, SDS011_MODEL
 from .base import Device
+
 
 @dataclass(repr=False, eq=False)
 class EnvironmentalBox(Device):
+    """Represents a Robonomics Environmental Box.
+
+    :param data: Unparsed data from the sensor.
+    """
+
     data: dict = field(repr=False)
 
     def __post_init__(self) -> None:
+        """Parse data from sensor and store into the corresponding variables."""
+
         self.id = str(self.data["esp8266id"])
         self.model = SDS011_MODEL
         self.public = self.generate_pubkey(str(self.id))
@@ -24,9 +32,13 @@ class EnvironmentalBox(Device):
         self.measurement.update({"timestamp": self.timestamp})
         self.measurement.update({"model": self.model})
 
-
     def _SDS011_values_saver(self, meas: dict, value: dict) -> dict:
-        "Reducer callback for SDS011 sensors"
+        """Reducer callback for SDS011 sensors.
+        :param meas: Unparsed data from the sensor.
+        :param value: Current element (dict) of the meas dict.
+        :return: Formatted data with the measurements.
+        """
+
         extra_data = [
             "GPS",
             "micro",

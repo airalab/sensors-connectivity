@@ -1,16 +1,23 @@
-from robonomicsinterface import Datalog, Account
-import typing as tp
+"""
+Frontier Feeder. This feeder collects data from the stations and send it directly to
+Robonomics Datalog.
+"""
 import logging
+import logging.config
+import typing as tp
+
+from robonomicsinterface import Account, Datalog
+
+from connectivity.config.logging import LOGGING_CONFIG
 
 from .ifeeder import IFeeder
-import logging.config
-from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
 
 
 class FrontierFeeder(IFeeder):
+    """ Send every measurement to Robonomics Datalog."""
     def __init__(self, config: dict) -> None:
         super().__init__(config)
 

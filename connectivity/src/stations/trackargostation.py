@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
-from os import times
-import urllib.request as ur
-from urllib import parse, error
-import ssl
+"""Station to get data from TrackAgro sensor using its API."""
 import json
-import time
-import threading
 import logging.config
+import ssl
+import threading
+import time
 import typing as tp
+import urllib.request as ur
 
-from .istation import IStation
+# from os import times
+from urllib import error, parse
+
+from connectivity.config.logging import LOGGING_CONFIG
+
 from ...constants import STATION_VERSION
 from ..sensors import TrackAgro
-from connectivity.config.logging import LOGGING_CONFIG
+from .istation import IStation
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
@@ -23,7 +26,8 @@ thlock = threading.RLock()
 
 class TrackAgroStation(IStation):
     def __init__(self, config: dict) -> None:
-        # super().__init__(config)
+        """Prepare headers. COllects initial data."""
+
         self.headers = {"X-Token-Auth": config["trackagro"]["token"]}
         ssl._create_default_https_context = ssl._create_unverified_context
         self.sessions: dict = dict()
@@ -33,6 +37,13 @@ class TrackAgroStation(IStation):
         self._collecting_data()
 
     def url_updater(self, till_time: str, from_time: str) -> str:
+        """Update url to get data for a period of time.
+
+        :param till_time: End of the period.
+        :param from_time: Start of the period.
+        :return: Updated url for request.
+        """
+
         url = "https://api.ttrackagro.ru/telemetry"
         url_parse = parse.urlparse(url)
         query = url_parse.query
@@ -45,9 +56,12 @@ class TrackAgroStation(IStation):
         return upd_url
 
     def _request_sendler(self) -> tp.List[tp.Dict[str, tp.Union[str, int, float]]]:
-        url = self.url_updater(
-            till_time=f"{int(time.time()) * 1000}", from_time=f"{self.time_from}"
-        )
+        """Send request.
+
+        :return: Dict with response.
+        """
+
+        url = self.url_updater(till_time=f"{int(time.time()) * 1000}", from_time=f"{self.time_from}")
         try:
             request = ur.Request(url, headers=self.headers)
             response_body = ur.urlopen(request).read()
@@ -58,6 +72,8 @@ class TrackAgroStation(IStation):
         return data
 
     def _collecting_data(self) -> None:
+        """Parse data and store it into `sessions`."""
+
         threading.Timer(3600, self._collecting_data).start()
         data = self._request_sendler()
         meas = TrackAgro(data, self.time_from)
@@ -67,6 +83,11 @@ class TrackAgroStation(IStation):
                 self.time_from = meas.time_from
 
     def get_data(self) -> tp.List[dict]:
+        """Main function of the class.
+
+        :return: Formatetd data.
+        """
+
         global sessions
         global thlock
         with thlock:

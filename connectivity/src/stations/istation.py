@@ -1,11 +1,12 @@
 # This is an interface for a station
-import time
-from dataclasses import dataclass, field
-import threading
 import copy
+import threading
+import time
 import typing as tp
+from dataclasses import dataclass, field
 
 thlock = threading.RLock()
+
 
 @dataclass
 class IStation:
@@ -23,6 +24,10 @@ class IStation:
     DEAD_SENSOR_TIME: int = field(init=False)
 
     def drop_dead_sensors(self, sessions: dict) -> dict:
+        """Drop sensors which have not sent measurements for more than
+        `DEAD_SENSOR_TIME` interval. Interval is setted for each station.
+        """
+
         stripped = dict()
         current_time = int(time.time())
         sessions_copy = copy.deepcopy(sessions)
@@ -40,4 +45,5 @@ class IStation:
         more often than new data is received
         :return: List of measurements
         """
+
         raise NotImplementedError("Subclass must implement get_data()!")

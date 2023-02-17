@@ -1,7 +1,10 @@
-import random
-import requests, json
-import time
+import json
 import logging.config
+import random
+import time
+
+import requests
+
 from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
@@ -28,9 +31,7 @@ def main():
     }
 
     try:
-        response = requests.post(
-            "http://127.0.0.1:31113/", data=json.dumps(body), headers=header
-        )
+        response = requests.post("http://127.0.0.1:31113/", data=json.dumps(body), headers=header)
     except Exception as e:
         logger.warning(e)
         pass

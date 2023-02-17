@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
-from ctypes import resize
+"""Station to input data via HTTP."""
+import cgi
+import json
+import logging.config
 import threading
 import time
-import json
-import cgi
 import typing as tp
-import logging.config
 from http.server import BaseHTTPRequestHandler, HTTPServer
+
 from prometheus_client import Gauge
 
-from .istation import IStation
+from connectivity.config.logging import LOGGING_CONFIG
+
 from ...constants import STATION_VERSION
 from ..sensors import EnvironmentalBox, MobileLab
-
-from connectivity.config.logging import LOGGING_CONFIG
+from .istation import IStation
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
@@ -21,13 +22,21 @@ thlock = threading.RLock()
 sessions = dict()
 last_sensors_update = time.time()
 
-ALIVE_SENSORS_METRIC = Gauge(
-    "connectivity_sensors_alive_total", "return number of active sessions"
-)
+ALIVE_SENSORS_METRIC = Gauge("connectivity_sensors_alive_total", "return number of active sessions")
 
 
 class RequestHandler(BaseHTTPRequestHandler):
+    """Service class to handle HTTP requests."""
+
     def _set_headers(self, id: str = None) -> None:
+        """Service functions to set headers for requests.
+        It checks if the sensor has sent data to this station already and
+        sends the count of the active sensors back to the sensor. It allows to
+        distribute sensors evenly across multiple servers.
+
+        :param id: Unique id of the sensor. Used to check wether the sensor is on the station or no.
+        """
+
         global last_sensors_update
         self.send_response(200)
         self.send_header("Content-type", "application/json")
@@ -42,26 +51,24 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_HEAD(self) -> None:
+        """Service function to set headers."""
         self._set_headers()
 
     def do_GET(self) -> None:
-        logger.info(
-            "GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers)
-        )
+        """Callback for get requests."""
+
+        logger.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
         id = self.headers["Sensor-id"]
         self._set_headers(id)
         logger.info(f"HTTP Station session length: {len(sessions)}")
 
     def do_POST(self) -> None:
+        """Callback for post requests. Save unparsed data into `sessions`."""
+
         global sessions
         ctype, pdict = cgi.parse_header(self.headers["content-type"])
         length = int(self.headers.get("content-length"))
-        d = (
-            self.rfile.read(length)
-            .decode()
-            .replace("SDS_P1", "SDS_pm10")
-            .replace("SDS_P2", "SDS_pm25")
-        )
+        d = self.rfile.read(length).decode().replace("SDS_P1", "SDS_pm10").replace("SDS_P2", "SDS_pm25")
         data = json.loads(d)
         if "esp8266id" in data.keys():
             meas = EnvironmentalBox(data)
@@ -74,6 +81,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 class HTTP_server(threading.Thread):
+    """Servcie class to run HTTP server."""
+
     def __init__(self, port: int):
         threading.Thread.__init__(self)
         self.port: int = port
@@ -85,14 +94,25 @@ class HTTP_server(threading.Thread):
 
 
 class HTTPStation(IStation):
+    """Station to input data via HTTP."""
+
     def __init__(self, config: dict) -> None:
-        # super().__init__(config)
+        """Start HTTP server on the port from config.
+
+        :param config: Dict with configuration file.
+        """
+
         port: int = int(config["httpstation"]["port"])
         self.version = STATION_VERSION
         HTTP_server(port).start()
         self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
 
     def get_data(self) -> tp.List[dict]:
+        """Main function of the class.
+
+        :return: Formatetd data.
+        """
+
         global sessions
         global thlock
         result = []

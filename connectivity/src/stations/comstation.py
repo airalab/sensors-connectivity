@@ -1,15 +1,17 @@
+import logging.config
 import threading
-import nacl.signing
 import time
 import typing as tp
-import logging.config
 from collections import deque
 
-from .istation import IStation
+import nacl.signing
+
+from connectivity.config.logging import LOGGING_CONFIG
+
 from ...constants import STATION_VERSION
 from ..drivers.sds011 import SDS011
 from ..sensors import SensorSDS011
-from connectivity.config.logging import LOGGING_CONFIG
+from .istation import IStation
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
@@ -18,18 +20,19 @@ logger = logging.getLogger("sensors-connectivity")
 def _read_data_thread(sensor: SDS011, q: deque, timeout: int) -> None:
     while True:
         meas = sensor.query()
-        # timestamp = int(time.time())
         q.append((meas))
         time.sleep(timeout)
 
 
 class COMStation(IStation):
-    """
-    Reads data from a serial port
-    """
+    """Reads data from a serial port."""
 
     def __init__(self, config: dict) -> None:
-        # super().__init__(config)
+        """Safe the last data from a serial port.
+        
+        :param config: Dict with configuration file.
+        """
+
         self.version: str = f"airalab-com-{STATION_VERSION}"
 
         self.sensor: SDS011 = SDS011(config["comstation"]["port"])
@@ -52,18 +55,19 @@ class COMStation(IStation):
 
         self.initial_data = [0, 0]
         self.q = deque(maxlen=1)
-        threading.Thread(
-            target=_read_data_thread, args=(self.sensor, self.q, work_period)
-        ).start()
+        threading.Thread(target=_read_data_thread, args=(self.sensor, self.q, work_period)).start()
 
     def get_data(self) -> tp.List[dict]:
+        """Main function of the stations.
+        
+        :return: Formatetd data.
+        """
+        
         if self.q:
             values = self.q[0]
             pm = values[0]
             meas = SensorSDS011(public_key=self.public, data=pm, geo=self.geo)
         else:
-            meas = SensorSDS011(
-                public_key=self.public, data=self.initial_data, geo=self.geo
-            )
+            meas = SensorSDS011(public_key=self.public, data=self.initial_data, geo=self.geo)
 
         return [meas]

@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
-import paho.mqtt.client as mqtt
-import typing as tp
-import threading
+"""Station to input data via MQTT."""
 import json
 import logging.config
+import threading
+import typing as tp
 
+import paho.mqtt.client as mqtt
+
+from connectivity.config.logging import LOGGING_CONFIG
+
+from ...constants import STATION_VERSION
 from ..sensors import EnvironmentalBox, MobileLab
 from .istation import IStation
-from ...constants import STATION_VERSION
-from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
@@ -16,10 +19,20 @@ logger = logging.getLogger("sensors-connectivity")
 thlock = threading.RLock()
 sessions = dict()
 
+
 class MQTTHandler(mqtt.Client):
-    def __init__(
-        self, host: str, port: int, topic: str, username: str, password: str
-    ) -> None:
+    """Service class to handle MQTT messages."""
+
+    def __init__(self, host: str, port: int, topic: str, username: str, password: str) -> None:
+        """Initialize MQTT client.
+
+        :param host: MQTT broker host.
+        :param port: MQTT broker port.
+        :param topic: MQTT topic where messages are published.
+        :param username: Username for MQTT broker authorization.
+        :param password: Password for MQTT broker authorization.
+        """
+
         mqtt.Client.__init__(self)
         self.host: str = host
         self.port: int = port
@@ -30,6 +43,11 @@ class MQTTHandler(mqtt.Client):
             self.username_pw_set(username=self.username, password=self.password)
 
     def on_connect(self, client, obj, flags, rc) -> None:
+        """Connect callback. If connects successfully, it subscribes on the `topic`.
+
+        :param rc: Result connection code.
+        """
+
         if rc == 0:
             logger.info(f"MQTT Station: Connected OK with result code {str(rc)}")
             self.subscribe(self.topic, 0)
@@ -39,6 +57,11 @@ class MQTTHandler(mqtt.Client):
             logger.error(f"MQTT Station: Connection refused with result code {str(rc)}")
 
     def on_message(self, client, userdata, msg: dict) -> None:
+        """Callback for message receiving. Parse data from a sensor and store it into `sessions`.
+
+        :param msg: MQTT message.
+        """
+
         global thlock
         global sessions
         data = json.loads(msg.payload.decode())
@@ -51,16 +74,26 @@ class MQTTHandler(mqtt.Client):
                 sessions[meas.id] = meas
 
     def on_subscribe(self, client, userdata, mid, granted_qos) -> None:
+        """Subscription callback."""
+
         logger.info(f"Subscribed {str(mid)} to topic {self.topic}")
 
     def run(self) -> None:
+        """Service function for MQTT handler."""
+
         self.connect_async(self.host, self.port, 60)
         self.loop_start()
 
 
 class MQTTStation(IStation):
+    """Station to input data via MQTT."""
+
     def __init__(self, config: dict) -> None:
-        # super().__init__(config)
+        """Initialize MQTT client based on credentials from config.
+
+        :param config: Dict with configuration file.
+        """
+
         self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
         self.version = STATION_VERSION
         host: str = config["mqttstation"]["host"]
@@ -72,6 +105,11 @@ class MQTTStation(IStation):
         rc = client.run()
 
     def get_data(self) -> tp.List[dict]:
+        """Main function of the class.
+
+        :return: Formatetd data.
+        """
+
         global sessions
         global thlock
         result = []
@@ -80,4 +118,3 @@ class MQTTStation(IStation):
         for k, v in stripped.items():
             result.append(v)
         return result
-

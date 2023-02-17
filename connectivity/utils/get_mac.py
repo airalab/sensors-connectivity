@@ -1,4 +1,6 @@
+"""Service function to get MAC address of the station."""
 import netifaces
+
 
 def _get_mac() -> str:
     for interface in netifaces.interfaces():
