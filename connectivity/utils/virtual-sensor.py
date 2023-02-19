@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 import argparse
-from os import name
-import random
-import requests
 import json
-import time
 import logging.config
+import random
+import time
+from os import name
+
+import requests
 
 from connectivity.config.logging import LOGGING_CONFIG
+
 # from config.logging import LOGGING_CONFIG
 
 

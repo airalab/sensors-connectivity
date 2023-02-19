@@ -1,27 +1,33 @@
-import robonomicsinterface as RI
-import typing as tp
+"""
+Frontier Feeder. This feeder collects data from the stations and send it directly to
+Robonomics Datalog.
+"""
 import logging
+import logging.config
+import typing as tp
+
+from robonomicsinterface import Account, Datalog
+
+from connectivity.config.logging import LOGGING_CONFIG
 
 from .ifeeder import IFeeder
-from ..stations.istation import StationData, Measurement
-from ..drivers.ping import PING_MODEL
-import logging.config
-from connectivity.config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
 
 
 class FrontierFeeder(IFeeder):
+    """ Send every measurement to Robonomics Datalog."""
     def __init__(self, config: dict) -> None:
         super().__init__(config)
 
-    def feed(self, data: tp.List[StationData]) -> None:
+    def feed(self, data: tp.List[dict]) -> None:
         if self.config["frontier"]["enable"]:
-            interface = RI.RobonomicsInterface(seed=self.config["datalog"]["suri"])
+            account = Account(seed=self.config["datalog"]["suri"])
+            datalog = Datalog(account)
             for d in data:
                 try:
-                    robonomics_receipt = interface.record_datalog(f"{d.measurement}")
+                    robonomics_receipt = datalog.record(f"{d.measurement}")
                     logger.info(
                         f"Frontier Datalog: Data sent to Robonomics datalog and included in block {robonomics_receipt}"
                     )

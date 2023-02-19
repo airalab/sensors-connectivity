@@ -1,43 +1,26 @@
-"""This module provides an abstraction for the SDS011 air partuclate densiry sensor.
+"""This module provides an abstraction for the SDS011 air particulate densiry sensor.
 The code is borrowed from here https://github.com/ikalchev/py-sds011
 Thanks @ikalchev for work
 """
 import struct
 import typing as tp
+
 import serial
-from ..stations.istation import Measurement
+
+from ...constants import MOBILE_GPS
+from ..sensors import SensorSDS011
 
 
-SDS011_MODEL = 2  # unique model for the driver
-MOBILE_GPS = 3
-
-
-def sds011_codec(data: bytes, pk: str, timestamp: int) -> Measurement:
+def sds011_codec(data: bytes, pk: str) -> dict:
     unpacked = struct.unpack("<ffff", data)
-
-    return Measurement(
-        pk,
-        SDS011_MODEL,
-        round(unpacked[0], 2),
-        round(unpacked[1], 2),
-        round(unpacked[2], 6),
-        round(unpacked[3], 6),
-        timestamp,
-    )
+    meas = SensorSDS011(public_key=pk, data=unpacked)
+    return meas
 
 
-def sds011_gps_codec(data: bytes, pk: str, timestamp: int) -> Measurement:
+def sds011_gps_codec(data: bytes, pk: str) -> dict:
     unpacked = struct.unpack("<ffff", data)
-
-    return Measurement(
-        pk,
-        MOBILE_GPS,
-        round(unpacked[0], 2),
-        round(unpacked[1], 2),
-        round(unpacked[2], 6),
-        round(unpacked[3], 6),
-        timestamp,
-    )
+    meas = SensorSDS011(public_key=pk, data=unpacked, model=MOBILE_GPS)
+    return meas
 
 
 # TODO: Commands against the sensor should read the reply and return success status.
@@ -143,10 +126,7 @@ class SDS011(object):
         """
         cmd = self.cmd_begin()
         cmd += (
-            self.SLEEP_CMD
-            + (self.READ if read else self.WRITE)
-            + (self.SLEEP if sleep else self.WORK)
-            + b"\x00" * 10
+            self.SLEEP_CMD + (self.READ if read else self.WRITE) + (self.SLEEP if sleep else self.WORK) + b"\x00" * 10
         )
         cmd = self._finish_cmd(cmd)
         self._execute(cmd)
@@ -158,12 +138,7 @@ class SDS011(object):
         """
         assert 0 <= work_time <= 30
         cmd = self.cmd_begin()
-        cmd += (
-            self.WORK_PERIOD_CMD
-            + (self.READ if read else self.WRITE)
-            + bytes([work_time])
-            + b"\x00" * 10
-        )
+        cmd += self.WORK_PERIOD_CMD + (self.READ if read else self.WRITE) + bytes([work_time]) + b"\x00" * 10
         cmd = self._finish_cmd(cmd)
         self._execute(cmd)
         self._get_reply()

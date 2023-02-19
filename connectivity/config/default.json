@@ -17,10 +17,11 @@
    "mqttstation": {
       "enable": false,
       "host": "localhost",
-      "port": 1883
-   },
-   "luftdaten": {
-      "enable": false
+      "port": 1883,
+      "topic": "/freertos_mqtt_robonomics_example/#",
+      "username": "",
+      "password": ""
+
    },
    "robonomics": {
       "enable": true,

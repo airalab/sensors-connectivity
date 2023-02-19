@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-import paho.mqtt.client as mqtt
-import typing as tp
-import threading
-import time
+"""Station to input data via MQTT."""
 import json
-import copy
-import hashlib
 import logging.config
+import threading
+import typing as tp
 
-from ..drivers.sds011 import SDS011_MODEL, MOBILE_GPS
-from .istation import IStation, StationData, Measurement, STATION_VERSION
+import paho.mqtt.client as mqtt
+
 from connectivity.config.logging import LOGGING_CONFIG
+
+from ...constants import STATION_VERSION
+from ..sensors import EnvironmentalBox, MobileLab
+from .istation import IStation
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
@@ -19,207 +20,101 @@ thlock = threading.RLock()
 sessions = dict()
 
 
-def _generate_pubkey(id: str) -> str:
-    verify_key = hashlib.sha256(id.encode("utf-8"))
-    verify_key_hex = verify_key.hexdigest()
-    return str(verify_key_hex)
-
-
 class MQTTHandler(mqtt.Client):
-    def __init__(self, host: str, port: int) -> None:
+    """Service class to handle MQTT messages."""
+
+    def __init__(self, host: str, port: int, topic: str, username: str, password: str) -> None:
+        """Initialize MQTT client.
+
+        :param host: MQTT broker host.
+        :param port: MQTT broker port.
+        :param topic: MQTT topic where messages are published.
+        :param username: Username for MQTT broker authorization.
+        :param password: Password for MQTT broker authorization.
+        """
+
         mqtt.Client.__init__(self)
         self.host: str = host
         self.port: int = port
+        self.topic: str = topic
+        self.username: str = username
+        self.password: str = password
+        if self.username and self.password:
+            self.username_pw_set(username=self.username, password=self.password)
 
     def on_connect(self, client, obj, flags, rc) -> None:
-        logger.info(f"MQTT Station: Connected to mqtt with result code {str(rc)}")
-        self.subscribe("/freertos_mqtt_robonomics_example/#", 0)
+        """Connect callback. If connects successfully, it subscribes on the `topic`.
 
-    def _parser(self, data: dict) -> Measurement:
-        global sessions
-        global thlock
-        paskal = 133.32
+        :param rc: Result connection code.
+        """
 
-        try:
-            if "esp32mac" in data.keys():
-                self.client_id = data["esp32mac"]
-                temperature = None
-                pressure = None
-                humidity = None
-                for d in data["sensordatavalues"]:
-                    if d["value_type"] == "SDS_P1":
-                        pm10 = float(d["value"])
-                    if d["value_type"] == "SDS_P2":
-                        pm25 = float(d["value"])
-                    if d["value_type"] == "GPS_lat":
-                        geo_lat = d["value"]
-                    if d["value_type"] == "GPS_lon":
-                        geo_lon = d["value"]
-
-                    if "temperature" in d["value_type"]:
-                        temperature = float(d["value"])
-                    if "pressure" in d["value_type"]:
-                        pressure = float(d["value"]) / paskal
-                    if "humidity" in d["value_type"]:
-                        humidity = float(d["value"])
-                    if "CCS_CO2" in d["value_type"]:
-                        CCS_CO2 = float(d["value"])
-                    if "CCS_TVOC" in d["value_type"]:
-                        CCS_TVOC = float(d["value"])
-                    if "GC" in d["value_type"]:
-                        GC = float(d["value"])
-
-                meas = {}
-                model = SDS011_MODEL
-                meas.update(
-                    {
-                        "pm10": pm10,
-                        "pm25": pm25,
-                        "temperature": temperature,
-                        "pressure": pressure,
-                        "humidity": humidity,
-                        "CCS_CO2": CCS_CO2,
-                        "CCS_TVOC": CCS_TVOC,
-                        "GC": GC,
-                    }
-                )
-
-                meas = {}
-                model = SDS011_MODEL
-                meas.update(
-                    {
-                        "pm10": pm10,
-                        "pm25": pm25,
-                        "temperature": temperature,
-                        "pressure": pressure,
-                        "humidity": humidity,
-                    }
-                )
-
-            elif "ID" in data.keys():
-                self.client_id = data["ID"]
-                temperature = None
-                pressure = None
-                humidity = None
-                CO = None
-                NH3 = None
-                NO2 = None
-                speed = None
-                vane = None
-                pm1 = None
-                pm10 = None
-                pm25 = None
-
-                if "temperature" in data.keys():
-                    temperature = float(data["temperature"])
-                if "humidity" in data.keys():
-                    humidity = float(data["humidity"])
-                if "pressure" in data.keys():
-                    pressure = float(data["pressure"]) / paskal
-                if "CO" in data.keys():
-                    CO = float(data["CO"])
-                if "NH3" in data.keys():
-                    NH3 = float(data["NH3"])
-                if "NO2" in data.keys():
-                    NO2 = float(data["NO2"])
-                if "speed" in data.keys():
-                    speed = float(data["speed"])
-                if "vane" in data.keys():
-                    vane = data["vane"]
-                if "PM1" in data.keys():
-                    pm1 = data["PM1"]
-                if "PM10" in data.keys():
-                    pm10 = data["PM10"]
-                if "PM25" in data.keys():
-                    pm25 = data["PM25"]
-
-                geo_lat = float(data["GPS_lat"])
-                geo_lon = float(data["GPS_lon"])
-
-                meas = {}
-                model = MOBILE_GPS
-                meas.update(
-                    {
-                        "temperature": temperature,
-                        "humidity": humidity,
-                        "pressure": pressure,
-                        "CO": CO,
-                        "NH3": NH3,
-                        "NO2": NO2,
-                        "speed": speed,
-                        "vane": vane,
-                        "pm1": pm1,
-                        "pm10": pm10,
-                        "pm25": pm25,
-                    }
-                )
-
-            timestamp = int(time.time())
-            meas.update({"timestamp": timestamp})
-            with thlock:
-                if self.client_id not in sessions:
-                    public = _generate_pubkey()
-                else:
-                    public = sessions[self.client_id].public
-
-            measurement = Measurement(public, model, geo_lat, geo_lon, meas)
-
-        except Exception as e:
-            logging.warning(f"MQTT Station: Error in parser {e}")
-            return
-
-        return measurement
+        if rc == 0:
+            logger.info(f"MQTT Station: Connected OK with result code {str(rc)}")
+            self.subscribe(self.topic, 0)
+        elif rc == 5:
+            logger.error(f"MQTT Station: Connection Refused: Authorization error")
+        else:
+            logger.error(f"MQTT Station: Connection refused with result code {str(rc)}")
 
     def on_message(self, client, userdata, msg: dict) -> None:
+        """Callback for message receiving. Parse data from a sensor and store it into `sessions`.
+
+        :param msg: MQTT message.
+        """
+
         global thlock
         global sessions
         data = json.loads(msg.payload.decode())
-        parse_data = self._parser(data)
-
+        if "esp8266id" in data.keys():
+            meas = EnvironmentalBox(data)
+        elif "ID" in data.keys():
+            meas = MobileLab(data)
         with thlock:
-            if parse_data:
-                sessions[self.client_id] = parse_data
+            if meas:
+                sessions[meas.id] = meas
 
     def on_subscribe(self, client, userdata, mid, granted_qos) -> None:
-        logger.info(f"Subscribed {str(mid)}, client {client}")
+        """Subscription callback."""
+
+        logger.info(f"Subscribed {str(mid)} to topic {self.topic}")
 
     def run(self) -> None:
+        """Service function for MQTT handler."""
+
         self.connect_async(self.host, self.port, 60)
         self.loop_start()
 
 
 class MQTTStation(IStation):
+    """Station to input data via MQTT."""
+
     def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        self.version: str = f"airalab-http-{STATION_VERSION}"
+        """Initialize MQTT client based on credentials from config.
+
+        :param config: Dict with configuration file.
+        """
+
         self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
+        self.version = STATION_VERSION
         host: str = config["mqttstation"]["host"]
         port: int = int(config["mqttstation"]["port"])
-        client = MQTTHandler(host, port)
+        topic: str = config["mqttstation"]["topic"]
+        username: str = config["mqttstation"]["username"]
+        password: str = config["mqttstation"]["password"]
+        client = MQTTHandler(host, port, topic, username, password)
         rc = client.run()
 
-    def get_data(self) -> tp.List[StationData]:
-        global sessions
-        result = []
-        for k, v in self._drop_dead_sensors().items():
-            result.append(
-                StationData(
-                    self.version, self.mac_address, time.time() - self.start_time, v
-                )
-            )
-        return result
+    def get_data(self) -> tp.List[dict]:
+        """Main function of the class.
 
-    def _drop_dead_sensors(self) -> dict:
+        :return: Formatetd data.
+        """
+
+        global sessions
         global thlock
-        global sessions
-        stripped = dict()
-        current_time = int(time.time())
+        result = []
         with thlock:
-            sessions_copy = copy.deepcopy(sessions)
-            for k, v in sessions_copy.items():
-                if (current_time - v.measurement["timestamp"]) < self.DEAD_SENSOR_TIME:
-                    stripped[k] = v
-                else:
-                    del sessions[k]
-
-        return stripped
+            stripped = self.drop_dead_sensors(sessions)
+        for k, v in stripped.items():
+            result.append(v)
+        return result

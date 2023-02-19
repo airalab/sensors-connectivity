@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 
 try:
     os.mkdir(f"{os.path.expanduser('~')}/.logs")

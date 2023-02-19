@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import argparse
-import shutil
-import tempfile
-import nacl.signing
-import os
-import sys
-import yaml
 import logging.config
+import os
+import shutil
+import sys
+import tempfile
+
+import nacl.signing
+import yaml
 from config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)

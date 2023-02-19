@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import argparse
-import nacl.signing
 import logging.config
+
+import nacl.signing
 from config.logging import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
