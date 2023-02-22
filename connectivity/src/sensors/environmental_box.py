@@ -30,7 +30,6 @@ class EnvironmentalBox(Device):
         self.measurement = reduce(self._SDS011_values_saver, sensors_data, {})
         self.timestamp = int(time.time())
         self.measurement.update({"timestamp": self.timestamp})
-        self.measurement.update({"model": self.model})
 
     def _SDS011_values_saver(self, meas: dict, value: dict) -> dict:
         """Reducer callback for SDS011 sensors.

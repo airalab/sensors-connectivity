@@ -18,7 +18,6 @@ class Device:
     def __post_init__(self) -> None:
         self.timestamp = int(time.time())
         self.measurement.update({"timestamp": self.timestamp})
-        self.measurement.update({"model": self.model})
 
     def generate_pubkey(self, id: str) -> str:
         """Generate public key for a sensor based on its id.
