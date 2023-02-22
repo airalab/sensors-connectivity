@@ -26,4 +26,3 @@ class SensorName(Device):
         self.measurement = {}
         self.timestamp = int(time.time())
         self.measurement.update({"timestamp": self.timestamp})
-        self.measurement.update({"model": self.model})

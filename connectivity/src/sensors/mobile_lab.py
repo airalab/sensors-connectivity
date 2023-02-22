@@ -26,7 +26,6 @@ class MobileLab(Device):
         self.measurement = reduce(self._mobile_sensor_data_saver, self.data.items(), {})
         self.timestamp = int(time.time())
         self.measurement.update({"timestamp": self.timestamp})
-        self.measurement.update({"model": self.model})
 
     def _mobile_sensor_data_saver(self, meas: dict, value: tuple) -> dict:
         """Reducer callback for mobile GPS sensor's data
