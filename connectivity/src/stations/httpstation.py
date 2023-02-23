@@ -41,7 +41,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         global sessions
         self.send_response(200)
         self.send_header("Content-type", "application/json")
-        updating_sensors_interval = 160 # 1hr, how often sensors will switch server
+        updating_sensors_interval = 60 * 60  # 1hr, how often sensors will switch server
         if (time.time() - last_sensors_update) > updating_sensors_interval:
             self.send_header("sensors-count", "0")
             last_sensors_update = time.time()
@@ -111,7 +111,7 @@ class HTTPStation(IStation):
         port: int = int(config["httpstation"]["port"])
         self.version = STATION_VERSION
         HTTP_server(port).start()
-        self.DEAD_SENSOR_TIME: int = 150  # 1 hour
+        self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
 
     def get_data(self) -> tp.List[dict]:
         """Main function of the class.
