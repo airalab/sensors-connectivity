@@ -28,9 +28,7 @@ def main():
     }
 
     try:
-        response = requests.post(
-            "http://127.0.0.1:31113/", data=json.dumps(body), headers=header
-        )
+        response = requests.post("http://127.0.0.1:31113/", data=json.dumps(body), headers=header)
     except Exception as e:
         logger.warning(e)
         pass
