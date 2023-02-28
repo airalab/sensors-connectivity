@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sensors_connectivity"
-version = "1.3.1"
+version = "1.3.2"
 description = "Robonomics package to read data from sensors and publish to different output channels"
 authors = [
     "Vadim Manaenko <vadim.razorq@gmail.com>",
@@ -38,6 +38,7 @@ py-sr25519-bindings = "^0.2.0"
 sensors_connectivity = "connectivity.main:run"
 test_environmental_box = "tests.environmental_box_test:main"
 test_mobile_lab = "tests.mobile_lab_test:main"
+test_many_sensors = "tests.many_environmental_boxes:main"
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]

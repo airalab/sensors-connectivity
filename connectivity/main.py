@@ -162,5 +162,4 @@ def run() -> None:
     parser = argparse.ArgumentParser(description="Add config path.")
     parser.add_argument("config_path", type=str, help="config path")
     args = parser.parse_args()
-    start_http_server(8000)
     WorkerNode(args.config_path).spin()

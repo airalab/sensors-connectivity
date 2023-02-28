@@ -38,12 +38,17 @@ class RequestHandler(BaseHTTPRequestHandler):
         """
 
         global last_sensors_update
+        global sessions
         self.send_response(200)
         self.send_header("Content-type", "application/json")
         updating_sensors_interval = 60 * 60  # 1hr, how often sensors will switch server
         if (time.time() - last_sensors_update) > updating_sensors_interval:
             self.send_header("sensors-count", "0")
             last_sensors_update = time.time()
+            logger.debug(f"sessions before rotation: {sessions}")
+            with thlock:
+                sessions.clear()
+            logger.debug(f"sessions after rotation: {sessions}")
         else:
             self.send_header("sensors-count", f"{len(sessions)}")
         if id is not None:
@@ -89,6 +94,7 @@ class HTTP_server(threading.Thread):
 
     def run(self) -> None:
         self.server_address = ("", self.port)
+        logger.debug(f"HTTP Station on port: {self.port}")
         self.httpd = HTTPServer(self.server_address, RequestHandler)
         self.httpd.serve_forever()
 
