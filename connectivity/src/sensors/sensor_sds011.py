@@ -39,8 +39,7 @@ class SensorSDS011(Device):
             self.measurement = {
                 "pm10": round(self.data[1], 2),
                 "pm25": round(self.data[0], 2),
-                "timestamp": self.timestamp,
-                "model": self.model,
+                "timestamp": self.timestamp
             }
         else:
             self.measurement = {}
