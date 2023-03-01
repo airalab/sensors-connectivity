@@ -48,6 +48,7 @@ class TrackAgro(Device):
         try:
             for d in self.data:
                 self.id = d["id"]
+                self.public = self.generate_pubkey(str(self.id))
                 if "position" in d["key"]:
                     if d["key"] == "position.longitude":
                         self.geo_lon = float(d["value"])
