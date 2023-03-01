@@ -157,9 +157,11 @@ class WorkerNode:
 def run() -> None:
     """Main function of the script. Read config path as argument from command line,
     initialize the `WorkerNode` with the config path and run its `spin()` function.
+    Initialize Prometheus server on port 8000.
     """
     
     parser = argparse.ArgumentParser(description="Add config path.")
     parser.add_argument("config_path", type=str, help="config path")
     args = parser.parse_args()
+    start_http_server(8000)
     WorkerNode(args.config_path).spin()
