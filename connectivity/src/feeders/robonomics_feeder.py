@@ -1,10 +1,12 @@
 import json
 import logging
 import logging.config
+import tempfile
 import threading
 import typing as tp
+import os
 
-import ipfshttpclient
+import ipfshttpclient2
 
 from connectivity.config.logging import LOGGING_CONFIG
 
@@ -55,7 +57,7 @@ def _to_ping_message(data: dict) -> str:
 class RobonomicsFeeder(IFeeder):
     """
     Publishes a result or demand message to IPFS pubsub channel
-    according to Robonomics communication protocol. 
+    according to Robonomics communication protocol.
     """
 
     def __init__(self, config: dict) -> None:
@@ -71,8 +73,23 @@ class RobonomicsFeeder(IFeeder):
             if config["robonomics"]["ipfs_provider"]
             else "/ip4/127.0.0.1/tcp/5001/http"
         )
-        self.ipfs_client = ipfshttpclient.connect(endpoint, session=True)
+        self.ipfs_client = ipfshttpclient2.connect(endpoint, session=True)
         self.topic: str = config["robonomics"]["ipfs_topic"]
+
+    def _publish_to_topic(self, payload):
+
+        if int(self.ipfs_client.version()["Version"].split(".")[1]) < 11:
+            return self.ipfs_client.pubsub.publish_old(self.topic, payload)
+
+        if isinstance(payload, str) and not os.path.exists(payload):
+            payload = payload.encode()
+        if isinstance(payload, bytes) or isinstance(payload, bytearray):
+            with tempfile.NamedTemporaryFile() as tp:
+                tp.write(payload)
+                tp.flush()
+                self.ipfs_client.pubsub.publish(self.topic, tp.name)
+        else:
+            self.ipfs_client.pubsub.publish(self.topic, payload)
 
     def feed(self, data: tp.List[dict]) -> None:
         """Send data to IPFS pubsub in the topic from config.
@@ -86,4 +103,4 @@ class RobonomicsFeeder(IFeeder):
                 else:
                     pubsub_payload = _to_ping_message(d)
                 logger.info(f"RobonomicsFeeder: {pubsub_payload}")
-                self.ipfs_client.pubsub.publish(self.topic, pubsub_payload)
+                self._publish_to_topic(pubsub_payload)

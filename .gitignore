@@ -11,3 +11,4 @@ venv/
 !connectivity/config/README.md
 .vscode/*
 logs/
+poetry.lock

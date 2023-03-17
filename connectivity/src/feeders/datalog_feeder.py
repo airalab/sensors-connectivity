@@ -11,7 +11,7 @@ import time
 import typing as tp
 from tempfile import NamedTemporaryFile
 
-import ipfshttpclient
+import ipfshttpclient2
 import requests
 from pinatapy import PinataPy
 from prometheus_client import Enum
@@ -89,7 +89,7 @@ def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/500
     except Exception as e:
         DATALOG_MEMORY_METRIC.state("error")
 
-    with ipfshttpclient.connect(endpoint) as client:
+    with ipfshttpclient2.connect(endpoint) as client:
         response = client.add(temp.name)
         db.add_data("not sent", response["Hash"], time.time(), json.dumps(payload))
         return (response["Hash"], temp.name)
