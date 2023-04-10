@@ -3,6 +3,7 @@ Datalog Feeder. This feeder collects data from the stations and adds it to the b
 Every `dump_interval` (from the config) the buffer writes to the file which pins to IPFS.
 IPFS hash of the file sends to Robonomics Datalog.
 """
+from crustinterface import Mainnet
 import json
 import logging.config
 import os
@@ -56,8 +57,8 @@ def _sort_payload(data: dict) -> dict:
     return ordered
 
 
-def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> tp.Dict[str, str]:
-    """Write sorted measurements to the temp file, add file to IPFS and add 
+def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> tuple:
+    """Write sorted measurements to the temp file, add file to IPFS and add
     measurements and hash in the database with 'not sent' status.
 
     :param buf: Set of measurements from all sensors.
@@ -92,7 +93,7 @@ def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/500
     with ipfshttpclient2.connect(endpoint) as client:
         response = client.add(temp.name)
         db.add_data("not sent", response["Hash"], time.time(), json.dumps(payload))
-        return (response["Hash"], temp.name)
+        return (response["Hash"], temp.name, response["Size"])
 
 
 def _pin_to_pinata(file_path: str, config: dict) -> None:
@@ -114,6 +115,34 @@ def _pin_to_pinata(file_path: str, config: dict) -> None:
             logger.info(f"DatalogFeeder: File sent to pinata. Hash is {hash}")
         except Exception as e:
             logger.warning(f"DatalogFeeder: Failed while pining file to Pinata. Error: {e}")
+
+
+def _upload_to_crust(hash: str, file_size: int, seed: str) -> None:
+    mainnet = Mainnet(seed=seed)
+    try:
+        # Check balance
+        balance = mainnet.get_balance()
+        logger.debug(f"DatalogFeeder: Actual balance in crust network - {balance}")
+
+        # Check price in Main net. Price in pCRUs
+        price = mainnet.get_appx_store_price(file_size)
+        logger.debug(f"DatalogFeeder: Approximate cost to store the file - {price}")
+
+    except Exception as e:
+        logger.warning(f"DatalogFeeder: Error while getting account balance - {e}")
+        return None
+
+    if price >= balance:
+        logger.warning(f"DatalogFeeder: Not enough account balance to store the file in Crust Network")
+        return None
+
+    try:
+        logger.debug(f"DatalogFeeder: Start adding {hash} to crust with size {file_size}")
+        file_stored = mainnet.store_file(hash, file_size)
+        logger.debug(f"DatalogFeeder: File stored in Crust. Extrinsic data is  {file_stored}")
+    except Exception as e:
+        logger.debug(f"error while uploading file to crust - {e}")
+        return None
 
 
 class DatalogFeeder(IFeeder):
@@ -143,8 +172,8 @@ class DatalogFeeder(IFeeder):
         self.db.create_table()
 
     def feed(self, data: tp.List[dict]) -> None:
-        """Main function of the feeder and it is called in `main.py`. It collects 
-        data into buffer and, every `interval` from config, adds it to IPFS and sends the hash 
+        """Main function of the feeder and it is called in `main.py`. It collects
+        data into buffer and, every `interval` from config, adds it to IPFS and sends the hash
         to Robonomics Datalog.
 
         :param data: Data from the stations.
@@ -160,9 +189,10 @@ class DatalogFeeder(IFeeder):
                     if self.buffer:
                         logger.debug("Datalog Feeder: About to publish collected data...")
                         logger.debug(f"Datalog Feeder: Buffer is {self.buffer}")
-                        ipfs_hash, file_path = _get_multihash(self.buffer, self.db, self.ipfs_endpoint)
+                        ipfs_hash, file_path, file_size = _get_multihash(self.buffer, self.db, self.ipfs_endpoint)
                         self._pin_to_temporal(file_path)
                         _pin_to_pinata(file_path, self.config)
+                        _upload_to_crust(ipfs_hash, file_size, self.config["datalog"]["suri"])
                         os.unlink(file_path)
                         self.to_datalog(ipfs_hash)
                     else:
