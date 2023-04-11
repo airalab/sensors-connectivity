@@ -2,14 +2,17 @@
 This script allows to test HTTP Station on several servers. Defaults servers are localhost on port 31133
 and 31112.
 """
+import asyncio
+import json
+import logging.config
+import random
+import time
 from asyncio import tasks
 from cmath import log
-import random
-import requests, json
-import time
-import logging.config
+
+import requests
+
 from connectivity.config.logging import LOGGING_CONFIG
-import asyncio
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")

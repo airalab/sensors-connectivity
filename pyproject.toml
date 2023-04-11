@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sensors_connectivity"
-version = "1.3.3"
+version = "1.4.0"
 description = "Robonomics package to read data from sensors and publish to different output channels"
 authors = [
     "Vadim Manaenko <vadim.razorq@gmail.com>",
@@ -33,6 +33,7 @@ netifaces = "^0.11.0"
 paho-mqtt = "^1.6.1"
 prometheus-client = "^0.13.1"
 py-sr25519-bindings = "^0.2.0"
+IPFS-Toolkit = "^0.4.4"
 
 [tool.poetry.scripts]
 sensors_connectivity = "connectivity.main:run"
