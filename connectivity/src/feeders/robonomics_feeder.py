@@ -1,10 +1,10 @@
 import json
 import logging
 import logging.config
+import os
 import tempfile
 import threading
 import typing as tp
-import os
 
 import ipfshttpclient2
 

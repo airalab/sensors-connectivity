@@ -7,7 +7,6 @@ import threading
 import time
 import typing as tp
 import urllib.request as ur
-
 # from os import times
 from urllib import error, parse
 

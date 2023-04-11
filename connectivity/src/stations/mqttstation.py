@@ -10,7 +10,7 @@ import paho.mqtt.client as mqtt
 from connectivity.config.logging import LOGGING_CONFIG
 
 from ...constants import STATION_VERSION
-from ..sensors import EnvironmentalBox, MobileLab
+from ..sensors import EnvironmentalBox, LoraSensor, MobileLab
 from .istation import IStation
 
 logging.config.dictConfig(LOGGING_CONFIG)
@@ -69,13 +69,17 @@ class MQTTHandler(mqtt.Client):
             meas = EnvironmentalBox(data)
         elif "ID" in data.keys():
             meas = MobileLab(data)
+        elif "decoded_payload" in data["uplink_message"]:
+            id = data["end_device_ids"]["device_id"]
+            meas = LoraSensor(id=id, data=data["uplink_message"]["decoded_payload"])
+        else:
+            return
         with thlock:
             if meas:
                 sessions[meas.id] = meas
 
     def on_subscribe(self, client, userdata, mid, granted_qos) -> None:
         """Subscription callback."""
-
         logger.info(f"Subscribed {str(mid)} to topic {self.topic}")
 
     def run(self) -> None:
