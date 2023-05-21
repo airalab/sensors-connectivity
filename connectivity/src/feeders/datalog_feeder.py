@@ -68,14 +68,18 @@ def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/500
 
     payload = {}
     for m in buf:
-        if m.public in payload:
-            payload[m.public]["measurements"].append(m.measurement)
-        else:
-            payload[m.public] = {
-                "model": m.model,
-                "geo": "{},{}".format(m.geo_lat, m.geo_lon),
-                "measurements": [m.measurement],
-            }
+        try:
+            if m.public in payload:
+                payload[m.public]["measurements"].append(m.measurement)
+            else:
+                payload[m.public] = {
+                    "model": m.model,
+                    "geo": "{},{}".format(m.geo_lat, m.geo_lon),
+                    "measurements": [m.measurement],
+                }
+        except Exception as e:
+            logger.warning(f"Datalog Feeder: Couldn't store data: {e}")
+
 
     logger.debug(f"Payload before sorting: {payload}")
     payload = _sort_payload(payload)
