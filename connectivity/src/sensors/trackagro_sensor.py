@@ -26,7 +26,7 @@ class TrackAgro(Device):
 
     def __post_init__(self) -> None:
         """Parse data from sensor and store into the corresponding variables."""
-
+        super().__post_init__()
         self.model = SDS011_MODEL
         meas = self._parse_data()
         if meas:

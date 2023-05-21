@@ -17,6 +17,9 @@ class Device:
 
     def __post_init__(self) -> None:
         self.timestamp = int(time.time())
+        self.geo_lat = 0.0
+        self.geo_lon = 0.0
+        self.measurement = {}
         self.measurement.update({"timestamp": self.timestamp})
 
     def generate_pubkey(self, id: str) -> str:
