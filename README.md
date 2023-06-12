@@ -19,6 +19,8 @@ sudo bash install.sh
 ipfs init
 ```
 
+You need at least `Python3.10.0` to run this project.
+
 # Installation as PyPi package
 
 ```
@@ -28,7 +30,7 @@ pip3 install sensors-connectivity
 
 ## Configuration
 
-[Here](https://wiki.robonomics.network/docs/configuration-options-description/) you can find an article to set a proper configuration for your instance.
+[Here](https://robonomics.academy/en/learn/sensors-connectivity-course/sensors-connectivity-config-options/) you can find an article to set a proper configuration for your instance.
 
 ## Running
 
@@ -64,11 +66,11 @@ poetry install
 
 ## Documentation
 
-To prepare a sensor for the work with the package follow instructions on [Robonomics Wiki](https://wiki.robonomics.network/docs/connect-sensor-to-robonomics/).
+To prepare a sensor for the work with the package follow instructions on [Robonomics Academy](https://robonomics.academy/en/learn/sensors-connectivity-course/setting-up-and-connecting-sensors/).
 
 ## Configuration
 
-[Here](https://wiki.robonomics.network/docs/configuration-options-description/) you can find an article to set a proper configuration for your instance.
+[Here](https://robonomics.academy/en/learn/sensors-connectivity-course/sensors-connectivity-config-options/) you can find an article to set a proper configuration for your instance.
 
 Make a copy of `default.json` and fill it using description from the article.
 
@@ -129,8 +131,8 @@ python3-dev does not cover all versions for python3. The service needs at least 
 
 ### Python versions mismatch
 
-If during running `poetry install` comand you get `SolverProblemError`, which says "The current project's Python requirement (3.6.9) is not compatible with some of the required packages Python requirement:..", even though you have older version of python (e.g. python3.8), you may need to specify the python version poetry is using:
+If during running `poetry install` comand you get `SolverProblemError`, which says "The current project's Python requirement (3.6.9) is not compatible with some of the required packages Python requirement:..", even though you have older version of python (e.g. python3.10.9), you may need to specify the python version poetry is using:
 
 ```
-poetry env use python3.8
+poetry env use python3.10.9
 ```
