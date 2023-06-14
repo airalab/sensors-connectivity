@@ -10,7 +10,7 @@ https://robonomics.academy/en/learn/sensors-connectivity-course/overview/
 
 ## Pre-requirements
 
-IPFS daemon should be installed to build this package. Assuming you work in Linux:
+IPFS daemon should be installed to build this package. Assuming you work on Linux:
 
 ```
 wget https://dist.ipfs.io/go-ipfs/v0.8.0/go-ipfs_v0.8.0_linux-amd64.tar.gz
@@ -59,7 +59,7 @@ You will see logs in your terminal and in `~/.logs`.
 
 ## Build from Source
 
-To build a python package from source [Poetry](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions) should be also installed. Assuming you work in Linux:
+To build a python package from source [Poetry](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions) should be also installed. Assuming you work on Linux:
 
 ```
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
@@ -81,7 +81,7 @@ https://robonomics.academy/en/learn/sensors-connectivity-course/sensors-connecti
 
 Make a copy of `default.json` and fill it using description from the article.
 
-You also can set a logging file. The default file for logs is `logging.py`, which uses `console` and `file` handler by default. Pay attention for the `file` handler.
+You also can set a logging file. The default file for logs is `logging.py`, which uses `console` and `file` handler by default. Pay attention to the `file` handler.
 
 The template is stored in `connectivity/config/logging_template.py`. You can specify the path (`filename`), where your logs will be stored in (do not forget to create this directory if it doesn't exist). Default path for logs is `~/.logs`. You can find any other handlers in the [Logging facility module](https://docs.python.org/3.8/library/logging.html) for Python.
 
@@ -108,6 +108,10 @@ poetry run test_mobile_lab
 test_environmental_box
 ```
 
+For more information about development check `/docs` directory:
+
+https://github.com/airalab/sensors-connectivity/tree/master/docs
+
 ### Troubleshooting
 
 **Python.h: No such file or directory:**:
@@ -117,7 +121,7 @@ If during running `poetry install` command you get such error, you need to insta
 sudo apt install python3-dev
 ```
 > Note:
-`python3-dev` does not cover all versions for Python 3. The service needs at least Python 3.8, for that you may need to specify the version: `sudo apt install python3.8-dev`.
+`python3-dev` does not cover all versions for Python 3. The service needs at least Python 3.10, for that you may need to specify the version: `sudo apt install python3.10-dev`.
 
 [Here](https://stackoverflow.com/a/21530768) you can find examples for other package managers.
 
