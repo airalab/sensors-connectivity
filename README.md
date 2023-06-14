@@ -1,62 +1,71 @@
-# Add telemetry agent functions to your Aira instance
-Aira source package to input data from sensors.
+# Sensors Connectivity Module for Decentralized Sensors Network
 
-# Module For Your Aira Instance. Add Telemetry Agent
+The module for launching your own server instance for receiving data from sensors (like SDS011) and their further processing.
 
-The Aira package allows you to read data from a SDS011 sensor (and a few others) and publish to different output channels.
-That said Aira is able to form Demand and Result messages and a few other channels.
-Also it includes Datalog feature which is still experimental. It could be used to publish data to Substrate based blockchain by [Robonomics](https://parachain.robonomics.network/).
+## Available Guides
+
+We have created a nice complete guide that reveals the idea of the Decentralized Sensors Network and the Sensors Connectivity module. The guide is available at Robonomics Academy:
+
+https://robonomics.academy/en/learn/sensors-connectivity-course/overview/
 
 ## Pre-requirements
 
-To build a python package IPFS daemon should be installed. Assyming, you work with linux:
+IPFS daemon should be installed to build this package. Assuming you work in Linux:
 
 ```
 wget https://dist.ipfs.io/go-ipfs/v0.8.0/go-ipfs_v0.8.0_linux-amd64.tar.gz
 tar -xzf go-ipfs_v0.8.0_linux-amd64.tar.gz
 cd go-ipfs
-sudo bash install.sh 
+sudo bash install.sh
 ipfs init
 ```
 
-You need at least `Python3.10.0` to run this project.
+You also need at least `Python3.10.0` to run this project.
 
-# Installation as PyPi package
+## Sensor Preparation
+
+To prepare a sensor for the work with the package follow instructions on [Robonomics Academy](https://robonomics.academy/en/learn/sensors-connectivity-course/setting-up-and-connecting-sensors/).
+
+## Installation as PyPi package
+
+Run the following commands:
 
 ```
 pip3 install py-sr25519-bindings
 pip3 install sensors-connectivity
 ```
 
-## Configuration
+### Configuration
 
-[Here](https://robonomics.academy/en/learn/sensors-connectivity-course/sensors-connectivity-config-options/) you can find an article to set a proper configuration for your instance.
+At Robonomics Academy you can find an article to set a proper configuration for your instance:
 
-## Running
+https://robonomics.academy/en/learn/sensors-connectivity-course/sensors-connectivity-config-options/
+
+### Launch
 
 First, launch IPFS daemon:
 
 ```
 ipfs daemon --enable-pubsub-experiment
 ```
-After config and log files are setted, you can run the service: (in another terminal)
+
+After configuration and log files are set, you can run the service in another terminal:
 
 ```
 sensors_connectivity "path/to/your/config/file"
 ```
 
-You will be able to see logs in your console and in `~/.logs`.
+You will see logs in your terminal and in `~/.logs`.
 
-# Build from source
-## Requirements
+## Build from Source
 
-To build a python package fron source [poetry](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions) should be also installed. Assyming, you work with linux:
+To build a python package from source [Poetry](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions) should be also installed. Assuming you work in Linux:
 
 ```
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 ```
 
-## Get a Package And Installing dependencies
+Get a package and install dependencies:
 
 ```
 git clone https://github.com/airalab/sensors-connectivity
@@ -64,74 +73,57 @@ cd sensors-connectivity
 poetry install
 ```
 
-## Documentation
+### Configuration
 
-To prepare a sensor for the work with the package follow instructions on [Robonomics Academy](https://robonomics.academy/en/learn/sensors-connectivity-course/setting-up-and-connecting-sensors/).
+At Robonomics Academy you can find an article to set a proper configuration for your instance:
 
-## Configuration
-
-[Here](https://robonomics.academy/en/learn/sensors-connectivity-course/sensors-connectivity-config-options/) you can find an article to set a proper configuration for your instance.
+https://robonomics.academy/en/learn/sensors-connectivity-course/sensors-connectivity-config-options/
 
 Make a copy of `default.json` and fill it using description from the article.
 
-You also can set a logging file. The default file for logs is `logging.py`, which uses `console` and `file` handler by default. Pay attention for the `file` handler. The template is stored in `connectivity/config/logging_template.py`. You can cpecify the path (`filename`), where your logs will be stored in (do not forget to create this directory if it doesn't exist). Default path for logs is `~/.logs`. You can figure any other handlers from the [library](https://docs.python.org/3.8/library/logging.html).
+You also can set a logging file. The default file for logs is `logging.py`, which uses `console` and `file` handler by default. Pay attention for the `file` handler.
 
-## Running
+The template is stored in `connectivity/config/logging_template.py`. You can specify the path (`filename`), where your logs will be stored in (do not forget to create this directory if it doesn't exist). Default path for logs is `~/.logs`. You can find any other handlers in the [Logging facility module](https://docs.python.org/3.8/library/logging.html) for Python.
+
+### Launch
 
 First, launch IPFS daemon:
 
 ```
 ipfs daemon --enable-pubsub-experiment
 ```
-After config and log files are setted, you can run the service: (in another terminal)
+After configuration and log files are set, you can run the service in another terminal:
 
 ```
 poetry run sensors_connectivity "path/to/your/config/file"  
 ```
 
-If your log file is setted with `console` handler, you will be able to see logs in your console.
+If your log file is set with `console` handler, you will be able to see logs in your terminal.
 
-Example of output:
+### Development
 
-```
-2022-02-17 19:30:51,248 - INFO - Getting data from the stations...
-2022-02-17 19:30:51,443 - INFO - airalab-http-v0.8.0: [[], [{MAC: c8e2650f254e, Uptime: 0:00:14.010502, M: {Public: 0be87b58e87599a85dc79bf14731cc9ad547411e9b10c883e29f78fc2c67206a, geo: (53.518475,49.397178000000004), measurements: {'airtemp': -8.0, 'windang': 45.0, 'windspeed': 0.13, 'windspeedmax': 0.13, 'pm10': '', 'pm25': '', 'timestamp': 1645113602.0}}}]]
-2022-02-17 19:30:51,443 - INFO - Sending result to the feeders...
-2022-02-17 19:31:07,517 - INFO - Frontier Datalog: Data sent to Robonomics datalog and included in block 0x04baf3d81c6d31ec6f3ca3e515b9a6920666ee17cbd66f57130eaa000bad2cd4
-2022-02-17 19:31:07,519 - INFO - RobonomicsFeeder: {"0be87b58e87599a85dc79bf14731cc9ad547411e9b10c883e29f78fc2c67206a": {"model": 2, "geo": "53.518475,49.397178000000004", "measurement": {"airtemp": -8.0, "windang": 45.0, "windspeed": 0.13, "windspeedmax": 0.13, "pm10": "", "pm25": "", "timestamp": 1645113602.0}}}
-2022-02-17 19:31:07,523 - INFO - Checking data base...
-127.0.0.1 - - [17/Feb/2022 19:31:13] "POST / HTTP/1.1" 200 -
-2022-02-17 19:31:21,248 - INFO - Getting data from the stations...
-2022-02-17 19:31:21,429 - INFO - airalab-http-v0.8.0: [[{MAC: c8e2650f254e, Uptime: 0:00:43.818101, M: {Public: 133b761496539ab5d1140e94f644e2ef92c7ac32446dc782bfe1a768379a669a, geo: (1,200), measurements: {'pm10': 27.58, 'pm25': 15.02, 'temperature': 22.93, 'pressure': 758.0687068706872, 'humidity': 39.44, 'timestamp': 1645115473}}}], [{MAC: c8e2650f254e, Uptime: 0:00:43.996539, M: {Public: 0be87b58e87599a85dc79bf14731cc9ad547411e9b10c883e29f78fc2c67206a, geo: (53.518475,49.397178000000004), measurements: {'airtemp': -8.0, 'windang': 45.0, 'windspeed': 0.13, 'windspeedmax': 0.13, 'pm10': '', 'pm25': '', 'timestamp': 1645113602.0}}}]]
-2022-02-17 19:31:21,444 - INFO - Sending result to the feeders...
-2022-02-17 19:31:51,249 - INFO - Getting data from the stations...
-```
-
-## Development
-
-Testing with HTTP Station:
+To test the module with HTTP station use:
 ```
 poetry run test_mobile_lab
 test_environmental_box
 ```
-For more information about development see `/docs`.
 
-## Troubleshooting
+### Troubleshooting
 
-### Python.h: No such file or directory
+**Python.h: No such file or directory:**:
 
-If during running `poetry install` comand you get such error, you need to install the header files and static libraries for python dev. Use your package manager for installation. For example, for `apt` you need to run
+If during running `poetry install` command you get such error, you need to install the header files and static libraries for `python-dev`. Use your package manager for installation. For example, for `apt` you need to run:
 ```
 sudo apt install python3-dev
 ```
 > Note:
-python3-dev does not cover all versions for python3. The service needs at least python3.8, for that you may need to specify the version `sudo apt install python3.8-dev`.
+`python3-dev` does not cover all versions for Python 3. The service needs at least Python 3.8, for that you may need to specify the version: `sudo apt install python3.8-dev`.
 
 [Here](https://stackoverflow.com/a/21530768) you can find examples for other package managers.
 
-### Python versions mismatch
+**Python versions mismatch:**
 
-If during running `poetry install` comand you get `SolverProblemError`, which says "The current project's Python requirement (3.6.9) is not compatible with some of the required packages Python requirement:..", even though you have older version of python (e.g. python3.10.9), you may need to specify the python version poetry is using:
+If during running `poetry install` command you get `SolverProblemError`, which says `The current project's Python requirement (3.6.9) is not compatible with some of the required packages Python requirement:..`, even though you have older version of Python (e.g. Python 3.10.9), you may need to specify the Python version for Poetry:
 
 ```
 poetry env use python3.10.9
