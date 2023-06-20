@@ -13,6 +13,7 @@ class Device:
     geo_lon: float = field(init=False)
     model: int = field(init=False)
     timestamp: float = field(init=False)
+    donated_by: str = field(init=False)
     measurement: dict = field(init=False)
 
     def __post_init__(self) -> None:
@@ -20,6 +21,7 @@ class Device:
         self.geo_lat = 0.0
         self.geo_lon = 0.0
         self.measurement = {}
+        self.donated_by = ""
         self.measurement.update({"timestamp": self.timestamp})
 
     def generate_pubkey(self, id: str) -> str:
@@ -34,10 +36,10 @@ class Device:
         return str(verify_key_hex)
 
     def __str__(self) -> str:
-        return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), model: {self.model}, measurements: {self.measurement}}}"
+        return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), model: {self.model}, donated_by: {self.donated_by}, measurements: {self.measurement}}}"
 
     def __repr__(self) -> str:
-        return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), model: {self.model}, measurements: {self.measurement}}}"
+        return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), model: {self.model}, donated_by: {self.donated_by}, measurements: {self.measurement}}}"
 
     def __hash__(self) -> int:
         return hash((self.id, self.timestamp))

@@ -52,7 +52,7 @@ def _sort_payload(data: dict) -> dict:
     ordered = {}
     for k, v in data.items():
         meas = sorted(v["measurements"], key=lambda x: x["timestamp"])
-        ordered[k] = {"model": v["model"], "geo": v["geo"], "measurements": meas}
+        ordered[k] = {"model": v["model"], "geo": v["geo"], "donated_by": v["donated_by"], "measurements": meas}
     return ordered
 
 
@@ -75,6 +75,7 @@ def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/500
                 payload[m.public] = {
                     "model": m.model,
                     "geo": "{},{}".format(m.geo_lat, m.geo_lon),
+                    "donated_by": m.donated_by,
                     "measurements": [m.measurement],
                 }
         except Exception as e:

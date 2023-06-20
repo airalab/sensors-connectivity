@@ -21,6 +21,7 @@ class EnvironmentalBox(Device):
         self.id = str(self.data["esp8266id"])
         self.model = SDS011_MODEL
         self.public = self.generate_pubkey(str(self.id))
+        self.donated_by = str(self.data["donated_by"])
         sensors_data = self.data["sensordatavalues"]
         for d in sensors_data:
             if d["value_type"] == "GPS_lat":
