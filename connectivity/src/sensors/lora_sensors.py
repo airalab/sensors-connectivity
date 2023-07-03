@@ -12,6 +12,8 @@ class LoraSensor(Device):
 
     def __post_init__(self) -> None:
         """Parse data from sensor and store into the corresponding variables."""
+        
+        super().__post_init__()
         self.model = SDS011_MODEL
         self.public = self.generate_pubkey(str(self.id))
         self.geo_lat = 59.944502

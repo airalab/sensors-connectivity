@@ -17,7 +17,8 @@ class SensorName(Device):
 
     def __post_init__(self) -> None:
         """Parse data from sensor and store into the corresponding variables."""
-
+        
+        super().__post_init__()
         self.id = ""
         self.model = ""
         self.public = self.generate_pubkey(str(self.id))
