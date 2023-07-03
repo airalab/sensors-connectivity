@@ -24,6 +24,7 @@ def main():
     body = {
         "esp8266id": id,
         "software_version": "NRZ-2020-129",
+        "donated_by": "Robonomics",
         "sensordatavalues": [
             {"value_type": "SDS_P1", "value": pm10},
             {"value_type": "SDS_P2", "value": pm25},

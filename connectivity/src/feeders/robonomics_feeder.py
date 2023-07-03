@@ -31,6 +31,7 @@ def _to_pubsub_message(data: dict) -> str:
     message[data.public] = {
         "model": data.model,
         "geo": "{},{}".format(data.geo_lat, data.geo_lon),
+        "donated_by": data.donated_by,
         "measurement": data.measurement,
     }
     return json.dumps(message)
