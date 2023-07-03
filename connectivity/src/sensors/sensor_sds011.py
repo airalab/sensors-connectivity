@@ -22,7 +22,8 @@ class SensorSDS011(Device):
 
     def __post_init__(self) -> None:
         """Parse data from sensor and store into the corresponding variables."""
-
+        
+        super().__post_init__()
         self.timestamp = int(time.time())
         if not self.model:
             self.model = SDS011_MODEL
