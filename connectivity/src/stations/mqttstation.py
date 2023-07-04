@@ -69,9 +69,10 @@ class MQTTHandler(mqtt.Client):
             meas = EnvironmentalBox(data)
         elif "ID" in data.keys():
             meas = MobileLab(data)
-        elif "decoded_payload" in data["uplink_message"]:
-            id = data["end_device_ids"]["device_id"]
-            meas = LoraSensor(id=id, data=data["uplink_message"]["decoded_payload"])
+        elif "uplink_message" in data.keys():
+            if "decoded_payload" in data["uplink_message"]:
+                id = data["end_device_ids"]["device_id"]
+                meas = LoraSensor(id=id, data=data["uplink_message"]["decoded_payload"])
         else:
             return
         with thlock:
