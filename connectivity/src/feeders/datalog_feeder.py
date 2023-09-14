@@ -114,7 +114,7 @@ def _pin_to_pinata(file_path: str, config: dict) -> None:
         try:
             logger.info("DatalogFeeder: Pinning file to Pinata")
             pinata = PinataPy(pinata_api, pinata_secret)
-            pinata.pin_file_to_ipfs(file_path)
+            pinata.pin_file_to_ipfs(path_to_file=file_path, save_absolute_paths=False)
             hash = pinata.pin_list()["rows"][0]["ipfs_pin_hash"]
             logger.info(f"DatalogFeeder: File sent to pinata. Hash is {hash}")
         except Exception as e:
