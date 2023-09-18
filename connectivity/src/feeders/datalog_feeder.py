@@ -137,11 +137,11 @@ def _upload_to_crust(hash: str, file_size: int, seed: str) -> None:
         return None
 
     try:
-        logger.debug(f"DatalogFeeder: Start adding {hash} to crust with size {file_size}")
+        logger.info(f"DatalogFeeder: Start adding {hash} to crust with size {file_size}")
         file_stored = mainnet.store_file(hash, file_size)
-        logger.debug(f"DatalogFeeder: File stored in Crust. Extrinsic data is  {file_stored}")
+        logger.info(f"DatalogFeeder: File stored in Crust. Extrinsic data is  {file_stored}")
     except Exception as e:
-        logger.debug(f"error while uploading file to crust - {e}")
+        logger.warning(f"error while uploading file to crust - {e}")
         return None
 
 
@@ -192,7 +192,7 @@ class DatalogFeeder(IFeeder):
                         ipfs_hash, file_path, file_size = _get_multihash(self.buffer, self.db, self.ipfs_endpoint)
                         self._pin_to_temporal(file_path)
                         _pin_to_pinata(file_path, self.config)
-                        _upload_to_crust(ipfs_hash, file_size, self.config["datalog"]["suri"])
+                        _upload_to_crust(ipfs_hash, int(file_size), self.config["datalog"]["suri"])
                         os.unlink(file_path)
                         self.to_datalog(ipfs_hash)
                     else:
