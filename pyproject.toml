@@ -34,6 +34,7 @@ paho-mqtt = "^1.6.1"
 prometheus-client = "^0.13.1"
 py-sr25519-bindings = "^0.2.0"
 IPFS-Toolkit = "^0.4.4"
+crust-interface-patara = "^0.1.1"
 
 [tool.poetry.scripts]
 sensors_connectivity = "connectivity.main:run"
