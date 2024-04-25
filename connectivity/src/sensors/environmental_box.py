@@ -20,7 +20,7 @@ class EnvironmentalBox(Device):
         
         super().__post_init__()
         self.id = str(self.data["esp8266id"])
-        self.model = SDS011_MODEL
+        self.model = self.data.get("model", SDS011_MODEL)
         self.public = self.generate_pubkey(str(self.id))
         self.donated_by = str(self.data.get("donated_by", ""))
         sensors_data = self.data["sensordatavalues"]
