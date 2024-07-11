@@ -28,6 +28,7 @@ def main():
         "sensordatavalues": [
             {"value_type": "SDS_P1", "value": pm10},
             {"value_type": "SDS_P2", "value": pm25},
+            {"value_type":"DB_Meter","value": 58.00},
             {"value_type": "temperature", "value": temperature},
             {"value_type": "humidity", "value": humidity},
             {"value_type": "samples", "value": "890618"},
