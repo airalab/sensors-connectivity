@@ -62,7 +62,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         """Callback for get requests."""
 
-        logger.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
+        # logger.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
         id = self.headers["Sensor-id"]
         self._set_headers(id)
         logger.info(f"HTTP Station session length: {len(sessions)}")
