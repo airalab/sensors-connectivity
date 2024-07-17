@@ -192,11 +192,13 @@ class DatalogFeeder(IFeeder):
 
                 if (time.time() - self.last_time) >= self.interval:
                     if self.buffer:
+                        self.last_time = time.time()
                         logger.debug("Datalog Feeder: About to publish collected data...")
                         logger.debug(f"Datalog Feeder: Buffer is {self.buffer}")
                         ipfs_hash, file_path, file_size = _get_multihash(self.buffer, self.db, self.ipfs_endpoint)
                         self._pin_to_temporal(file_path)
                         _pin_to_pinata(file_path, self.config)
+                        self.buffer = set()
                         _upload_to_crust(ipfs_hash, int(file_size), self.config["datalog"]["suri"])
                         os.unlink(file_path)
                         self.to_datalog(ipfs_hash)
@@ -240,9 +242,6 @@ class DatalogFeeder(IFeeder):
         :param ipfs_hash: Ipfs hash of the file.
         """
 
-        logger.info(ipfs_hash)
-        self.last_time = time.time()
-        self.buffer = set()
         account = Account(seed=self.config["datalog"]["suri"])
         rws = RWS(account)
         try:

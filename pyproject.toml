@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sensors_connectivity"
-version = "1.6.2"
+version = "1.6.3"
 description = "Robonomics package to read data from sensors and publish to different output channels"
 authors = [
     "Vadim Manaenko <vadim.razorq@gmail.com>",
