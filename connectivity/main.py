@@ -17,7 +17,7 @@ from connectivity.config.logging import LOGGING_CONFIG
 from .src.feeders import DatalogFeeder, FrontierFeeder, RobonomicsFeeder
 from .src.stations import COMStation, HTTPStation, MQTTStation
 from .src.stations.trackargostation import TrackAgroStation
-from .utils.database import DataBase
+from .utils.datalog_db import DatalogDB
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
@@ -45,7 +45,7 @@ class WorkerNode:
         self.stations: list = self._populate_stations()
         self.feeders: list = self._populate_feeders()
         self.station_data: list = []
-        self.db: DataBase = DataBase(self.config)
+        self.datalog_db: DatalogDB = DatalogDB(self.config["general"]["datalog_db_path"])
 
     def _read_configuration(self, config_path: str) -> dict:
         """Internal method. Loads configuration.
@@ -145,7 +145,7 @@ class WorkerNode:
 
             logger.info("Checking data base...")
             Timer(3600, db_watcher).start()
-            for data in self.db.checker(time.time()):
+            for data in self.datalog_db.checker(time.time()):
                 for hash in data:
                     self.feeders[2].to_datalog(hash)
 

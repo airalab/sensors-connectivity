@@ -19,7 +19,8 @@ from prometheus_client import Enum
 from robonomicsinterface import RWS, Account, Datalog
 
 from connectivity.config.logging import LOGGING_CONFIG
-from connectivity.utils.database import DataBase
+from connectivity.utils.datalog_db import DatalogDB
+from connectivity.utils.ipfs_db import IPFSDB
 
 from ...constants import PING_MODEL
 from .ifeeder import IFeeder
@@ -173,8 +174,10 @@ class DatalogFeeder(IFeeder):
             if config["robonomics"]["ipfs_provider"]
             else "/ip4/127.0.0.1/tcp/5001/http"
         )
-        self.db: DataBase = DataBase(self.config)
-        self.db.create_table()
+        self.datalog_db: DatalogDB = DatalogDB(self.config["general"]["datalog_db_path"])
+        self.ipfs_db: IPFSDB = IPFSDB(self.config["general"]["ipfs_db_path"])
+        self.datalog_db.create_table()
+        self.ipfs_db.create_table()
 
     def feed(self, data: tp.List[dict]) -> None:
         """Main function of the feeder and it is called in `main.py`. It collects
@@ -185,7 +188,7 @@ class DatalogFeeder(IFeeder):
         """
         if self.config["datalog"]["enable"]:
             if data:
-                for d in data:
+                for d in data:  
                     if d.public and d.model != PING_MODEL:
                         logger.debug(f"DatalogFeeder: Adding data to buffer: {d}")
                         self.buffer.add(d)
@@ -195,7 +198,8 @@ class DatalogFeeder(IFeeder):
                         self.last_time = time.time()
                         logger.debug("Datalog Feeder: About to publish collected data...")
                         logger.debug(f"Datalog Feeder: Buffer is {self.buffer}")
-                        ipfs_hash, file_path, file_size = _get_multihash(self.buffer, self.db, self.ipfs_endpoint)
+                        ipfs_hash, file_path, file_size = _get_multihash(self.buffer, self.datalog_db, self.ipfs_endpoint)
+                        self.ipfs_db.add_hash(ipfs_hash)
                         self._pin_to_temporal(file_path)
                         _pin_to_pinata(file_path, self.config)
                         self.buffer = set()
@@ -258,7 +262,7 @@ class DatalogFeeder(IFeeder):
                 f"Datalog Feeder: Ipfs hash sent to Robonomics Parachain and included in block {robonomics_receipt}"
             )
             DATALOG_STATUS_METRIC.state("success")
-            self.db.update_status("sent", ipfs_hash)
+            self.datalog_db.update_status("sent", ipfs_hash)
         except Exception as e:
             logger.warning(f"Datalog Feeder: Something went wrong during extrinsic submission to Robonomics: {e}")
             DATALOG_STATUS_METRIC.state("error")

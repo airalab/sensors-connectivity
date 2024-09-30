@@ -2,15 +2,15 @@
 import contextlib
 import sqlite3
 import typing as tp
-from sqlite3.dbapi2 import connect
 
 
 class DataBase:
-    def __init__(self, config: dict) -> None:
-        self.config: dict = config
+    def __init__(self, path_to_db_file: str, table_name) -> None:
+        self.path_to_db_file: str = path_to_db_file
+        self.table_name: str = table_name
 
     def connection(self) -> tp.Any:
-        db_file = self.config["general"]["db_path"]
+        db_file = self.path_to_db_file
         try:
             connection = sqlite3.connect(db_file)
 
@@ -18,53 +18,58 @@ class DataBase:
             print(f"Could not connect to data base {e}")
 
         return connection
-
-    def create_table(self) -> None:
+    
+    def create_table(self, rows_with_types: str) -> None:
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(
-            """
-                        CREATE TABLE IF NOT EXISTS datalog (
-                                                    id integer PRIMARY KEY,
-                                                    status text,
-                                                    hash text,
-                                                    time real,
-                                                    payload blob
-
-                            ); """
+            f"CREATE TABLE IF NOT EXISTS {self.table_name} ({rows_with_types});"
         )
+    
+    def insert_data(self, value_names: str, values: tuple):
+        connection = self.connection()
+        cursor = connection.cursor()
+        values_str = ', '.join(["?"] * len(values))
+        with contextlib.closing(connection) as conn:  # auto-closes
+            with conn:  # auto-commits
+                with contextlib.closing(cursor) as cursor:  # auto-closes
+                    cursor.execute(
+                        f"INSERT INTO {self.table_name} ({value_names}) VALUES ({values_str})",
+                        values,
+                    )
+    
 
-    def add_data(self, status, hash, time, payload) -> None:
+    def update(self, condition: str, values: tuple) -> None:
         connection = self.connection()
         cursor = connection.cursor()
         with contextlib.closing(connection) as conn:  # auto-closes
             with conn:  # auto-commits
                 with contextlib.closing(cursor) as cursor:  # auto-closes
                     cursor.execute(
-                        "INSERT INTO datalog (status, hash, time, payload) VALUES (?, ?, ?, ?)",
-                        (status, hash, time, payload),
+                        f"UPDATE {self.table_name} {condition}", values
                     )
-
-    def update_status(self, status, hash) -> None:
+    
+    def get_data(self, values_to_select: str, condifitons: str, condidition_values: tp.Optional[tuple]=None) -> list:
         connection = self.connection()
         cursor = connection.cursor()
         with contextlib.closing(connection) as conn:  # auto-closes
             with conn:  # auto-commits
                 with contextlib.closing(cursor) as cursor:  # auto-closes
-                    cursor.execute(
-                        "UPDATE datalog SET status = ? WHERE hash = ?", (status, hash)
-                    )
+                    if condidition_values:
+                        data_from_table = cursor.execute(
+                            f"SELECT {values_to_select} FROM {self.table_name} {condifitons}",
+                            condidition_values,
+                        ).fetchall()
+                    else:
+                        data_from_table = cursor.execute(
+                            f"SELECT {values_to_select} FROM {self.table_name} {condifitons}",
+                        ).fetchall()
+        return data_from_table
 
-    def checker(self, current_time) -> list:
+    def delete_data(self, conditions: str) -> None:
         connection = self.connection()
         cursor = connection.cursor()
-        time = current_time - 86400  # 24hrs
         with contextlib.closing(connection) as conn:  # auto-closes
             with conn:  # auto-commits
                 with contextlib.closing(cursor) as cursor:  # auto-closes
-                    hashes = cursor.execute(
-                        "SELECT hash FROM datalog WHERE time < ? AND status='not sent'",
-                        (time,),
-                    ).fetchall()
-                    cursor.execute("DELETE FROM datalog WHERE status='sent'")
-        return hashes
+                    cursor.execute(f"DELETE FROM {self.table_name} {conditions}")
