@@ -43,3 +43,7 @@ class MobileLab(Device):
             meas[key] = float(item) / PASKAL2MMHG
         meas[key] = item
         return meas
+
+    def __str__(self) -> str:
+        self.measurement.update({"geo": f"{self.geo_lat},{self.geo_lon}"})
+        return f"{{Public: {self.public}, model: {self.model}, donated_by: {self.donated_by}, measurements: {self.measurement}}}"

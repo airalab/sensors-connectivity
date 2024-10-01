@@ -74,12 +74,19 @@ def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/500
             if m.public in payload:
                 payload[m.public]["measurements"].append(m.measurement)
             else:
-                payload[m.public] = {
-                    "model": m.model,
-                    "geo": "{},{}".format(m.geo_lat, m.geo_lon),
-                    "donated_by": m.donated_by,
-                    "measurements": [m.measurement],
-                }
+                if m.geo_lat:
+                    payload[m.public] = {
+                        "model": m.model,
+                        "geo": "{},{}".format(m.geo_lat, m.geo_lon),
+                        "donated_by": m.donated_by,
+                        "measurements": [m.measurement],
+                    }
+                else:
+                    payload[m.public] = {
+                        "model": m.model,
+                        "donated_by": m.donated_by,
+                        "measurements": [m.measurement],
+                    }
         except Exception as e:
             logger.warning(f"Datalog Feeder: Couldn't store data: {e}")
 
@@ -257,10 +264,10 @@ class DatalogFeeder(IFeeder):
                 robonomics_receipt = rws_datalog.record(ipfs_hash)
             else:
                 datalog = Datalog(account)
-                robonomics_receipt = datalog.record(ipfs_hash)
-            logger.info(
-                f"Datalog Feeder: Ipfs hash sent to Robonomics Parachain and included in block {robonomics_receipt}"
-            )
+                # robonomics_receipt = datalog.record(ipfs_hash)
+            # logger.info(
+            #     f"Datalog Feeder: Ipfs hash sent to Robonomics Parachain and included in block {robonomics_receipt}"
+            # )
             DATALOG_STATUS_METRIC.state("success")
             self.datalog_db.update_status("sent", ipfs_hash)
         except Exception as e:

@@ -9,7 +9,6 @@ class DatalogDB:
         self.db_class.create_table("id integer PRIMARY KEY, status text, hash text, time real, payload blob")
     
     def add_data(self, status, hash, time, payload) -> None:
-        print("adding data to db")
         self.db_class.insert_data("status, hash, time, payload", (status, hash, time, payload))
     
     def update_status(self, status, hash) -> None:
