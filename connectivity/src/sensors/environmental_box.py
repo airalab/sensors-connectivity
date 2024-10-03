@@ -57,3 +57,10 @@ class EnvironmentalBox(Device):
         else:
             meas[value["value_type"]] = value["value"]
         return meas
+
+
+    def __str__(self) -> str:
+        if self.model == SDS011_MODEL:
+            return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), model: {self.model}, donated_by: {self.donated_by}, measurements: {self.measurement}}}"
+        self.measurement.update({"geo": f"{self.geo_lat},{self.geo_lon}"})
+        return f"{{Public: {self.public}, model: {self.model}, donated_by: {self.donated_by}, measurements: {self.measurement}}}"

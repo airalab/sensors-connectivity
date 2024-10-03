@@ -1,7 +1,8 @@
 {
    "general": {
       "publish_interval": 30,
-      "db_path": ""
+      "datalog_db_path":"",
+      "ipfs_db_path":""
    },
    "comstation": {
       "enable": false,
