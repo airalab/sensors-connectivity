@@ -1,6 +1,6 @@
 [submodule "firmware-flasher"]
 	path = airrohr-firmware-flasher
-	url = https://github.com/LoSk-p/airrohr-firmware-flasher
+	url = https://github.com/airalab/airrohr-firmware-flasher.git
 [submodule "firmware"]
-	path = sensors-software
-	url = https://github.com/LoSk-p/sensors-software
+	path = altruist-firmware
+	url = https://github.com/airalab/altruist-firmware.git
