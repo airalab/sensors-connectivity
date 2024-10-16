@@ -21,6 +21,7 @@ from robonomicsinterface import RWS, Account, Datalog
 from connectivity.config.logging import LOGGING_CONFIG
 from connectivity.utils.datalog_db import DatalogDB
 from connectivity.utils.ipfs_db import IPFSDB
+from ...constants import SDS011_MODEL
 
 from ...constants import PING_MODEL
 from .ifeeder import IFeeder
@@ -54,7 +55,10 @@ def _sort_payload(data: dict) -> dict:
     ordered = {}
     for k, v in data.items():
         meas = sorted(v["measurements"], key=lambda x: x["timestamp"])
-        ordered[k] = {"model": v["model"], "geo": v["geo"], "donated_by": v["donated_by"], "measurements": meas}
+        if v.get("geo"):
+            ordered[k] = {"model": v["model"], "geo": v["geo"], "donated_by": v["donated_by"], "measurements": meas}
+        else:
+            ordered[k] = {"model": v["model"], "donated_by": v["donated_by"], "measurements": meas}
     return ordered
 
 
@@ -74,7 +78,7 @@ def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/500
             if m.public in payload:
                 payload[m.public]["measurements"].append(m.measurement)
             else:
-                if m.geo_lat:
+                if m.model==SDS011_MODEL:
                     payload[m.public] = {
                         "model": m.model,
                         "geo": "{},{}".format(m.geo_lat, m.geo_lon),
@@ -264,10 +268,10 @@ class DatalogFeeder(IFeeder):
                 robonomics_receipt = rws_datalog.record(ipfs_hash)
             else:
                 datalog = Datalog(account)
-                # robonomics_receipt = datalog.record(ipfs_hash)
-            # logger.info(
-            #     f"Datalog Feeder: Ipfs hash sent to Robonomics Parachain and included in block {robonomics_receipt}"
-            # )
+                robonomics_receipt = datalog.record(ipfs_hash)
+            logger.info(
+                f"Datalog Feeder: Ipfs hash sent to Robonomics Parachain and included in block {robonomics_receipt}"
+            )
             DATALOG_STATUS_METRIC.state("success")
             self.datalog_db.update_status("sent", ipfs_hash)
         except Exception as e:
