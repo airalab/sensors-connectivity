@@ -21,7 +21,7 @@ from robonomicsinterface import RWS, Account, Datalog
 from connectivity.config.logging import LOGGING_CONFIG
 from connectivity.utils.datalog_db import DatalogDB
 from connectivity.utils.ipfs_db import IPFSDB
-from ...constants import SDS011_MODEL
+from ...constants import MOBILE_GPS
 
 from ...constants import PING_MODEL
 from .ifeeder import IFeeder
@@ -78,16 +78,16 @@ def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/500
             if m.public in payload:
                 payload[m.public]["measurements"].append(m.measurement)
             else:
-                if m.model==SDS011_MODEL:
+                if m.model == MOBILE_GPS:
                     payload[m.public] = {
                         "model": m.model,
-                        "geo": "{},{}".format(m.geo_lat, m.geo_lon),
                         "donated_by": m.donated_by,
                         "measurements": [m.measurement],
                     }
                 else:
                     payload[m.public] = {
                         "model": m.model,
+                        "geo": "{},{}".format(m.geo_lat, m.geo_lon),
                         "donated_by": m.donated_by,
                         "measurements": [m.measurement],
                     }
