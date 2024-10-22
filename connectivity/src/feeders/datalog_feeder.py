@@ -9,7 +9,6 @@ import os
 import threading
 import time
 import typing as tp
-from tempfile import NamedTemporaryFile
 
 from prometheus_client import Enum
 from robonomicsinterface import RWS, Account, Datalog
@@ -17,9 +16,13 @@ from robonomicsinterface import RWS, Account, Datalog
 from connectivity.config.logging import LOGGING_CONFIG
 from connectivity.utils.datalog_db import DatalogDB
 from connectivity.utils.ipfs_db import IPFSDB
-from ...constants import MOBILE_GPS
+from connectivity.utils.datalog_payload import (
+    create_payload,
+    sort_payload,
+    create_tmp_file,
+)
+from connectivity.constants import PING_MODEL
 
-from ...constants import PING_MODEL
 from .ifeeder import IFeeder
 from .pinning_services import PinningManager
 
@@ -42,71 +45,6 @@ DATALOG_MEMORY_METRIC = Enum(
 )
 
 
-def _sort_payload(data: dict) -> dict:
-    """Sort measurements dict with timestamp.
-
-    :param data: Measurements dict.
-    :return: Sorted measurements dict.
-    """
-
-    ordered = {}
-    for k, v in data.items():
-        meas = sorted(v["measurements"], key=lambda x: x["timestamp"])
-        if v.get("geo"):
-            ordered[k] = {"model": v["model"], "geo": v["geo"], "donated_by": v["donated_by"], "measurements": meas}
-        else:
-            ordered[k] = {"model": v["model"], "donated_by": v["donated_by"], "measurements": meas}
-    return ordered
-
-
-def _get_multihash(buf: set) -> tuple:
-    """Write sorted measurements to the temp file, add file to IPFS and add
-    measurements and hash in the database with 'not sent' status.
-
-    :param buf: Set of measurements from all sensors.
-    :param db: Database class object.
-    :param endpoint: Endpoint for IPFS node. Default is local.
-    :return: IPFS hash of the file and path to the temp file.
-    """
-
-    payload = {}
-    for m in buf:
-        try:
-            if m.public in payload:
-                payload[m.public]["measurements"].append(m.measurement)
-            else:
-                if m.model == MOBILE_GPS:
-                    payload[m.public] = {
-                        "model": m.model,
-                        "donated_by": m.donated_by,
-                        "measurements": [m.measurement],
-                    }
-                else:
-                    payload[m.public] = {
-                        "model": m.model,
-                        "geo": "{},{}".format(m.geo_lat, m.geo_lon),
-                        "donated_by": m.donated_by,
-                        "measurements": [m.measurement],
-                    }
-        except Exception as e:
-            logger.warning(f"Datalog Feeder: Couldn't store data: {e}")
-
-
-    logger.debug(f"Payload before sorting: {payload}")
-    payload = _sort_payload(payload)
-    logger.debug(f"Payload sorted: {payload}")
-    try:
-        temp = NamedTemporaryFile(mode="w", delete=False)
-        logger.debug(f"Created temp file: {temp.name}")
-        temp.write(json.dumps(payload))
-        temp.close()
-        DATALOG_MEMORY_METRIC.state("success")
-    except Exception as e:
-        DATALOG_MEMORY_METRIC.state("error")
-
-    return temp.name, payload
-
-
 class DatalogFeeder(IFeeder):
     """
     The feeder is responsible for collecting measurements and
@@ -125,7 +63,9 @@ class DatalogFeeder(IFeeder):
         self.last_time: float = time.time()
         self.buffer: set = set()
         self.interval: int = self.config["datalog"]["dump_interval"]
-        self.datalog_db: DatalogDB = DatalogDB(self.config["general"]["datalog_db_path"])
+        self.datalog_db: DatalogDB = DatalogDB(
+            self.config["general"]["datalog_db_path"]
+        )
         self.ipfs_db: IPFSDB = IPFSDB(self.config["general"]["ipfs_db_path"])
         self.datalog_db.create_table()
         self.ipfs_db.create_table()
@@ -140,7 +80,7 @@ class DatalogFeeder(IFeeder):
         """
         if self.config["datalog"]["enable"]:
             if data:
-                for d in data:  
+                for d in data:
                     if d.public and d.model != PING_MODEL:
                         logger.debug(f"DatalogFeeder: Adding data to buffer: {d}")
                         self.buffer.add(d)
@@ -148,19 +88,32 @@ class DatalogFeeder(IFeeder):
                 if (time.time() - self.last_time) >= self.interval:
                     if self.buffer:
                         self.last_time = time.time()
-                        logger.debug("Datalog Feeder: About to publish collected data...")
+                        logger.debug(
+                            "Datalog Feeder: About to publish collected data..."
+                        )
                         logger.debug(f"Datalog Feeder: Buffer is {self.buffer}")
-                        file_path, payload = _get_multihash(self.buffer)
-                        ipfs_hash = self.pinning_manager.pin_to_gateways(file_path)
-                        self.datalog_db.add_data("not sent", ipfs_hash, time.time(), json.dumps(payload))
+                        payload = create_payload(self.buffer)
+                        sorted_payload = sort_payload(payload)
+                        try:
+                            tmp_file_path = create_tmp_file(sorted_payload)
+                            DATALOG_MEMORY_METRIC.state("success")
+                        except Exception as e:
+                            DATALOG_MEMORY_METRIC.state("error")
+                            logger.warning(
+                                f"Datalog Feeder: couldn't create tmp file: {e}"
+                            )
+
+                        ipfs_hash = self.pinning_manager.pin_to_gateways(tmp_file_path)
+                        self.datalog_db.add_data(
+                            "not sent", ipfs_hash, time.time(), json.dumps(payload)
+                        )
                         self.buffer = set()
-                        os.unlink(file_path)
+                        os.unlink(tmp_file_path)
                         self.to_datalog(ipfs_hash)
                     else:
                         logger.info("Datalog Feeder:Nothing to publish")
                 else:
                     logger.info("Datalog Feeder: Still collecting measurements...")
-
 
     def to_datalog(self, ipfs_hash: str) -> None:
         """Send IPFS hash to Robonomics Datalog. It uses seed pharse from the config file.
@@ -190,5 +143,7 @@ class DatalogFeeder(IFeeder):
             DATALOG_STATUS_METRIC.state("success")
             self.datalog_db.update_status("sent", ipfs_hash)
         except Exception as e:
-            logger.warning(f"Datalog Feeder: Something went wrong during extrinsic submission to Robonomics: {e}")
+            logger.warning(
+                f"Datalog Feeder: Something went wrong during extrinsic submission to Robonomics: {e}"
+            )
             DATALOG_STATUS_METRIC.state("error")
