@@ -22,7 +22,6 @@ class Device:
         self.geo_lon = 0.0
         self.measurement = {}
         self.donated_by = ""
-        self.measurement.update({"timestamp": self.timestamp})
 
     def generate_pubkey(self, id: str) -> str:
         """Generate public key for a sensor based on its id.
