@@ -3,7 +3,6 @@ Datalog Feeder. This feeder collects data from the stations and adds it to the b
 Every `dump_interval` (from the config) the buffer writes to the file which pins to IPFS.
 IPFS hash of the file sends to Robonomics Datalog.
 """
-from crustinterface import Mainnet
 import json
 import logging.config
 import os
@@ -12,9 +11,6 @@ import time
 import typing as tp
 from tempfile import NamedTemporaryFile
 
-import ipfshttpclient2
-import requests
-from pinatapy import PinataPy
 from prometheus_client import Enum
 from robonomicsinterface import RWS, Account, Datalog
 
@@ -25,6 +21,7 @@ from ...constants import MOBILE_GPS
 
 from ...constants import PING_MODEL
 from .ifeeder import IFeeder
+from .pinning_services import PinningManager
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
@@ -62,7 +59,7 @@ def _sort_payload(data: dict) -> dict:
     return ordered
 
 
-def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/5001/http") -> tuple:
+def _get_multihash(buf: set) -> tuple:
     """Write sorted measurements to the temp file, add file to IPFS and add
     measurements and hash in the database with 'not sent' status.
 
@@ -107,59 +104,7 @@ def _get_multihash(buf: set, db: object, endpoint: str = "/ip4/127.0.0.1/tcp/500
     except Exception as e:
         DATALOG_MEMORY_METRIC.state("error")
 
-    with ipfshttpclient2.connect(endpoint) as client:
-        response = client.add(temp.name)
-        db.add_data("not sent", response["Hash"], time.time(), json.dumps(payload))
-        return (response["Hash"], temp.name, response["Size"])
-
-
-def _pin_to_pinata(file_path: str, config: dict) -> None:
-    """Pin file to Pinata for for better accessibility.
-    Need to provide pinata credentials in the config file.
-
-    :param file_path: Path to the temp file.
-    :param config: Configuration dictionary.
-    """
-
-    pinata_api = config["datalog"]["pinata_api"]
-    pinata_secret = config["datalog"]["pinata_secret"]
-    if pinata_secret:
-        try:
-            logger.info("DatalogFeeder: Pinning file to Pinata")
-            pinata = PinataPy(pinata_api, pinata_secret)
-            pinata.pin_file_to_ipfs(path_to_file=file_path, save_absolute_paths=False)
-            hash = pinata.pin_list()["rows"][0]["ipfs_pin_hash"]
-            logger.info(f"DatalogFeeder: File sent to pinata. Hash is {hash}")
-        except Exception as e:
-            logger.warning(f"DatalogFeeder: Failed while pining file to Pinata. Error: {e}")
-
-
-def _upload_to_crust(hash: str, file_size: int, seed: str) -> None:
-    mainnet = Mainnet(seed=seed)
-    try:
-        # Check balance
-        balance = mainnet.get_balance()
-        logger.debug(f"DatalogFeeder: Actual balance in crust network - {balance}")
-
-        # Check price in Main net. Price in pCRUs
-        price = mainnet.get_appx_store_price(file_size)
-        logger.debug(f"DatalogFeeder: Approximate cost to store the file - {price}")
-
-    except Exception as e:
-        logger.warning(f"DatalogFeeder: Error while getting account balance - {e}")
-        return None
-
-    if price >= balance:
-        logger.warning(f"DatalogFeeder: Not enough account balance to store the file in Crust Network")
-        return None
-
-    try:
-        logger.info(f"DatalogFeeder: Start adding {hash} to crust with size {file_size}")
-        file_stored = mainnet.store_file(hash, file_size)
-        logger.info(f"DatalogFeeder: File stored in Crust. Extrinsic data is  {file_stored}")
-    except Exception as e:
-        logger.warning(f"error while uploading file to crust - {e}")
-        return None
+    return temp.name, payload
 
 
 class DatalogFeeder(IFeeder):
@@ -180,15 +125,11 @@ class DatalogFeeder(IFeeder):
         self.last_time: float = time.time()
         self.buffer: set = set()
         self.interval: int = self.config["datalog"]["dump_interval"]
-        self.ipfs_endpoint: str = (
-            config["robonomics"]["ipfs_provider"]
-            if config["robonomics"]["ipfs_provider"]
-            else "/ip4/127.0.0.1/tcp/5001/http"
-        )
         self.datalog_db: DatalogDB = DatalogDB(self.config["general"]["datalog_db_path"])
         self.ipfs_db: IPFSDB = IPFSDB(self.config["general"]["ipfs_db_path"])
         self.datalog_db.create_table()
         self.ipfs_db.create_table()
+        self.pinning_manager = PinningManager(self.config)
 
     def feed(self, data: tp.List[dict]) -> None:
         """Main function of the feeder and it is called in `main.py`. It collects
@@ -209,12 +150,10 @@ class DatalogFeeder(IFeeder):
                         self.last_time = time.time()
                         logger.debug("Datalog Feeder: About to publish collected data...")
                         logger.debug(f"Datalog Feeder: Buffer is {self.buffer}")
-                        ipfs_hash, file_path, file_size = _get_multihash(self.buffer, self.datalog_db, self.ipfs_endpoint)
-                        self.ipfs_db.add_hash(ipfs_hash)
-                        self._pin_to_temporal(file_path)
-                        _pin_to_pinata(file_path, self.config)
+                        file_path, payload = _get_multihash(self.buffer)
+                        ipfs_hash = self.pinning_manager.pin_to_gateways(file_path)
+                        self.datalog_db.add_data("not sent", ipfs_hash, time.time(), json.dumps(payload))
                         self.buffer = set()
-                        _upload_to_crust(ipfs_hash, int(file_size), self.config["datalog"]["suri"])
                         os.unlink(file_path)
                         self.to_datalog(ipfs_hash)
                     else:
@@ -222,30 +161,6 @@ class DatalogFeeder(IFeeder):
                 else:
                     logger.info("Datalog Feeder: Still collecting measurements...")
 
-    def _pin_to_temporal(self, file_path: str) -> None:
-        """Pin file to Temporal Cloud for for better accessibility.
-        Need to provide corresponding credentials in the config file.
-
-        :param file_path: Path to the temp file.
-        """
-
-        username = self.config["datalog"]["temporal_username"]
-        password = self.config["datalog"]["temporal_password"]
-        if username and password:
-            auth_url = "https://api.temporal.cloud/v2/auth/login"
-            token_resp = requests.post(auth_url, json={"username": username, "password": password})
-            token = token_resp.json()
-
-            url_add = "https://api.temporal.cloud/v2/ipfs/public/file/add"
-            headers = {"Authorization": f"Bearer {token['token']}"}
-            resp = requests.post(
-                url_add,
-                files={"file": open(file_path), "hold_time": (None, 1)},
-                headers=headers,
-            )
-
-            if resp.status_code == 200:
-                logger.info("Datalog Feeder: File pinned to Temporal Cloud")
 
     def to_datalog(self, ipfs_hash: str) -> None:
         """Send IPFS hash to Robonomics Datalog. It uses seed pharse from the config file.
