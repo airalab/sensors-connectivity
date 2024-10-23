@@ -2,7 +2,7 @@ import time
 from dataclasses import dataclass, field
 from functools import reduce
 
-from ...constants import MOBILE_GPS, PASKAL2MMHG
+from connectivity.constants import MOBILE_GPS, PASKAL2MMHG
 from .base import Device
 
 

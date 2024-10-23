@@ -7,13 +7,12 @@ import threading
 import time
 import typing as tp
 import urllib.request as ur
-# from os import times
 from urllib import error, parse
 
 from connectivity.config.logging import LOGGING_CONFIG
 
-from ...constants import STATION_VERSION
-from ..sensors import TrackAgro
+from connectivity.constants import STATION_VERSION
+from connectivity.src.sensors import TrackAgro
 from .istation import IStation
 
 logging.config.dictConfig(LOGGING_CONFIG)

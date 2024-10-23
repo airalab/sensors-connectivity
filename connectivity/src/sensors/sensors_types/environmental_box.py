@@ -2,7 +2,7 @@ import time
 from dataclasses import dataclass, field
 from functools import reduce
 
-from ...constants import PASKAL2MMHG, SDS011_MODEL
+from connectivity.constants import PASKAL2MMHG, SDS011_MODEL
 from .base import Device
 
 
