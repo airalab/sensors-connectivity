@@ -11,6 +11,7 @@ import ipfshttpclient2
 from connectivity.config.logging import LOGGING_CONFIG
 
 from connectivity.constants import PING_MODEL
+from connectivity.src.sensors.sensors_types import Device
 from connectivity.utils.format_robonomics_feeder_msg import to_pubsub_message, to_ping_message
 from .ifeeder import IFeeder
 
@@ -57,7 +58,7 @@ class RobonomicsFeeder(IFeeder):
         else:
             self.ipfs_client.pubsub.publish(self.topic, payload)
 
-    def feed(self, data: tp.List[dict]) -> None:
+    def feed(self, data: tp.List[Device]) -> None:
         """Send data to IPFS pubsub in the topic from config.
 
         :param data: Data from the stations.

@@ -7,7 +7,7 @@ import typing as tp
 
 import serial
 
-from ...constants import MOBILE_GPS
+from connectivity.constants import MOBILE_GPS
 from connectivity.src.sensors import SensorSDS011
 
 

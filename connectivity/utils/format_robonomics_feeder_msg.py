@@ -1,6 +1,8 @@
 import json
 
-def to_pubsub_message(data: dict) -> str:
+from connectivity.src.sensors.sensors_types import Device
+
+def to_pubsub_message(data: Device) -> str:
     """Prepare JSON formatted string with measurements.
 
     :param data: Dict with the last measurement from one sensor.
@@ -17,7 +19,7 @@ def to_pubsub_message(data: dict) -> str:
     return json.dumps(message)
 
 
-def to_ping_message(data: dict) -> str:
+def to_ping_message(data: Device) -> str:
     """Prepare JSON formatted string with base info about sensor.
     No measurements.
 
