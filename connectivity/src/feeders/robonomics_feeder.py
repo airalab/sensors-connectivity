@@ -10,7 +10,9 @@ import ipfshttpclient2
 
 from connectivity.config.logging import LOGGING_CONFIG
 
-from ...constants import PING_MODEL
+from connectivity.constants import PING_MODEL
+from connectivity.src.sensors.sensors_types import Device
+from connectivity.utils.format_robonomics_feeder_msg import to_pubsub_message, to_ping_message
 from .ifeeder import IFeeder
 
 logging.config.dictConfig(LOGGING_CONFIG)
@@ -18,42 +20,6 @@ logger = logging.getLogger("sensors-connectivity")
 
 
 thlock = threading.RLock()
-
-
-def _to_pubsub_message(data: dict) -> str:
-    """Prepare JSON formatted string with measurements.
-
-    :param data: Dict with the last measurement from one sensor.
-    :return: JSON formatted string for pubsub.
-    """
-
-    message = {}
-    message[data.public] = {
-        "model": data.model,
-        "geo": "{},{}".format(data.geo_lat, data.geo_lon),
-        "donated_by": data.donated_by,
-        "measurement": data.measurement,
-    }
-    return json.dumps(message)
-
-
-def _to_ping_message(data: dict) -> str:
-    """Prepare JSON formatted string with base info about sensor.
-    No measurements.
-
-    :param data: Dict with the base info from one sensor.
-    :return: JSON formatted string for pubsub.
-    """
-
-    message = {}
-    message[data.public] = {
-        "model": data.model,
-        "timestamp": data.measurement.timestamp,
-        "measurement": {"geo": "{},{}".format(data.geo_lat, data.geo_lon)},
-    }
-
-    return json.dumps(message)
-
 
 class RobonomicsFeeder(IFeeder):
     """
@@ -92,7 +58,7 @@ class RobonomicsFeeder(IFeeder):
         else:
             self.ipfs_client.pubsub.publish(self.topic, payload)
 
-    def feed(self, data: tp.List[dict]) -> None:
+    def feed(self, data: tp.List[Device]) -> None:
         """Send data to IPFS pubsub in the topic from config.
 
         :param data: Data from the stations.
@@ -100,8 +66,8 @@ class RobonomicsFeeder(IFeeder):
         if self.config["robonomics"]["enable"]:
             for d in data:
                 if d.public and d.model != PING_MODEL:
-                    pubsub_payload = _to_pubsub_message(d)
+                    pubsub_payload = to_pubsub_message(d)
                 else:
-                    pubsub_payload = _to_ping_message(d)
+                    pubsub_payload = to_ping_message(d)
                 logger.info(f"RobonomicsFeeder: {pubsub_payload}")
                 self._publish_to_topic(pubsub_payload)

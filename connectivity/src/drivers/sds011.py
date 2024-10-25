@@ -7,8 +7,8 @@ import typing as tp
 
 import serial
 
-from ...constants import MOBILE_GPS
-from ..sensors import SensorSDS011
+from connectivity.constants import MOBILE_GPS
+from connectivity.src.sensors import SensorSDS011
 
 
 def sds011_codec(data: bytes, pk: str) -> dict:
