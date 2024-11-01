@@ -9,8 +9,8 @@ import paho.mqtt.client as mqtt
 
 from connectivity.config.logging import LOGGING_CONFIG
 
-from ...constants import STATION_VERSION
-from ..sensors import EnvironmentalBox, LoraSensor, MobileLab, LoraValidationException
+from connectivity.constants import STATION_VERSION
+from connectivity.src.sensors import SensorsFabcric
 from .istation import IStation
 
 logging.config.dictConfig(LOGGING_CONFIG)
@@ -65,20 +65,8 @@ class MQTTHandler(mqtt.Client):
         global thlock
         global sessions
         data = json.loads(msg.payload.decode())
-        logger.info(f"MQTT Station: Got new msg.")
-        if "esp8266id" in data.keys():
-            meas = EnvironmentalBox(data)
-        elif "ID" in data.keys():
-            meas = MobileLab(data)
-        elif "uplink_message" in data.keys():
-            if "decoded_payload" in data["uplink_message"]:
-                id = data["end_device_ids"]["device_id"]
-                try:
-                    meas = LoraSensor(id=id, data=data["uplink_message"]["decoded_payload"])
-                except LoraValidationException:
-                    logger.info(f"MQTT Station: Lora msg doesn't contain required values")
-                    return
-        else:
+        meas = SensorsFabcric.get_sensor(data)
+        if meas is None:
             return
         with thlock:
             if meas:

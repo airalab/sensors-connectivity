@@ -2,7 +2,7 @@ import time
 import typing as tp
 from dataclasses import dataclass, field
 
-from ...constants import PING_MODEL, SDS011_MODEL
+from connectivity.constants import PING_MODEL, SDS011_MODEL
 from .base import Device
 
 

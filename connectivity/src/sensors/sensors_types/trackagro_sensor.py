@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from connectivity.config.logging import LOGGING_CONFIG
 
-from ...constants import SDS011_MODEL
+from connectivity.constants import SDS011_MODEL
 from .base import Device
 
 logging.config.dictConfig(LOGGING_CONFIG)

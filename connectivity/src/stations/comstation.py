@@ -8,9 +8,9 @@ import nacl.signing
 
 from connectivity.config.logging import LOGGING_CONFIG
 
-from ...constants import STATION_VERSION
+from connectivity.constants import STATION_VERSION
 from ..drivers.sds011 import SDS011
-from ..sensors import SensorSDS011
+from connectivity.src.sensors import SensorSDS011
 from .istation import IStation
 
 logging.config.dictConfig(LOGGING_CONFIG)

@@ -2,7 +2,7 @@ import time
 import re
 from dataclasses import dataclass, field
 
-from ...constants import SDS011_MODEL
+from connectivity.constants import SDS011_MODEL
 from .base import Device
 
 

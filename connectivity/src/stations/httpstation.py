@@ -12,8 +12,8 @@ from prometheus_client import Gauge
 
 from connectivity.config.logging import LOGGING_CONFIG
 
-from ...constants import STATION_VERSION
-from ..sensors import EnvironmentalBox, MobileLab
+from connectivity.constants import STATION_VERSION
+from connectivity.src.sensors import SensorsFabcric
 from .istation import IStation
 
 logging.config.dictConfig(LOGGING_CONFIG)
@@ -75,10 +75,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         length = int(self.headers.get("content-length"))
         d = self.rfile.read(length).decode().replace("SDS_P1", "SDS_pm10").replace("SDS_P2", "SDS_pm25")
         data = json.loads(d)
-        if "esp8266id" in data.keys():
-            meas = EnvironmentalBox(data)
-        elif "ID" in data.keys():
-            meas = MobileLab(data)
+        meas = SensorsFabcric.get_sensor(data)
+        if meas is None: 
+            return
         with thlock:
             if meas:
                 sessions[meas.id] = meas
