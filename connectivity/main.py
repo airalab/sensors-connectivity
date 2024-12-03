@@ -15,7 +15,7 @@ from prometheus_client import start_http_server
 from connectivity.config.logging import LOGGING_CONFIG
 
 from .src.feeders import DatalogFeeder, FrontierFeeder, RobonomicsFeeder
-from .src.stations import COMStation, HTTPStation, MQTTStation
+from .src.stations import COMStation, HTTPStation, MQTTStation, LoraStation
 from .src.stations.trackargostation import TrackAgroStation
 from .utils.datalog_db import DatalogDB
 
@@ -83,6 +83,8 @@ class WorkerNode:
 
         if self.config["trackagro"]["enable"]:
             s.append(TrackAgroStation(self.config))
+        if self.config["lorastation"]["enable"]:
+            s.append(LoraStation(self.config))
 
         return s
 

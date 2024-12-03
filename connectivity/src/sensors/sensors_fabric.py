@@ -12,5 +12,7 @@ class SensorsFabcric():
         elif "uplink_message" in data.keys():
             if "decoded_payload" in data["uplink_message"]:
                 id = data["end_device_ids"]["device_id"]
-                meas = LoraSensor(id=id, data=data["uplink_message"]["decoded_payload"])
+                if "payload" in data["uplink_message"]["decoded_payload"]:
+                    return
+                meas = LoraSensor(id, data["uplink_message"])
         return meas
