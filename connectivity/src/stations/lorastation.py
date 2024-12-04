@@ -96,11 +96,11 @@ class LoraStation(IStation):
 
         self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
         self.version = STATION_VERSION
-        host: str = config["mqttstation"]["host"]
-        port: int = int(config["mqttstation"]["port"])
-        topic: str = config["mqttstation"]["topic"]
-        username: str = config["mqttstation"]["username"]
-        password: str = config["mqttstation"]["password"]
+        host: str = config["lorastation"]["host"]
+        port: int = int(config["lorastation"]["port"])
+        topic: str = config["lorastation"]["topic"]
+        username: str = config["lorastation"]["username"]
+        password: str = config["lorastation"]["password"]
         client = LoraHandler(host, port, topic, username, password)
         rc = client.run()
 
