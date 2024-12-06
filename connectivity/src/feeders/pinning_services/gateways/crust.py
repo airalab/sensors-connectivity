@@ -42,6 +42,8 @@ class CrustGateway(PinningGateway):
     def _can_upload(self, file_size: int) -> bool:
         """Check whether there is enough tokens on balance"""
         balance = self._get_balance()
+        if not balance:
+            return None
         approximately_price = self._get_store_price(file_size)
         return balance >= approximately_price
 

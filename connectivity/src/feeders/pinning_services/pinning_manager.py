@@ -1,4 +1,5 @@
 import typing as tp
+import logging.config
 
 from .gateways import (
     CrustGateway,
@@ -7,7 +8,10 @@ from .gateways import (
     TemporalGateway,
     PinArgs,
 )
+from connectivity.config.logging import LOGGING_CONFIG
 
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger("sensors-connectivity")
 
 class PinningManager:
     def __init__(self, config: dict) -> None:
@@ -36,9 +40,15 @@ class PinningManager:
 
     def pin_to_gateways(self, file_path: str) -> tp.Optional[str]:
         pinArgs_for_local_gateway = PinArgs(file_path)
-        file_hash, file_size = self.gateways["local"].pin(pinArgs_for_local_gateway)
+        try:
+            file_hash, file_size = self.gateways["local"].pin(pinArgs_for_local_gateway)
+        except Exception as e:
+            logger.error(f"PinningManager: couldn't pin file to local gateway: {e}")
         pin_args = PinArgs(file_path=file_path, hash=file_hash, file_size=file_size)
         for gateway_name, gateway in self.gateways.items():
             if gateway_name != "local":
-                gateway.pin(pin_args)
+                try:
+                    gateway.pin(pin_args)
+                except Exception as e:
+                    logger.error(f"PinningManager: couldn't pin {file_hash} to {gateway_name}: {e}")
         return file_hash
