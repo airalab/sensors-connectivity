@@ -21,7 +21,7 @@ from connectivity.utils.datalog_payload import (
     sort_payload,
     create_tmp_file,
 )
-from connectivity.constants import PING_MODEL
+from connectivity.constants import PING_MODEL, POLKA_REMOTE_WS, KSM_REMOTE_WS
 
 from .ifeeder import IFeeder
 from .pinning_services import PinningManager
@@ -125,25 +125,36 @@ class DatalogFeeder(IFeeder):
         :param ipfs_hash: Ipfs hash of the file.
         """
 
-        account = Account(seed=self.config["datalog"]["suri"])
-        rws = RWS(account)
+        ksm_account = Account(seed=self.config["datalog"]["suri"], remote_ws=KSM_REMOTE_WS)
+        polkadot_account = Account(seed=self.config["datalog"]["suri"], remote_ws=POLKA_REMOTE_WS)
+        rws = RWS(ksm_account)
         try:
             if rws.get_days_left():
-                rws_sub_owner = account.get_address()
+                rws_sub_owner = ksm_account.get_address()
                 if not rws.is_in_sub(sub_owner_addr=rws_sub_owner, addr=rws_sub_owner):
                     rws.set_devices([rws_sub_owner])
-                rws_datalog = Datalog(account, rws_sub_owner=rws_sub_owner)
+                rws_datalog = Datalog(ksm_account, rws_sub_owner=rws_sub_owner)
                 robonomics_receipt = rws_datalog.record(ipfs_hash)
             else:
-                datalog = Datalog(account)
+                datalog = Datalog(ksm_account)
                 robonomics_receipt = datalog.record(ipfs_hash)
             logger.info(
-                f"Datalog Feeder: Ipfs hash sent to Robonomics Parachain and included in block {robonomics_receipt}"
+                f"Datalog Feeder: Ipfs hash sent to Robonomics KSM Parachain and included in block {robonomics_receipt}"
             )
             DATALOG_STATUS_METRIC.state("success")
             self.datalog_db.update_status("sent", ipfs_hash)
         except Exception as e:
             logger.warning(
-                f"Datalog Feeder: Something went wrong during extrinsic submission to Robonomics: {e}"
+                f"Datalog Feeder: Something went wrong during extrinsic submission to KSM Robonomics: {e}"
             )
             DATALOG_STATUS_METRIC.state("error")
+        try:
+            datalog = Datalog(polkadot_account)
+            robonomics_receipt = datalog.record(ipfs_hash)
+            logger.info(
+                f"Datalog Feeder: Ipfs hash sent to Robonomics Polkadot Parachain and included in block {robonomics_receipt}"
+            )
+        except Exception as e:
+            logger.warning(
+                f"Datalog Feeder: Something went wrong during extrinsic submission to Polkadot Robonomics: {e}"
+            )
