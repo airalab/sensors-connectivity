@@ -25,19 +25,22 @@ class Altruist(Device):
         self.model = int(self.data.get("model", SDS011_MODEL))
         self.public = self.id
         self.donated_by = str(self.data.get("donated_by", ""))
-        sensors_data = self.data["sensordatavalues"]
+        sensors_data: str = self.data["sensordatavalues"]
+        self.measurement = None
         if not self._check_signature(sensors_data):
+            print(f"Altrusit sensor: Signature is not verified")
             return
         elif not self._is_address_in_subscription():
+            print(f"Altrusit sensor: Address is not in subscription")
             return
         self.geo_lat = sensors_data["lat"]
         self.geo_lon = sensors_data["lon"]
 
-        self.measurements_formatter(sensors_data)
+        self._measurements_formatter(sensors_data)
         self.timestamp = int(time.time())
         self.measurement.update({"timestamp": self.timestamp})
 
-    def _check_signature(self, sensor_data: dict) -> bool:
+    def _check_signature(self, sensor_data: str) -> bool:
         """Verifies data with specified signature.
         :param sensor_data: Unparsed data from the sensor.
         :return: True if data is signed with this Keypair, otherwise False
@@ -47,15 +50,16 @@ class Altruist(Device):
             ss58_address=self.public, crypto_type=KeypairType.ED25519
         )
         timestamp = str(int(time.time()))[:-2]
-        sensor_data["time"] = timestamp
-        return sender_keypair.verify(str(sensor_data), self.data["signature"])
+        print(f'singature: {self.data["signature"]}')
+        sensor_data = f"{sensor_data},time:{timestamp}"
+        return sender_keypair.verify(sensor_data, f"0x{self.data['signature']}")
 
     def _is_address_in_subscription(self) -> bool:
         account = Account()
         rws = RWS(account)
         return rws.is_in_sub(sub_owner_addr=self.data["owner"], addr=self.public)
 
-    def measurements_formatter(self, sensor_data: dict) -> dict:
+    def _measurements_formatter(self, sensor_data: str) -> dict:
         mapping = {
             "temperature": "t",
             "pressure": "p",
@@ -65,6 +69,8 @@ class Altruist(Device):
             "noiseMax": "nm",
             "noiseAvg": "na",
         }
+        sensor_data_dict = dict(item.split(":") for item in sensor_data.split(","))
+        sensor_data_dict = {key: float(value) for key, value in sensor_data_dict.items()}
 
         self.measurement.update({key: sensor_data[value] for key, value in mapping.items() if value in sensor_data})
 

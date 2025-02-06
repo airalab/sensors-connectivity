@@ -9,6 +9,8 @@ class SensorsFabcric():
             meas = EnvironmentalBox(data)
         elif "robonomics_address" in data.keys():
             meas = Altruist(data)
+            if meas.measurement is None:
+                return None
         elif "ID" in data.keys():
             meas = MobileLab(data)
         elif "uplink_message" in data.keys():

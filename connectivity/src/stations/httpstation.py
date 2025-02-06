@@ -78,6 +78,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         data = json.loads(d)
         meas = SensorsFabcric.get_sensor(data)
         if meas is None: 
+            self.send_response(500)
+            self.end_headers()
             return
         with thlock:
             if meas:
