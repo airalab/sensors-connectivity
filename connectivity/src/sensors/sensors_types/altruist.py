@@ -72,7 +72,7 @@ class Altruist(Device):
         sensor_data_dict = dict(item.split(":") for item in sensor_data.split(","))
         sensor_data_dict = {key: float(value) for key, value in sensor_data_dict.items()}
 
-        self.measurement.update({key: sensor_data[value] for key, value in mapping.items() if value in sensor_data})
+        self.measurement.update({key: sensor_data_dict[value] for key, value in mapping.items() if value in sensor_data_dict})
 
 
     def __str__(self) -> str:
