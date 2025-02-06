@@ -4,7 +4,7 @@ from functools import reduce
 from substrateinterface import Keypair, KeypairType
 from robonomicsinterface import RWS, Account
 
-from connectivity.constants import PASKAL2MMHG, SDS011_MODEL
+from connectivity.constants import SDS011_MODEL, POLKA_REMOTE_WS
 from .base import Device
 
 
@@ -55,7 +55,7 @@ class Altruist(Device):
         return sender_keypair.verify(sensor_data, f"0x{self.data['signature']}")
 
     def _is_address_in_subscription(self) -> bool:
-        account = Account()
+        account = Account(remote_ws=POLKA_REMOTE_WS)
         rws = RWS(account)
         return rws.is_in_sub(sub_owner_addr=self.data["owner"], addr=self.public)
 
