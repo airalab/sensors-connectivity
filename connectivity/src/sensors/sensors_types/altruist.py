@@ -28,13 +28,13 @@ class Altruist(Device):
         sensors_data: str = self.data["sensordatavalues"]
         self.measurement = None
         if not self._check_signature(sensors_data):
-            print(f"Altrusit sensor: Signature is not verified")
+            print(f"Altruist sensor: Signature is not verified")
             return
         elif not self._is_address_in_subscription():
-            print(f"Altrusit sensor: Address is not in subscription")
+            print(f"Altruist sensor: Address is not in subscription")
             return
-        self.geo_lat = sensors_data["lat"]
-        self.geo_lon = sensors_data["lon"]
+        self.geo_lat = sensors_data["GPS_lat"]
+        self.geo_lon = sensors_data["GPS_lon"]
 
         self._measurements_formatter(sensors_data)
         self.timestamp = int(time.time())
