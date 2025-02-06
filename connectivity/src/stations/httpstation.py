@@ -16,6 +16,7 @@ from connectivity.constants import STATION_VERSION
 from connectivity.src.sensors import SensorsFabcric
 from .istation import IStation
 
+
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
 thlock = threading.RLock()
