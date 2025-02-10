@@ -4,7 +4,7 @@ from functools import reduce
 from substrateinterface import Keypair, KeypairType
 from robonomicsinterface import RWS, Account
 
-from connectivity.constants import SDS011_MODEL, POLKA_REMOTE_WS
+from connectivity.constants import SDS011_MODEL, POLKA_REMOTE_WS, PASKAL2MMHG
 from .base import Device
 
 
@@ -72,7 +72,10 @@ class Altruist(Device):
         sensor_data_dict = dict(item.split(":") for item in sensor_data.split(","))
         sensor_data_dict = {key: float(value) for key, value in sensor_data_dict.items()}
 
-        self.measurement.update({key: sensor_data_dict[value] for key, value in mapping.items() if value in sensor_data_dict})
+        self.measurement.update({
+        key: (round(sensor_data_dict[value] / PASKAL2MMHG, 2) if key == "pressure" else sensor_data_dict[value])
+        for key, value in mapping.items() if value in sensor_data_dict
+        })
 
 
     def __str__(self) -> str:
