@@ -2,10 +2,11 @@ import json
 
 from connectivity.src.sensors.sensors_types import Device
 
-def to_pubsub_message(data: Device) -> str:
+def to_pubsub_message(data: Device, signature: str) -> str:
     """Prepare JSON formatted string with measurements.
 
     :param data: Dict with the last measurement from one sensor.
+    :param signature: Signature of the measurements
     :return: JSON formatted string for pubsub.
     """
 
@@ -14,6 +15,7 @@ def to_pubsub_message(data: Device) -> str:
         "model": data.model,
         "geo": "{},{}".format(data.geo_lat, data.geo_lon),
         "donated_by": data.donated_by,
+        "signature": signature,
         "measurement": data.measurement,
     }
     return json.dumps(message)

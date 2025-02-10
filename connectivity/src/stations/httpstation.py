@@ -16,6 +16,7 @@ from connectivity.constants import STATION_VERSION
 from connectivity.src.sensors import SensorsFabcric
 from .istation import IStation
 
+
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
 thlock = threading.RLock()
@@ -77,6 +78,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         data = json.loads(d)
         meas = SensorsFabcric.get_sensor(data)
         if meas is None: 
+            self.send_response(500)
+            self.end_headers()
             return
         with thlock:
             if meas:

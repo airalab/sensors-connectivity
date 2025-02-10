@@ -1,4 +1,4 @@
-from .sensors_types import EnvironmentalBox, LoraSensor, MobileLab, Device
+from .sensors_types import EnvironmentalBox, LoraSensor, MobileLab, Device, Altruist
 
 class SensorsFabcric():
 
@@ -7,6 +7,10 @@ class SensorsFabcric():
         meas = None
         if "esp8266id" in data.keys():
             meas = EnvironmentalBox(data)
+        elif "robonomics_address" in data.keys():
+            meas = Altruist(data)
+            if not meas.measurement:
+                return None
         elif "ID" in data.keys():
             meas = MobileLab(data)
         elif "uplink_message" in data.keys():

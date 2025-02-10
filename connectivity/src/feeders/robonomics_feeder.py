@@ -14,6 +14,7 @@ from connectivity.constants import PING_MODEL
 from connectivity.src.sensors.sensors_types import Device
 from connectivity.utils.format_robonomics_feeder_msg import to_pubsub_message, to_ping_message
 from .ifeeder import IFeeder
+from connectivity.utils.sign_data import sign_data
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("sensors-connectivity")
@@ -42,6 +43,7 @@ class RobonomicsFeeder(IFeeder):
         )
         self.ipfs_client = ipfshttpclient2.connect(endpoint, session=True)
         self.topic: str = config["robonomics"]["ipfs_topic"]
+        self.seed = config["datalog"]["suri"]
 
     def _publish_to_topic(self, payload):
 
@@ -66,7 +68,9 @@ class RobonomicsFeeder(IFeeder):
         if self.config["robonomics"]["enable"]:
             for d in data:
                 if d.public and d.model != PING_MODEL:
-                    pubsub_payload = to_pubsub_message(d)
+                    signature = sign_data(self.seed, str(d.measurement))
+                    logger.info(f"RobonomicsFeeder: Signatue: {signature}")
+                    pubsub_payload = to_pubsub_message(d, signature)
                 else:
                     pubsub_payload = to_ping_message(d)
                 logger.info(f"RobonomicsFeeder: {pubsub_payload}")
