@@ -15,6 +15,7 @@ header = {"Content-type": "application/json"}
 
 def main():
     pm10 = round(random.uniform(0.1, 100.99), 3)
+    co1 = round(random.uniform(0.1, 100.99), 3)
     pm25 = round(random.uniform(0.1, 100.99), 3)
     humidity = round(random.uniform(0, 100))
     temperature = round(random.uniform(-50, 50), 3)
@@ -28,7 +29,7 @@ def main():
         "donated_by": "Robonomics",
         "GPS_lat": lat,
         "GPS_lon": lon,
-        "sensordatavalues": f"nm:0.00,na:0.00,t:{temperature},p:360,h:{humidity},p1:{pm10},p2:{pm25}"
+        "sensordatavalues": f"nm:0.00,na:0.00,t:{temperature},p:360,h:{humidity},p1:{pm10},p2:{pm25},co1:{co1}"
     }   
 
     try:

@@ -70,7 +70,8 @@ class Altruist(Device):
             "noiseAvg": "na",
             "radiation": "gc",
             "CO2": "co",
-            "TVOC":  "vc"
+            "TVOC":  "vc",
+            "CO": "co1"
         }
         sensor_data_dict = dict(item.split(":") for item in sensor_data.split(","))
         sensor_data_dict = {key: float(value) for key, value in sensor_data_dict.items()}
