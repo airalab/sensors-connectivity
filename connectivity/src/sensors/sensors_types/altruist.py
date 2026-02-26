@@ -4,7 +4,7 @@ from functools import reduce
 from substrateinterface import Keypair, KeypairType
 from robonomicsinterface import RWS, Account
 
-from connectivity.constants import SDS011_MODEL, POLKA_REMOTE_WS, PASKAL2MMHG
+from connectivity.constants import SDS011_MODEL, POLKA_REMOTE_WS, KSM_REMOTE_WS, PASKAL2MMHG
 from .base import Device
 
 
@@ -55,9 +55,22 @@ class Altruist(Device):
         return sender_keypair.verify(sensor_data, f"0x{self.data['signature']}")
 
     def _is_address_in_subscription(self) -> bool:
-        account = Account(remote_ws=POLKA_REMOTE_WS)
-        rws = RWS(account)
-        return rws.is_in_sub(sub_owner_addr=self.data["owner"], addr=self.public)
+        try:
+            account = Account(remote_ws=POLKA_REMOTE_WS)
+            rws = RWS(account)
+            if rws.is_in_sub(sub_owner_addr=self.data["owner"], addr=self.public):
+                return True
+
+            account_ksm = Account(remote_ws=KSM_REMOTE_WS)
+            rws_ksm = RWS(account_ksm)
+            if rws_ksm.is_in_sub(sub_owner_addr=self.data["owner"], addr=self.public):
+                return True
+        except Exception as e:
+            print(f"Altruist: error: {e}")
+            print(f"Altruist: owner: {self.data["owner"]}")
+            print(f"Altruist: public: {self.public}")
+
+        return False
 
     def _measurements_formatter(self, sensor_data: str) -> dict:
         mapping = {
