@@ -60,15 +60,20 @@ class Altruist(Device):
             rws = RWS(account)
             if rws.is_in_sub(sub_owner_addr=self.data["owner"], addr=self.public):
                 return True
+        except Exception as e:
+            print(f"Altruist polkadot: error: {e}")
 
+        try:
             account_ksm = Account(remote_ws=KSM_REMOTE_WS)
             rws_ksm = RWS(account_ksm)
             if rws_ksm.is_in_sub(sub_owner_addr=self.data["owner"], addr=self.public):
                 return True
         except Exception as e:
-            print(f"Altruist: error: {e}")
-            print(f"Altruist: owner: {self.data["owner"]}")
-            print(f"Altruist: public: {self.public}")
+            print(f"Altruist kusama: error: {e}")
+
+
+        print(f"Altruist owner: {self.data['owner']}")
+        print(f"Altruist public: {self.public}")
 
         return False
 
