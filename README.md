@@ -1,17 +1,40 @@
-# Sensors Connectivity Module for Decentralized Sensors Network
+# Sensors Connectivity
 
-The module for launching your own server instance for receiving data from Altruist Civil Station and further processing.
+A Python service that acts as the data aggregation layer in the Robonomics decentralized sensors network. It receives signed sensor measurements, validates them, and distributes data through two channels: real-time IPFS pubsub for the Robonomics dApp and batched datalogs to the Robonomics parachain.
 
-## Available Guides
+## Architecture Overview
 
-We have created a comprehensive guide that explains the concept of the Decentralized Sensors Network and the Sensors Connectivity module. The guide is available at Robonomics Academy:
+Sensors Connectivity is the provider node in the decentralized sensors network:
 
-https://robonomics.academy/en/learn/sensors-connectivity-course/overview/
+- Receives signed measurements from Altruist devices via HTTP POST (port 8001 by default)
+- Also accepts data from other sensor types: EnvironmentalBox, MobileLab, LoRa sensors
+- Publishes real-time data via IPFS pubsub for the Robonomics dApp
+- Batches sensor data, pins to IPFS, and writes the hash as a datalog to the Robonomics parachain
 
+```
+Altruist / Other sensors
+  |
+  v HTTP POST (port 8001)
+Sensors Connectivity Provider
+  |- Validate: ED25519 signature + RWS subscription (Kusama/Polkadot)
+  |- Real-time: IPFS pubsub -> Robonomics dApp
+  |- Batch: collect -> pin to IPFS (local/Pinata/Crust) -> datalog to chain
+  '- Network priority: Kusama (with RWS) -> Kusama -> Polkadot
+```
+
+## How It Works
+
+**Validation.** Each incoming message is verified: ED25519 signature check, then RWS (Robonomics Web Services) subscription lookup on both Kusama and Polkadot parachains. Sensor types are routed via `sensors_fabric.py` based on payload fields.
+
+**IPFS publishing.** Validated data is published in real-time to IPFS pubsub topic `airalab.lighthouse.5.robonomics.eth`. Batched data is pinned through up to 4 gateways (local IPFS, Pinata, Crust, Temporal) managed by `pinning_manager.py`.
+
+**Datalog to chain.** Pinned IPFS hashes are written as datalogs to the Robonomics parachain with a network cascade: Kusama with active subscription first, then Kusama without, then Polkadot as fallback.
 
 ## Pre-requirements
 
-The IPFS daemon should be installed to build this package. Assuming you are working on Linux:
+IPFS daemon with pubsub enabled and Python 3.10+.
+
+Install IPFS (Linux):
 
 ```
 wget https://dist.ipfs.io/go-ipfs/v0.8.0/go-ipfs_v0.8.0_linux-amd64.tar.gz
@@ -21,54 +44,24 @@ sudo bash install.sh
 ipfs init
 ```
 
-You also need at least Python 3.10.0 to run this project.
+## Installation
 
-## Sensor Preparation
-
-To prepare a sensor to work with the package, follow the instructions on [Robonomics Academy](https://robonomics.academy/en/learn/sensors-connectivity-course/setting-up-and-connecting-sensors/).
-
-
-## Installation as PyPi package
-
-Run the following commands:
+### From PyPi
 
 ```
 pip3 install py-sr25519-bindings
 pip3 install sensors-connectivity
 ```
 
-### Configuration
+### From Source
 
-At Robonomics Academy, you can find an article on setting up the proper configuration for your instance:
-
-https://robonomics.academy/en/learn/sensors-connectivity-course/sensors-connectivity-config-options/
-
-
-### Launch
-
-First, launch IPFS daemon:
-
-```
-ipfs daemon --enable-pubsub-experiment
-```
-
-After the configuration and log files are set, you can run the service in another terminal:
-
-```
-sensors_connectivity "path/to/your/config/file"
-```
-
-You will see logs in your terminal and in `~/.logs`.
-
-## Build from Source
-
-To build a Python package from source, [Poetry](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions) should also be installed. Assuming you are working on Linux:
+Requires [Poetry](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions):
 
 ```
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 ```
 
-Get the package and install dependencies:
+Clone and install:
 
 ```
 git clone https://github.com/airalab/sensors-connectivity
@@ -76,63 +69,64 @@ cd sensors-connectivity
 poetry install
 ```
 
-### Configuration
+## Configuration
 
-At Robonomics Academy, you can find an article on setting up the proper configuration for your instance:
+Configuration guide: https://robonomics.academy/en/learn/sensors-connectivity-course/sensors-connectivity-config-options/
 
-https://robonomics.academy/en/learn/sensors-connectivity-course/sensors-connectivity-config-options/
+When building from source, make a copy of `default.json` and fill it using the guide above.
 
-Make a copy of `default.json` and fill it using the description from the article.
+Logging uses `console` and `file` handlers by default. The logging template is in `connectivity/config/logging_template.py`. Default log path: `~/.logs`. See the [Python logging docs](https://docs.python.org/3.8/library/logging.html) for other handler options.
 
-You can also set a logging file. The default file for logs is `logging.py`, which uses the `console` and `file` handlers by default. Pay attention to the `file` handler.
+## Launch
 
-The template is stored in `connectivity/config/logging_template.py`. You can specify the path (`filename`) where your logs will be stored (do not forget to create this directory if it doesn't exist). The default path for logs is `~/.logs`. You can find other handlers in the [Logging facility module](https://docs.python.org/3.8/library/logging.html) for Python.
-
-
-### Launch
-
-First, launch the IPFS daemon:
+Start the IPFS daemon first:
 
 ```
 ipfs daemon --enable-pubsub-experiment
 ```
-After the configuration and log files are set, you can run the service in another terminal:
+
+Then run the service:
 
 ```
-poetry run sensors_connectivity "path/to/your/config/file"  
+# PyPi install
+sensors_connectivity "path/to/your/config/file"
+
+# From source
+poetry run sensors_connectivity "path/to/your/config/file"
 ```
 
-If your log file is set with the `console` handler, you will be able to see logs in your terminal.
+Logs appear in your terminal (if `console` handler is set) and in `~/.logs`.
 
-### Development
+## Development
 
-To test the module with an HTTP station, use:
+Test the module with an HTTP station:
 
 ```
 poetry run test_mobile_lab
-test_environmental_box
+poetry run test_environmental_box
 ```
 
-For more information about development, check the `/docs` directory:
+More details in the [`/docs`](https://github.com/airalab/sensors-connectivity/tree/master/docs) directory.
 
-https://github.com/airalab/sensors-connectivity/tree/master/docs
+Comprehensive guide on the Decentralized Sensors Network concept: https://robonomics.academy/en/learn/sensors-connectivity-course/overview/
 
-### Troubleshooting
+Sensor preparation instructions: https://robonomics.academy/en/learn/sensors-connectivity-course/setting-up-and-connecting-sensors/
 
-**Python.h: No such file or directory:**:
+## Troubleshooting
 
-If, during the execution of the `poetry install` command, you encounter this error, you need to install the header files and static libraries for `python-dev`. Use your package manager for installation. For example, with `apt`, you need to run:
+**Python.h: No such file or directory**
+
+Install header files and static libraries for python-dev:
 
 ```
 sudo apt install python3-dev
 ```
-> **Note**: `python3-dev` does not cover all versions for Python 3. The service needs at least Python 3.10, for that you may need to specify the version: `sudo apt install python3.10-dev`.
 
-[Here](https://stackoverflow.com/a/21530768) you can find examples for other package managers.
+> Note: `python3-dev` does not cover all versions. The service needs at least Python 3.10, so you may need: `sudo apt install python3.10-dev`. See [examples for other package managers](https://stackoverflow.com/a/21530768).
 
-**Python versions mismatch:**
+**Python versions mismatch**
 
-If, during the execution of the `poetry install` command, you encounter a `SolverProblemError`, which states `The current project's Python requirement (3.6.9) is not compatible with some of the required packages' Python requirement:..`, even though you have a newer version of Python (e.g., Python 3.10.9), you may need to specify the Python version for Poetry:
+If `poetry install` fails with a `SolverProblemError` about Python version incompatibility, specify the version for Poetry:
 
 ```
 poetry env use python3.10.9
