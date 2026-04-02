@@ -29,6 +29,9 @@ ALIVE_SENSORS_METRIC = Gauge("connectivity_sensors_alive_total", "return number 
 class RequestHandler(BaseHTTPRequestHandler):
     """Service class to handle HTTP requests."""
 
+    known_peers = []
+    server_port = 8001
+
     def _set_headers(self, id: str = None) -> None:
         """Service functions to set headers for requests.
         It checks if the sensor has sent data to this station already and
@@ -63,10 +66,23 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         """Callback for get requests."""
 
-        # logger.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
-        id = self.headers["Sensor-id"]
+        id = self.headers.get("Sensor-id")
         self._set_headers(id)
         logger.info(f"HTTP Station session length: {len(sessions)}")
+
+        own_count = len(sessions)
+        servers = []
+        for peer in self.known_peers:
+            is_self = peer.get("port") == self.server_port
+            servers.append({
+                "host": peer["host"],
+                "port": peer["port"],
+                "sensors_count": own_count if is_self else 0,
+                "region": peer.get("region", "global"),
+            })
+
+        body = json.dumps({"servers": servers, "ttl": 3600, "version": 1})
+        self.wfile.write(body.encode())
 
     def do_POST(self) -> None:
         """Callback for post requests. Save unparsed data into `sessions`."""
@@ -90,13 +106,16 @@ class RequestHandler(BaseHTTPRequestHandler):
 class HTTP_server(threading.Thread):
     """Servcie class to run HTTP server."""
 
-    def __init__(self, port: int):
+    def __init__(self, port: int, known_peers: list = None):
         threading.Thread.__init__(self)
         self.port: int = port
+        self.known_peers: list = known_peers or []
 
     def run(self) -> None:
         self.server_address = ("", self.port)
         logger.debug(f"HTTP Station on port: {self.port}")
+        RequestHandler.known_peers = self.known_peers
+        RequestHandler.server_port = self.port
         self.httpd = HTTPServer(self.server_address, RequestHandler)
         self.httpd.serve_forever()
 
@@ -111,8 +130,9 @@ class HTTPStation(IStation):
         """
 
         port: int = int(config["httpstation"]["port"])
+        known_peers: list = config.get("known_peers", [])
         self.version = STATION_VERSION
-        HTTP_server(port).start()
+        HTTP_server(port, known_peers).start()
         self.DEAD_SENSOR_TIME: int = 60 * 60  # 1 hour
 
     def get_data(self) -> tp.List[dict]:

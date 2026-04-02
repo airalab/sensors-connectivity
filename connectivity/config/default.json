@@ -48,5 +48,10 @@
    "trackagro": {
       "enable": false,
       "token": ""
-   }
+   },
+   "known_peers": [
+      {"host": "connectivity.robonomics.network", "port": 65, "region": "global"},
+      {"host": "1.connectivity.robonomics.network", "port": 65, "region": "global"},
+      {"host": "2.connectivity.robonomics.network", "port": 65, "region": "global"}
+   ]
 }
