@@ -14,6 +14,8 @@ class Device:
     model: int = field(init=False)
     timestamp: float = field(init=False)
     donated_by: str = field(init=False)
+    owner: str = field(init=False)
+    device_model: str = field(init=False)
     measurement: dict = field(init=False)
 
     def __post_init__(self) -> None:
@@ -22,6 +24,8 @@ class Device:
         self.geo_lon = 0.0
         self.measurement = {}
         self.donated_by = ""
+        self.owner = ""
+        self.device_model = ""
         self.measurement.update({"timestamp": self.timestamp})
 
     def generate_pubkey(self, id: str) -> str:
