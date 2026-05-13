@@ -25,6 +25,8 @@ class Altruist(Device):
         self.model = int(self.data.get("model", SDS011_MODEL))
         self.public = self.id
         self.donated_by = str(self.data.get("donated_by", ""))
+        self.owner = str(self.data.get("owner", ""))
+        self.device_model = str(self.data.get("device_model", ""))
         sensors_data: str = self.data["sensordatavalues"]
         self.measurement = {}
         if not self._check_signature(sensors_data):

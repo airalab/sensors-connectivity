@@ -10,15 +10,19 @@ def to_pubsub_message(data: Device, signature: str) -> str:
     :return: JSON formatted string for pubsub.
     """
 
-    message = {}
-    message[data.public] = {
+    payload = {
         "model": data.model,
         "geo": "{},{}".format(data.geo_lat, data.geo_lon),
         "donated_by": data.donated_by,
         "signature": signature,
         "measurement": data.measurement,
     }
-    return json.dumps(message)
+    for name in ("owner", "device_model"):
+        value = getattr(data, name, None)
+        if value:
+            payload[name] = value
+
+    return json.dumps({data.public: payload})
 
 
 def to_ping_message(data: Device) -> str:
