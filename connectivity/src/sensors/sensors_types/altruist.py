@@ -104,6 +104,8 @@ class Altruist(Device):
 
     def __str__(self) -> str:
         if self.model == SDS011_MODEL:
-            return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), model: {self.model}, donated_by: {self.donated_by}, measurements: {self.measurement}}}"
+            return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), model: {self.model}, donated_by: {self.donated_by}, owner: {self.owner}, device_model: {self.device_model}, measurements: {self.measurement}}}"
+
         self.measurement.update({"geo": f"{self.geo_lat},{self.geo_lon}"})
-        return f"{{Public: {self.public}, model: {self.model}, donated_by: {self.donated_by}, measurements: {self.measurement}}}"
+
+        return f"{{Public: {self.public}, model: {self.model}, donated_by: {self.donated_by}, owner: {self.owner}, device_model: {self.device_model}, measurements: {self.measurement}}}"

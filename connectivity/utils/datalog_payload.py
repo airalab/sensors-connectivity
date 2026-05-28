@@ -26,6 +26,8 @@ def create_payload(buf: set) -> dict:
                     payload[m.public] = {
                         "model": m.model,
                         "donated_by": m.donated_by,
+                        "owner": m.owner,
+                        "device_model": m.device_model,
                         "measurements": [m.measurement],
                     }
                 else:
@@ -33,6 +35,8 @@ def create_payload(buf: set) -> dict:
                         "model": m.model,
                         "geo": "{},{}".format(m.geo_lat, m.geo_lon),
                         "donated_by": m.donated_by,
+                        "owner": m.owner,
+                        "device_model": m.device_model,
                         "measurements": [m.measurement],
                     }
         except Exception as e:
@@ -57,12 +61,16 @@ def sort_payload(payload: dict) -> dict:
                     "model": v["model"],
                     "geo": v["geo"],
                     "donated_by": v["donated_by"],
+                    "owner": v.get("owner", ""),
+                    "device_model": v.get("device_model", ""),
                     "measurements": meas,
                 }
             else:
                 ordered[k] = {
                     "model": v["model"],
                     "donated_by": v["donated_by"],
+                    "owner": v.get("owner", ""),
+                    "device_model": v.get("device_model", ""),
                     "measurements": meas,
                 }
         except Exception as e:
