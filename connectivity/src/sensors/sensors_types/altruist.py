@@ -1,11 +1,19 @@
 import time
 from dataclasses import dataclass, field
-from functools import reduce
 from substrateinterface import Keypair, KeypairType
 from robonomicsinterface import RWS, Account
 
 from connectivity.constants import SDS011_MODEL, POLKA_REMOTE_WS, KSM_REMOTE_WS, PASKAL2MMHG
 from .base import Device
+
+# Legacy Insight firmware sent SCD4x readings as "co:" instead of "co2:".
+# Old builds do not send device_model — use SS58 allowlist only (no heuristics).
+# Signature is verified on the original sensordatavalues string; alias is parse-time only.
+LEGACY_CO2_AS_CO_ADDRESSES = frozenset({
+    "4GS6AHES49wdTpo1p3BvGG616SAn8cDPokjXQxs5KB8dbG8J",  # cyprus
+    "4ErRoB79d9fp2o9YCvTkHYAooTDp49PeVtamGW6pwo2jDEQf",  # moscow
+    "4E8onUwyvQUCxSD56MYpyaGKnPraKTWJZ9ruMj1aLLRk7Vk8",  # ulan-ude
+})
 
 
 @dataclass(repr=False, eq=False)
@@ -73,11 +81,18 @@ class Altruist(Device):
         except Exception as e:
             print(f"Altruist kusama: error: {e}")
 
-
         print(f"Altruist owner: {self.data['owner']}")
         print(f"Altruist public: {self.public}")
 
         return False
+
+    def _apply_legacy_co2_alias(self, sensor_data_dict: dict) -> None:
+        """Map legacy key co: -> co2: for allowlisted SS58 (old firmware, no device_model)."""
+        if "co2" in sensor_data_dict or "co" not in sensor_data_dict:
+            return
+        if self.id not in LEGACY_CO2_AS_CO_ADDRESSES:
+            return
+        sensor_data_dict["co2"] = sensor_data_dict.pop("co")
 
     def _measurements_formatter(self, sensor_data: str) -> dict:
         mapping = {
@@ -90,22 +105,35 @@ class Altruist(Device):
             "noiseAvg": "na",
             "radiation": "gc",
             "CO2": "co2",
-            "TVOC":  "vc",
-            "CO": "co"
+            "TVOC": "vc",
+            "CO": "co",
         }
-        sensor_data_dict = dict(item.split(":") for item in sensor_data.split(","))
+        sensor_data_dict = dict(item.split(":", 1) for item in sensor_data.split(","))
         sensor_data_dict = {key: float(value) for key, value in sensor_data_dict.items()}
+        self._apply_legacy_co2_alias(sensor_data_dict)
 
         self.measurement.update({
-        key: (round(sensor_data_dict[value] / PASKAL2MMHG, 2) if key == "pressure" else sensor_data_dict[value])
-        for key, value in mapping.items() if value in sensor_data_dict
+            key: (
+                round(sensor_data_dict[value] / PASKAL2MMHG, 2)
+                if key == "pressure"
+                else sensor_data_dict[value]
+            )
+            for key, value in mapping.items()
+            if value in sensor_data_dict
         })
-
 
     def __str__(self) -> str:
         if self.model == SDS011_MODEL:
-            return f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), model: {self.model}, donated_by: {self.donated_by}, owner: {self.owner}, device_model: {self.device_model}, measurements: {self.measurement}}}"
+            return (
+                f"{{Public: {self.public}, geo: ({self.geo_lat},{self.geo_lon}), "
+                f"model: {self.model}, donated_by: {self.donated_by}, owner: {self.owner}, "
+                f"device_model: {self.device_model}, measurements: {self.measurement}}}"
+            )
 
         self.measurement.update({"geo": f"{self.geo_lat},{self.geo_lon}"})
 
-        return f"{{Public: {self.public}, model: {self.model}, donated_by: {self.donated_by}, owner: {self.owner}, device_model: {self.device_model}, measurements: {self.measurement}}}"
+        return (
+            f"{{Public: {self.public}, model: {self.model}, donated_by: {self.donated_by}, "
+            f"owner: {self.owner}, device_model: {self.device_model}, "
+            f"measurements: {self.measurement}}}"
+        )
