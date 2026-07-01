@@ -14,3 +14,4 @@ This table shows which keys should be used in `self.measurement` dictionary in s
 |CO          |ppm     |Сarbon monoxide.                                                                 |
 |NH3         |ppm     |Ammonia                                                                          |
 |NO2         |ppm     |Nitrogen oxide                                                                   |
+|O3          |ppm     |Ozone                                                                            |
