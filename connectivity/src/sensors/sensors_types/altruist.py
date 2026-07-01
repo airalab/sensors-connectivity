@@ -107,6 +107,8 @@ class Altruist(Device):
             "CO2": "co2",
             "TVOC": "vc",
             "CO": "co",
+            "o3": "o3",
+            "no2": "no2"
         }
         sensor_data_dict = dict(item.split(":", 1) for item in sensor_data.split(","))
         sensor_data_dict = {key: float(value) for key, value in sensor_data_dict.items()}
