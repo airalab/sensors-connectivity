@@ -48,5 +48,11 @@
    "trackagro": {
       "enable": false,
       "token": ""
-   }
+   },
+   "_known_peers_description": "Peer discovery: list of all connectivity servers in the fleet. Sensors query GET / and receive this list with sensor counts, then pick the least-loaded server. Each entry needs host (hostname or IP), port (HTTP port), and region (optional, for geo-aware balancing). Add your server here when deploying a new node.",
+   "known_peers": [
+      {"host": "connectivity.robonomics.network", "port": 65, "region": "global"},
+      {"host": "1.connectivity.robonomics.network", "port": 65, "region": "global"},
+      {"host": "2.connectivity.robonomics.network", "port": 65, "region": "global"}
+   ]
 }
