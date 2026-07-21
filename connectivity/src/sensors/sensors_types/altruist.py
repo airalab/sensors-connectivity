@@ -111,13 +111,20 @@ class Altruist(Device):
             "no2": "no2"
         }
         sensor_data_dict = dict(item.split(":", 1) for item in sensor_data.split(","))
-        sensor_data_dict = {key: float(value) for key, value in sensor_data_dict.items()}
+
+        def _parse_value(value: str):
+            # Encrypted values: "e.<base64(IV+ciphertext)>" — pass through as string.
+            if isinstance(value, str) and value.startswith("e."):
+                return value
+            return float(value)
+
+        sensor_data_dict = {key: _parse_value(value) for key, value in sensor_data_dict.items()}
         self._apply_legacy_co2_alias(sensor_data_dict)
 
         self.measurement.update({
             key: (
                 round(sensor_data_dict[value] / PASKAL2MMHG, 2)
-                if key == "pressure"
+                if key == "pressure" and isinstance(sensor_data_dict[value], (int, float))
                 else sensor_data_dict[value]
             )
             for key, value in mapping.items()
