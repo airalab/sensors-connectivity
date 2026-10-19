@@ -19,7 +19,7 @@ Sensors Connectivity Provider
   |- Validate: ED25519 signature + RWS subscription (Kusama/Polkadot)
   |- Real-time: IPFS pubsub -> Robonomics dApp
   |- Batch: collect -> pin to IPFS (local/Pinata/Crust) -> datalog to chain
-  '- Network priority: Kusama (with RWS) -> Kusama -> Polkadot
+  '- Network: Polkadot (RWS when subscribed, direct datalog otherwise)
 ```
 
 ## How It Works
@@ -28,7 +28,7 @@ Sensors Connectivity Provider
 
 **IPFS publishing.** Validated data is published in real-time to IPFS pubsub topic `airalab.lighthouse.5.robonomics.eth`. Batched data is pinned through up to 4 gateways (local IPFS, Pinata, Crust, Temporal) managed by `pinning_manager.py`.
 
-**Datalog to chain.** Pinned IPFS hashes are written as datalogs to the Robonomics parachain with a network cascade: Kusama with active subscription first, then Kusama without, then Polkadot as fallback.
+**Datalog to chain.** Pinned IPFS hashes are written as datalogs to the Polkadot Robonomics parachain. The configured account uses RWS when it has an active subscription and falls back to a direct datalog transaction otherwise.
 
 ## Pre-requirements
 
