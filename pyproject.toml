@@ -6,7 +6,7 @@ authors = [
     "Vadim Manaenko <vadim.razorq@gmail.com>",
     "Mariia Bystramovich <m.bystramovich@gmail.com>",
 ]
-license = "BSD 3-Clause License"
+license = "AGPL-3.0-only"
 
 repository = "https://github.com/airalab/sensors-connectivity"
 
