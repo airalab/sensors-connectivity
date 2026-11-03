@@ -131,3 +131,10 @@ If `poetry install` fails with a `SolverProblemError` about Python version incom
 ```
 poetry env use python3.10.9
 ```
+
+## License
+
+- **Code** — [GNU AGPL v3.0](LICENSE), Copyright (C) 2026 Pinout Limited. Code released before this change stays available under [BSD 3-Clause](LICENSES/BSD-3-Clause-Airalab.txt), Copyright (c) 2020, Airalab.
+- **Open measurement data** — [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/), attribution "© sensors.social contributors".
+
+Details — [NOTICE](NOTICE).

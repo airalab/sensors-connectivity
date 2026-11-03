@@ -1,0 +1,32 @@
+sensors-connectivity
+Copyright (C) 2026 Pinout Limited
+Copyright (c) 2020-2026, Airalab
+
+Code
+----
+Starting with this version, the code in this repository is licensed under the
+GNU Affero General Public License v3.0 (see LICENSE). If you run a modified
+version of this software as a network service, you must offer its source code
+to the users of that service.
+
+Code written before this change was released under the BSD 3-Clause License,
+Copyright (c) 2020, Airalab. That notice and licence text are kept in
+LICENSES/BSD-3-Clause-Airalab.txt and continue to apply to those portions.
+Earlier releases remain available under BSD 3-Clause.
+
+Git submodules and third-party components keep their own licences.
+
+For a commercial licence without the AGPL obligations, contact Pinout Limited.
+
+Measurement data
+----------------
+Open sensor measurements processed by this software and published on
+sensors.social are made available under the Open Database License (ODbL) 1.0:
+https://opendatacommons.org/licenses/odbl/1-0/
+Attribution: "© sensors.social contributors".
+Encrypted data belongs to the sensor owner and is not covered by this licence.
+
+Names
+-----
+The names "sensors.social" and "Altruist" and their logos are not licensed
+under any of the licences above.
