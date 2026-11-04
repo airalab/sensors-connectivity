@@ -20,6 +20,15 @@ cd sensors-connectivity
 poetry install
 ```
 
+The service itself does not need the submodules; they are kept for reference only:
+
+- `altruist-firmware` tracks the legacy **ESP8266** firmware branch (`esp8266`) of
+  [airalab/altruist-firmware](https://github.com/airalab/altruist-firmware/tree/esp8266).
+  Current Altruist firmware (ESP32-C6 / C3) lives on the `esp32` branch of that repo.
+- `airrohr-firmware-flasher` is the flasher for that legacy firmware.
+
+`git submodule update --remote altruist-firmware` follows the `esp8266` branch.
+
 Run the emulated stations against a local instance:
 
 ```bash
