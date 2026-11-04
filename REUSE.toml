@@ -1,0 +1,14 @@
+version = 1
+SPDX-PackageName = "sensors-connectivity"
+SPDX-PackageDownloadLocation = "https://github.com/airalab/sensors-connectivity"
+
+# Default for everything in this repository. Code released before the move to
+# AGPL stays available under BSD 3-Clause, see NOTICE and LICENSES/.
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = ["2026 Pinout Limited", "2020-2026 Airalab"]
+SPDX-License-Identifier = "AGPL-3.0-only"
+
+# Git submodules (airrohr-firmware-flasher, altruist-firmware) carry their own
+# licences; REUSE skips submodules by default.

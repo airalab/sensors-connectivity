@@ -12,3 +12,6 @@ venv/
 .vscode/*
 logs/
 poetry.lock
+
+# local datalog database created at runtime
+*.db
