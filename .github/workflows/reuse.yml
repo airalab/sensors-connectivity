@@ -1,0 +1,17 @@
+# Checks that every file has licence and copyright information (REUSE.toml).
+# https://reuse.software
+name: REUSE
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  reuse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: fsfe/reuse-action@v6
