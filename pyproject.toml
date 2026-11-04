@@ -1,14 +1,20 @@
 [tool.poetry]
 name = "sensors_connectivity"
-version = "1.7"
+version = "1.7.1"
 description = "Robonomics package to read data from sensors and publish to different output channels"
 authors = [
     "Vadim Manaenko <vadim.razorq@gmail.com>",
     "Mariia Bystramovich <m.bystramovich@gmail.com>",
 ]
 license = "AGPL-3.0-only"
+classifiers = [
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
 
 repository = "https://github.com/airalab/sensors-connectivity"
+homepage = "https://sensors.social"
 
 readme = "README.md"
 

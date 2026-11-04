@@ -1,5 +1,9 @@
 # Sensors Connectivity
 
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/sensors-connectivity.svg)](https://pypi.org/project/sensors-connectivity/)
+[![Python](https://img.shields.io/pypi/pyversions/sensors-connectivity.svg)](https://pypi.org/project/sensors-connectivity/)
+
 A Python service that acts as the data aggregation layer in the Robonomics decentralized sensors network. It receives signed sensor measurements, validates them, and distributes data through two channels: real-time IPFS pubsub for the Robonomics dApp and batched datalogs to the Robonomics parachain.
 
 ## Architecture Overview
@@ -131,6 +135,10 @@ If `poetry install` fails with a `SolverProblemError` about Python version incom
 ```
 poetry env use python3.10.9
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: [SECURITY.md](SECURITY.md).
 
 ## License
 
