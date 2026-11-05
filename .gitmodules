@@ -4,3 +4,4 @@
 [submodule "firmware"]
 	path = altruist-firmware
 	url = https://github.com/airalab/altruist-firmware.git
+	branch = esp8266
