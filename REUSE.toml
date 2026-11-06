@@ -8,7 +8,7 @@ SPDX-PackageDownloadLocation = "https://github.com/airalab/sensors-connectivity"
 path = "**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = ["2026 Pinout Limited", "2020-2026 Airalab"]
-SPDX-License-Identifier = "AGPL-3.0-only"
+SPDX-License-Identifier = "AGPL-3.0-only AND BSD-3-Clause"
 
 # Git submodules (airrohr-firmware-flasher, altruist-firmware) carry their own
 # licences; REUSE skips submodules by default.
