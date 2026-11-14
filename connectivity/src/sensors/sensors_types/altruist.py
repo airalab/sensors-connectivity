@@ -1,3 +1,4 @@
+import threading
 import time
 from dataclasses import dataclass, field
 from substrateinterface import Keypair, KeypairType
@@ -14,6 +15,31 @@ LEGACY_CO2_AS_CO_ADDRESSES = frozenset({
     "4ErRoB79d9fp2o9YCvTkHYAooTDp49PeVtamGW6pwo2jDEQf",  # moscow
     "4E8onUwyvQUCxSD56MYpyaGKnPraKTWJZ9ruMj1aLLRk7Vk8",  # ulan-ude
 })
+
+# Subscription lookups open a websocket to the parachain (~1.5 s each) and ran
+# on every POST. Cache the answer per (owner, address): a sensor posts every
+# ~30 s, membership changes rarely.
+SUB_CACHE_TTL_POSITIVE = 30 * 60
+SUB_CACHE_TTL_NEGATIVE = 10 * 60
+_sub_cache: dict = {}
+_sub_cache_lock = threading.Lock()
+
+
+def _sub_cache_get(key: tuple):
+    with _sub_cache_lock:
+        entry = _sub_cache.get(key)
+    if entry is None:
+        return None
+    value, expires = entry
+    if time.time() > expires:
+        return None
+    return value
+
+
+def _sub_cache_put(key: tuple, value: bool) -> None:
+    ttl = SUB_CACHE_TTL_POSITIVE if value else SUB_CACHE_TTL_NEGATIVE
+    with _sub_cache_lock:
+        _sub_cache[key] = (value, time.time() + ttl)
 
 
 @dataclass(repr=False, eq=False)
@@ -65,26 +91,42 @@ class Altruist(Device):
         return sender_keypair.verify(sensor_data, f"0x{self.data['signature']}")
 
     def _is_address_in_subscription(self) -> bool:
+        key = (str(self.data.get("owner", "")), self.public)
+        cached = _sub_cache_get(key)
+        if cached is not None:
+            return cached
+        result, lookup_failed = self._lookup_subscription()
+        # A negative answer caused by an RPC error is not cached: the next
+        # POST retries instead of dropping a registered sensor for 10 minutes.
+        if result or not lookup_failed:
+            _sub_cache_put(key, result)
+        return result
+
+    def _lookup_subscription(self) -> tuple:
+        """:return: (in subscription, any lookup raised)"""
+        lookup_failed = False
         try:
             account = Account(remote_ws=POLKA_REMOTE_WS)
             rws = RWS(account)
             if rws.is_in_sub(sub_owner_addr=self.data["owner"], addr=self.public):
-                return True
+                return True, False
         except Exception as e:
+            lookup_failed = True
             print(f"Altruist polkadot: error: {e}")
 
         try:
             account_ksm = Account(remote_ws=KSM_REMOTE_WS)
             rws_ksm = RWS(account_ksm)
             if rws_ksm.is_in_sub(sub_owner_addr=self.data["owner"], addr=self.public):
-                return True
+                return True, False
         except Exception as e:
+            lookup_failed = True
             print(f"Altruist kusama: error: {e}")
 
         print(f"Altruist owner: {self.data['owner']}")
         print(f"Altruist public: {self.public}")
 
-        return False
+        return False, lookup_failed
 
     def _apply_legacy_co2_alias(self, sensor_data_dict: dict) -> None:
         """Map legacy key co: -> co2: for allowlisted SS58 (old firmware, no device_model)."""
