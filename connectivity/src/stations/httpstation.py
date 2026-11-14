@@ -6,7 +6,7 @@ import logging.config
 import threading
 import time
 import typing as tp
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from prometheus_client import Gauge
 
@@ -97,7 +97,10 @@ class HTTP_server(threading.Thread):
     def run(self) -> None:
         self.server_address = ("", self.port)
         logger.debug(f"HTTP Station on port: {self.port}")
-        self.httpd = HTTPServer(self.server_address, RequestHandler)
+        # Threaded: one slow request (signature + RWS subscription lookup over
+        # websocket) must not block every other sensor queued behind it.
+        self.httpd = ThreadingHTTPServer(self.server_address, RequestHandler)
+        self.httpd.daemon_threads = True
         self.httpd.serve_forever()
 
 
