@@ -2,6 +2,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from substrateinterface import Keypair, KeypairType
+from substrateinterface.utils.ss58 import ss58_decode
 from robonomicsinterface import RWS, Account
 
 from connectivity.constants import SDS011_MODEL, POLKA_REMOTE_WS, KSM_REMOTE_WS, PASKAL2MMHG
@@ -23,6 +24,29 @@ SUB_CACHE_TTL_POSITIVE = 30 * 60
 SUB_CACHE_TTL_NEGATIVE = 10 * 60
 _sub_cache: dict = {}
 _sub_cache_lock = threading.Lock()
+
+# substrate-interface is not thread-safe (concurrent decoders fail with
+# 'Decoder class for "Compact<u32>" not found'), so lookups run one at a time
+# over one long-lived connection per network, reconnected after an error.
+_rpc_lock = threading.Lock()
+_rws_clients: dict = {}
+
+
+def _rws_for(remote_ws: str) -> RWS:
+    client = _rws_clients.get(remote_ws)
+    if client is None:
+        client = RWS(Account(remote_ws=remote_ws))
+        _rws_clients[remote_ws] = client
+    return client
+
+
+def _is_in_sub_on(remote_ws: str, owner: str, addr: str) -> bool:
+    """Caller holds _rpc_lock. Drops the cached client on error and re-raises."""
+    try:
+        return bool(_rws_for(remote_ws).is_in_sub(sub_owner_addr=owner, addr=addr))
+    except Exception:
+        _rws_clients.pop(remote_ws, None)
+        raise
 
 
 def _sub_cache_get(key: tuple):
@@ -95,29 +119,38 @@ class Altruist(Device):
         cached = _sub_cache_get(key)
         if cached is not None:
             return cached
-        result, lookup_failed = self._lookup_subscription()
-        # A negative answer caused by an RPC error is not cached: the next
-        # POST retries instead of dropping a registered sensor for 10 minutes.
-        if result or not lookup_failed:
-            _sub_cache_put(key, result)
+        with _rpc_lock:
+            # Another thread may have filled the cache while we waited.
+            cached = _sub_cache_get(key)
+            if cached is not None:
+                return cached
+            result, lookup_failed = self._lookup_subscription()
+            # A negative answer caused by an RPC error is not cached: the next
+            # POST retries instead of dropping a registered sensor for 10 minutes.
+            if result or not lookup_failed:
+                _sub_cache_put(key, result)
         return result
 
     def _lookup_subscription(self) -> tuple:
         """:return: (in subscription, any lookup raised)"""
+        try:
+            ss58_decode(str(self.data["owner"]))
+            ss58_decode(self.public)
+        except Exception as e:
+            # Malformed address: a definite "no", and no reason to drop the
+            # shared RPC connection over it.
+            print(f"Altruist: invalid address: {e}; owner={self.data.get('owner')!r} public={self.public!r}")
+            return False, False
         lookup_failed = False
         try:
-            account = Account(remote_ws=POLKA_REMOTE_WS)
-            rws = RWS(account)
-            if rws.is_in_sub(sub_owner_addr=self.data["owner"], addr=self.public):
+            if _is_in_sub_on(POLKA_REMOTE_WS, self.data["owner"], self.public):
                 return True, False
         except Exception as e:
             lookup_failed = True
             print(f"Altruist polkadot: error: {e}")
 
         try:
-            account_ksm = Account(remote_ws=KSM_REMOTE_WS)
-            rws_ksm = RWS(account_ksm)
-            if rws_ksm.is_in_sub(sub_owner_addr=self.data["owner"], addr=self.public):
+            if _is_in_sub_on(KSM_REMOTE_WS, self.data["owner"], self.public):
                 return True, False
         except Exception as e:
             lookup_failed = True
